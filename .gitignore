@@ -1,0 +1,11 @@
+.buildpath
+.cproject
+.cssproject
+.project
+.settings
+.metadata
+.vscode
+.atom-build.json
+**/.*.swp
+**/.*.swo
+/man/**/*.1.gz
