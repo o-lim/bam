@@ -10,7 +10,7 @@ BATS_FILES := $(wildcard $(TESTS_DIR)/*.bats)
 BAM_BATS_FILES := $(wildcard $(TESTS_DIR)/bam*.bats)
 
 .PHONY: test tests
-test tests: man
+test tests: man lnt
 	@cd $(TESTS_DIR) && BAM_INSTALL_PREFIX=$(PREFIX) bats $(BATS_FILES)
 
 .PHONY: $(BATS_FILES)
