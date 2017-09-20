@@ -1,0 +1,17 @@
+config("mingw64") {
+  defines = [
+    "MINGW64_DEFINES",
+  ]
+  cflags = [
+    "-O1",
+  ]
+  ldflags = [
+    "--rom_model",
+  ]
+}
+
+lint_dep("lnt") {
+  cc = "gcc"
+  cxx = "g++"
+  vendor = "gcc"
+}

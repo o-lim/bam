@@ -1,0 +1,3 @@
+SP := $(SP).x
+DIRSTACK_$(SP) := $(CURRENT_DIR)
+CURRENT_DIR := $(DIR)

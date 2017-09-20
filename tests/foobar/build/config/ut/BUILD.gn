@@ -1,0 +1,20 @@
+config("ut") {
+  precompiled_header = "build/precompiled_ut.h"
+  precompiled_source = "//build/precompiled_ut.h"
+  defines = [
+    "UNIT_TEST",
+  ]
+  asmflags = [
+    "-x", "assembler"
+  ]
+  cflags = [
+    "-g",
+  ]
+  cflags_cc = [
+    "-Wno-conversion-null",
+  ]
+  ldflags = [
+    "-rdynamic",
+    "-lSegFault",
+  ]
+}

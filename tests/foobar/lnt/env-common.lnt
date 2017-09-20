@@ -1,0 +1,54 @@
+// This format string is compatible with GCC output, such that
+// text parsers like those in Eclipse can determine file and line
+// number information from the error.
+//-vf
+-v
+-"format=%f%(:%l:%) error: %t %n - %m"
+-width(256,4)
+-limit(64)
+-h1
+-u
++linebuf
++libclass(angle)
+-wlib(1)
+-e686
+-elib(*)
+-dFLEXELINT=defined
+
+// New code errors introduced between version 'd' and version 'h' of flexelint.
+-e793              //Info 793   - ANSI/ISO limit of 6 'significant characters in an external identifier' exceeded -- processing is unaffected
+-e1754             // Info 1754 - Expected symbol 'operator*=' to be declared for class 'QPainterPath' -- More Effective C++ #22
+-esym(960,17.4)    // Note 960  - Violates MISRA 2004 Required Rule 17.4, pointer arithmetic by increment or decrement used
+-esym(960,8.7)     // Note 960 - Violates MISRA 2004 Required Rule 8.7, could define variable at block scope
+-esym(961,12.6)    // Note 961 - Violates MISRA 2004 Advisory Rule 12.6, boolean expression required for operator
+
+-esym(1960,16-0-1) // Note 1960 - Violates MISRA C++ 2008 Required Rule 16-0-1, declaration before #include
+-esym(1960,5-0-15) // Note 1960 - Violates MISRA C++ 2008 Required Rule 5-0-15, pointer arithmetic other than array indexing used
+-esym(1960,5-2-1)  // Note 1960 - Violates MISRA C++ 2008 Required Rule 5-2-1, non-postfix expression used with logical operator
+-esym(1963,5-2-10) // Note 1963 - Violates MISRA C++ 2008 Advisory Rule 5-2-10, increment or decrement combined with another operator
+-esym(1960,17-0-2) // Note 1960 - Violates MISRA C++ 2008 Required Rule 17-0-2, Re-use of C++ identifier pattern: <>
+
+-estring(974, "* is recursive, loop contains call to *")  // Note 974  - Worst case function for stack usage: 'X' is recursive, loop contains call to 'X'. See +stack for a full report. [MISRA C++ Rule 7-5-4]
+
+// New flexelint bugs introduced between version 'd' and version 'h' of flexelint.
+
+// Flexelint bugs fixed in version 'i'
+// -e1764               // Info 1764 - Reference parameter '<>' could be declared const ref --- Eff. C++ 3rd Ed. item 3
+
+// New flexelint issues introduced in version 'i'
+-esym(1960,6-2-1) // Note 1960 - Violates MISRA C++ 2008 Required Rule 6-2-1, assignment operator used in sub-expression
+
+//Pre-compiled headers (bugged)
+//-pch(pch.hpp)
+//-header(pch.hpp)
+//-e528  // Permit "Symbol '<>' (line <>, file <>) not referenced" for pre-compiled headers
+//-e766  // Permit "Header file '<>' not used in module '<>'"
+-e952    // Parameter 'xxxx' (line lll) could be declared const --- Eff. C++ 3rd Ed. item 3, [MISRA C++ Rule 7-1-1]
+
+-esym(960,14.3)    // Note 960 - Violates MISRA 2004 Required Rule 14.3, null statement not in line by itself
+-esym(1960,9-5-1)  // Note 1960 - Violates MISRA C++ 2008 Required Rule 9-5-1, declaration of union type or object of union type
+-e1929 // Note 1929 - function '' returning a reference -- Effective C++ #23 & Eff. C++ 3rd Ed. item 21
+-e1576 // Warning 1576 - Partial or explicit specialization does not occur in the same file as primary template
+-e1577 // Warning 1577 - Partial or explicit specialization does not occur in the same file as primary template
+-esym(1960,16-0-4) // Violates MISRA C++ 2008 Required Rule 16-0-4, Function-like macro defined
+-e830 //Info 830 - Location cited in prior message

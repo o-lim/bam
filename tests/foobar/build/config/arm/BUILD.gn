@@ -1,0 +1,17 @@
+config("arm") {
+  defines = [
+    "ARM_DEFINES",
+  ]
+  cflags = [
+    "-arm-cflag",
+  ]
+  ldflags = [
+    "-arm-ldflag",
+  ]
+}
+
+lint_dep("lnt") {
+  cc = "gcc"
+  cxx = "g++"
+  vendor = "gcc"
+}

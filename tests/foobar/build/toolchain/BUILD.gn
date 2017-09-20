@@ -1,0 +1,140 @@
+source_extensions_lintasm = ["."] # disables lint checking for asm files
+source_extensions_lintcc = ["h", "c"]
+source_extensions_lintcxx = ["hpp", "cpp"]
+
+Toolchain("style") {
+  toolchain_type = "style"
+
+  cc = "cpplint.py"
+  cxx = "cpplint.py"
+  ar = ""
+  ld = ""
+
+  source_extensions_asm = ["."] # disables style checking for asm files
+  source_extensions_cc = ["h", "c"]
+  source_extensions_cxx = ["hpp", "cpp"]
+
+  toolchain_args = {
+    current_cpu = "style"
+    current_os = "style"
+    current_platform = "style"
+  }
+}
+
+ToolchainWithLint("x86") {
+  toolchain_type = "gcc"
+
+  cc = "gcc"
+  cxx = "g++"
+  ar = "ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+  object_extensions = ["o", "obj", "oo"]
+
+  toolchain_args = {
+    current_cpu = "x86"
+    current_os = "linux"
+    current_platform = "x86"
+  }
+}
+
+ToolchainWithLint("x64") {
+  toolchain_type = "gcc"
+
+  cc = "gcc"
+  cxx = "g++"
+  ar = "ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+  object_extensions = ["o", "obj", "oo"]
+
+  toolchain_args = {
+    current_cpu = "x64"
+    current_os = "linux"
+    current_platform = "x64"
+  }
+}
+
+Toolchain("ut") {
+  toolchain_type = "gcc"
+
+  cc = "gcc"
+  cxx = "g++"
+  ar = "ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+  object_extensions = ["o", "obj", "oo"]
+
+  toolchain_args = {
+    current_cpu = "x86"
+    current_os = "linux"
+    current_platform = "ut"
+  }
+}
+
+ToolchainWithLint("mingw32") {
+  toolchain_type = "gcc"
+  toolprefix = "i686-w64-mingw32-"
+
+  cc = "${toolprefix}gcc"
+  cxx = "${toolprefix}g++"
+  ar = "${toolprefix}ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+  object_extensions = ["o", "obj", "oo"]
+
+  toolchain_args = {
+    pkg_config = "${toolprefix}pkg-config"
+
+    current_cpu = "x86"
+    current_os = "win"
+    current_platform = "mingw32"
+  }
+}
+
+ToolchainWithLint("mingw64") {
+  toolchain_type = "gcc"
+  toolprefix = "x86_64-w64-mingw32-"
+
+  cc = "${toolprefix}gcc"
+  cxx = "${toolprefix}g++"
+  ar = "${toolprefix}ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld", "cmd"]
+  object_extensions = ["o", "obj", "oo"]
+
+  toolchain_args = {
+    pkg_config = "${toolprefix}pkg-config"
+
+    current_cpu = "x64"
+    current_os = "win"
+    current_platform = "mingw64"
+  }
+}
+
+ToolchainWithLint("arm") {
+  toolchain_type = "gcc"
+  toolprefix = "arm-none-eabi-"
+
+  cc = "${toolprefix}gcc"
+  cxx = "${toolprefix}g++"
+  ar = "${toolprefix}ar"
+  ld = cxx
+
+  source_extensions_asm = ["asm", "s", "S", "arm"]
+  source_extensions_ld = ["ld"]
+  object_extensions = ["o", "obj", "oo"]
+
+  toolchain_args = {
+    pkg_config = "armv7-gnu-eabihf-pkg-config"
+
+    current_cpu = "arm"
+    current_os = "none"
+    current_platform = "arm"
+  }
+}

@@ -1,0 +1,52 @@
+declare_args() {
+  # Set to true to display bam version
+  show_version = false
+}
+
+if (show_version) {
+  print("bam version: $bam_version")
+}
+getenv("HOME")
+getenv("somevar")
+
+Lint("lint-headers") {
+  source_dirs = [ "//include" ]
+}
+
+Style("style-headers") {
+  root_dir = "//include"
+  source_dirs = [ "//include" ]
+}
+
+Group("style") {
+  deps = [
+    ":style-headers",
+    "src:foobar($style_toolchain)",
+  ]
+}
+
+Group("integrate") {
+  deps = []
+  foreach(pf, platforms) {
+    if (pf != test_platform) {
+      deps += [ "src:foobar($toolchain_path:$pf)" ]
+    }
+  }
+}
+
+Group("lint") {
+  deps = []
+  foreach(pf, lint_platforms) {
+    deps += [
+      ":lint-headers($toolchain_path:lint-$pf)",
+      "src:foobar($toolchain_path:lint-$pf)",
+    ]
+  }
+}
+
+Group("test") {
+  testgroup = true
+  deps = [
+    "src:foobar($test_toolchain)",
+  ]
+}

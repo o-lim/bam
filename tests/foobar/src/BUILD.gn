@@ -1,0 +1,136 @@
+style_root_dir = "//"
+
+Action("bar_gen_src") {
+  script = "gen_src.lua"
+  interpreter = "lua"
+  args = [
+    rebase_path("$target_gen_dir/bar.cxx", root_build_dir)
+  ]
+  outputs = ["$target_gen_dir/bar.cxx"]
+}
+
+Action("fubar") {
+  command = "date > " + rebase_path("$target_gen_dir/fubar.txt", root_build_dir)
+  outputs = ["$target_gen_dir/fubar.txt"]
+}
+
+SourceSet("foo") {
+  enable_style = false
+  if (is_host) {
+    public_external_deps = [
+      "python",
+    ]
+  }
+  if (current_platform != "mingw64") {
+    sources = [
+      "foo1.cpp",
+      "foo2.cpp",
+      "foo.oo",
+      "foo.cxx",
+    ]
+    if (is_test) {
+      sources -= ["foo.oo"]
+    }
+    unittests = [
+      "foo1_UT.cpp",
+      "foo2_UT.cpp",
+    ]
+    pre_test = "echo foo_pretest"
+    test_args = []
+    test_args = ["--foo-test-flags", "--more-foo-test-flags" ]
+    test_runner = "bash"
+    test_runner_args = []
+    test_runner_args = ["-c"]
+  }
+}
+
+StaticLibrary("bar") {
+  is_one_test_exe_per_file = true
+  enable_style = false
+  deps = [":bar_gen_src"]
+  if (is_host) {
+    external_deps = [
+      "lua",
+    ]
+  }
+  sources = [
+    "bar.c",
+    "bar.arm",
+    "bar.asm",
+  ] + get_target_outputs(":bar_gen_src")
+  unittests = [
+    "bar_UT1.cpp",
+    "bar_UT2.cpp",
+  ]
+}
+
+SharedLibrary("fu") {
+  enable_style = true
+  style_regex = ".*\\.(h|m|mm)\$"
+  if (is_host) {
+    external_deps = [
+      "lua",
+    ]
+  }
+  if (!is_test) {
+    sources = [
+      "fu.m",
+      "fu.mm",
+    ]
+  }
+  test_deps = [
+    ":bar",
+  ]
+  unittests = [
+    "fu_UT.cpp",
+  ]
+  test_extension = "ut"
+  test_name = "fu_test"
+}
+
+LoadableModule("baz") {
+  enable_style = false
+  if (is_host) {
+    external_deps = [
+      "lua",
+    ]
+  }
+  sources = [
+    "baz.cpp",
+  ]
+  unittests = [
+    "baz_UT.cpp",
+  ]
+}
+
+Executable("foobar") {
+  # note: host_platform should still build since is_codegen=true
+  filter_platforms = all_platforms - [host_platform]
+  filter_lint_platforms = all_lint_platforms - ["mingw32"]
+  is_codegen = true
+  deps = [
+    ":foo",
+    ":fu",
+    ":bar",
+    ":baz",
+    ":fubar",
+  ]
+  inputs = exec_script("print.lua", ["README.txt"], "list lines", [], "lua")
+  sources = [
+    "filtered_foobar.cpp",
+    "foobar.cpp",
+    "foobar.ld",
+    "foobar.cmd",
+  ]
+  sources_assignment_filter = [
+    "filtered_foobar.cpp",
+    "filtered_foobar_UT.cpp",
+  ]
+  if (is_test) {
+    sources -= ["foobar.ld", "foobar.cmd"]
+  }
+  unittests = [
+    "foobar_UT.cpp",
+    "filtered_foobar_UT.cpp",
+  ]
+}

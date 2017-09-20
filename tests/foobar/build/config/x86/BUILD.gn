@@ -1,0 +1,19 @@
+config("x86") {
+  asmflags = [
+    "-x", "assembler"
+  ]
+  cflags = [
+    "-g",
+    "-O1",
+  ]
+  ldflags = [
+    "-rdynamic",
+    "-lSegFault",
+  ]
+}
+
+lint_dep("lnt") {
+  cc = "gcc"
+  cxx = "g++"
+  vendor = "gcc"
+}

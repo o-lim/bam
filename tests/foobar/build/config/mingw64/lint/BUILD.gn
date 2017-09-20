@@ -1,0 +1,12 @@
+config("lint") {
+  defines = [
+    "__MINGW64__",
+  ]
+  include_dirs = [
+    "$lint_supp_dir/gcc",
+  ]
+  cppflags = [
+    "co-gcc.lnt",
+  ]
+  asmppflags = cppflags
+}

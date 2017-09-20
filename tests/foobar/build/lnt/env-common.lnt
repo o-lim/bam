@@ -1,0 +1,17 @@
+// This format string is compatible with GCC output, such that
+// text parsers like those in Eclipse can determine file and line
+// number information from the error.
+//-vf
+-v
+-format="%f%(:%l:%c:%) %t #%n: %m"
+-width(0,4)
+-limit(64)
+-hF1
+-u
++linebuf
++libclass(angle)
+-wlib(1)
+-elib(*)
+
++cpp(.c++,.cc,.C)  // extensions for C++ that are commonly used in addition
+                   // to the default extensions of .cpp and .cxx

@@ -1,0 +1,30 @@
+config("debug") {
+  defines = [
+    "_DEBUG",
+  ]
+}
+
+config("release") {
+  defines = [
+    "NDEBUG",
+  ]
+}
+
+config("common") {
+  if (!is_style) {
+    include_dirs = [
+      "//include",
+      "//src",
+    ]
+  }
+}
+
+#=============================================================================
+# Default compile configs
+#=============================================================================
+config("default") {
+  configs = [ ":common", "$current_platform" ]
+  if (is_lint) {
+    configs += [ "lint", "$current_platform/lint" ]
+  }
+}

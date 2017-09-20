@@ -1,0 +1,24 @@
+config("lint") {
+  defines = [
+    "_lint",
+  ]
+  include_dirs = [
+    "//lnt",
+    "$root_gen_dir/lnt",
+    "$lint_supp_dir/lnt",
+  ]
+  cppflags = [
+    "-fff",
+    "-b",
+    "au-sm123.lnt",
+  ]
+  cppflags_c = [
+    "au-misra2.lnt",
+    "env-common.lnt",
+  ]
+  cppflags_cc = [
+    "au-misra-cpp.lnt",
+    "env-common.lnt",
+  ]
+  asmppflags = cppflags + cppflags_c
+}

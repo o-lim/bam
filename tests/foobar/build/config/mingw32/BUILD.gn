@@ -1,0 +1,21 @@
+config("mingw32") {
+  defines = [
+    "WIN32",
+    "_WIN32",
+    "_WIN32_WINNT=0x0501",
+  ]
+  cflags = [
+    "-g",
+    "-O1",
+  ]
+  ldflags = [
+    "-rdynamic",
+    "-lSegFault",
+  ]
+}
+
+lint_dep("lnt") {
+  cc = "i686-w64-mingw32-gcc"
+  cxx = "i686-w64-mingw32-g++"
+  vendor = "gcc"
+}
