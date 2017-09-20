@@ -1,0 +1,11 @@
+*.lnt
+au-*
+co-*
+env-*
+*.c
+*.cpp
+*.h
+*.zip
+*.txt
+ansi/
+posix/

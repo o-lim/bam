@@ -6,3 +6,6 @@ include $(DIR)/rules.mk
 
 DIR := $(CURRENT_DIR)/../docs
 include $(DIR)/rules.mk
+
+DIR := $(CURRENT_DIR)/../lnt
+include $(DIR)/rules.mk
