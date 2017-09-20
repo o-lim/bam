@@ -1,0 +1,163 @@
+import("colors.gni")
+import("variables.gni")
+
+assert(defined(test_platform), "${color_error}Variable |test_platform| must be defined in the global scope.${color_none}")
+assert(defined(default_test_args), "${color_error}Variable |default_test_args| must be defined in the global scope.${color_none}")
+
+if (!defined(default_test_args)) {
+  default_test_args = []
+}
+if (!defined(default_enable_valgrind)) {
+  default_enable_valgrind = false
+}
+if (!defined(default_valgrind)) {
+  default_valgrind = "valgrind"
+}
+if (!defined(default_valgrind_args)) {
+  default_valgrind_args = [
+    "-q",
+    "--leak-check=full",
+    "--error-exitcode=5",
+    "--gen-suppressions=all",
+  ]
+}
+if (!defined(default_pre_test)) {
+  default_pre_test = ""
+}
+if (!defined(default_test_runner)) {
+  default_test_runner = ""
+}
+if (!defined(default_test_runner_args)) {
+  default_test_runner_args = []
+}
+if (!defined(default_test_console)) {
+  default_test_console = true
+}
+
+#=============================================================================
+# Build Flags
+#=============================================================================
+declare_args() {
+  # Set to true to run unit tests with valgrind
+  enable_valgrind = default_enable_valgrind
+
+  test_args = []
+  # Flags or options to use for unit test execution
+  test_args = default_test_args
+
+  # The valgrind executable to use
+  valgrind = default_valgrind
+
+  valgrind_args = []
+  # Flags or options to pass to valgrind
+  valgrind_args = default_valgrind_args
+
+  # Command to run before executing tests
+  pre_test = default_pre_test
+
+  # A test runner to call to wrap unit test execution in another
+  # executable or script (i.e. valgrind).
+  # Leaving it blank defaults to no test wrapper, or valgrind if valgrind is
+  # enabled.
+  test_runner = default_test_runner
+
+  test_runner_args = []
+  # Flags or options to pass to the test runner
+  test_runner_args = default_test_runner_args
+
+  # This should not normally be set as a build argument. It is here so that
+  # it can be used internally by the build sub-commands.
+  test_toolchain = "${toolchain_path}:$test_platform"
+
+  # Run tests in the console pool
+  test_console = default_test_console
+}
+
+#=============================================================================
+# Test Variables
+#=============================================================================
+is_test = (current_toolchain == test_toolchain)
+if (enable_valgrind) {
+  test_runner = valgrind
+  test_runner_args = []
+  test_runner_args = valgrind_args
+}
+
+#=============================================================================
+# Test Template
+#=============================================================================
+template("Test") {
+  assert(defined(invoker.sources),
+        "${color_error}Variable |sources| must be defined to be a list in Test.${color_none}")
+
+  test_target_name = target_name
+  executable(test_target_name) {
+    testonly = true
+    forward_variables_from(invoker, binary_target_variables - [
+                                      "complete_static_lib",
+                                      "configs",
+                                    ], [], true)
+    if (!defined(configs)) {
+      configs = []
+    }
+    if (defined(invoker.configs)) {
+      configs += invoker.configs
+    }
+    if (!defined(public_configs)) {
+      public_configs = []
+    }
+    if (defined(invoker.external_deps)) {
+      foreach(d, invoker.external_deps) {
+        configs += ["${external_deps_path}:$d"]
+      }
+    }
+    if (defined(invoker.public_external_deps)) {
+      foreach(d, invoker.public_external_deps) {
+        public_configs += ["${external_deps_path}:$d"]
+      }
+    }
+  }
+  test_pass = test_target_name + ".pass"
+  action(test_pass) {
+    forward_variables_from(invoker, test_variables + [
+                                      "output_dir",
+                                      "output_extension",
+                                      "output_name",
+                                    ], [], true)
+    testonly = true
+    test_output_dir = root_out_dir
+    test_output_extension = ""
+    test_output_name = test_target_name
+    if (defined(output_dir)) {
+      test_output_dir = output_dir
+    }
+    if (defined(output_extension)) {
+      test_output_extension = "." + output_extension
+    }
+    if (defined(output_name)) {
+      test_output_name = output_name
+    }
+    test_output = test_output_name + test_output_extension
+    test_exe = rebase_path("$test_output_dir/$test_output", root_build_dir)
+    test_token = rebase_path("$target_out_dir/$target_name", root_build_dir)
+    if (root_build_dir == test_output_dir) {
+      test_exe = "./" + test_exe
+    }
+    if (pre_test != "") {
+      command = pre_test + " && "
+    } else {
+      command = ""
+    }
+    test_exe_cmd = test_exe
+    test_runner_cmd = test_runner
+    foreach(arg, test_args) { test_exe_cmd += " " + arg }
+    foreach(arg, test_runner_args) { test_runner_cmd += " " + arg }
+    command += "$test_runner_cmd $test_exe_cmd"
+    command += " && touch $test_token"
+    description = "TEST $test_exe"
+
+    outputs = ["$target_out_dir/$target_name"]
+    deps = [":$test_target_name"]
+    console = test_console
+  }
+}

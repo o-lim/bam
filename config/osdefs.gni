@@ -1,0 +1,39 @@
+#=============================================================================
+# OS Definitions
+#=============================================================================
+if (current_os == "linux") {
+  is_posix = true
+  is_linux = true
+  is_mac = false
+  is_tx = false
+  is_win = false
+  is_mingw = false
+} else if (current_os == "mac") {
+  is_posix = true
+  is_linux = false
+  is_mac = true
+  is_tx = false
+  is_win = false
+  is_mingw = false
+} else if (current_os == "win") {
+  is_posix = false
+  is_linux = false
+  is_mac = false
+  is_tx = false
+  is_win = true
+  is_mingw = (host_os != "win")
+} else if (current_os == "tx") {
+  is_posix = false
+  is_linux = false
+  is_mac = false
+  is_tx = true
+  is_win = false
+  is_mingw = false
+} else {
+  is_posix = false
+  is_linux = false
+  is_mac = false
+  is_tx = false
+  is_win = false
+  is_mingw = false
+}

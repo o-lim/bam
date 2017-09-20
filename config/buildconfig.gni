@@ -1,0 +1,54 @@
+import("colors.gni")
+
+assert(defined(config_path), "${color_error}Variable |config_path| must be defined in the global scope.${color_none}")
+assert(defined(toolchain_path), "${color_error}Variable |toolchain_path| must be defined in the global scope.${color_none}")
+
+if (!defined(bam_core_path)) {
+  bam_core_path = getenv("BAM_CORE_PATH")
+}
+assert(bam_core_path != "", "${color_error}Variable |bam_core_path| must be defined to be a path.${color_none}")
+
+import("osdefs.gni")
+import("version.gni")
+import("platforms.gni")
+import("Action.gni")
+import("ActionForEach.gni")
+import("Copy.gni")
+import("Executable.gni")
+import("external_dep.gni")
+import("Group.gni")
+import("Lint.gni")
+import("LoadableModule.gni")
+import("SharedLibrary.gni")
+import("SourceSet.gni")
+import("StaticLibrary.gni")
+import("Style.gni")
+import("Test.gni")
+import("../toolchain/Toolchain.gni")
+import("../toolchain/LintToolchain.gni")
+import("../toolchain/ToolchainWithLint.gni")
+
+if (!defined(default_is_debug)) {
+  default_is_debug = true
+}
+
+#=============================================================================
+# Build Flags
+#=============================================================================
+declare_args() {
+  # Debug build
+  is_debug = default_is_debug
+}
+
+#=============================================================================
+# Toolchain Setup
+#=============================================================================
+host_toolchain = "${toolchain_path}:$host_platform"
+is_host = (current_platform == host_platform)
+if (target_platform != host_platform) {
+  set_default_toolchain("${toolchain_path}:$target_platform")
+} else if (current_platform != host_platform) {
+  set_default_toolchain("${toolchain_path}:$current_platform")
+} else {
+  set_default_toolchain(host_toolchain)
+}

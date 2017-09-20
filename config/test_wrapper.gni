@@ -1,0 +1,230 @@
+import("colors.gni")
+import("external_dep.gni")
+import("platforms.gni")
+import("Test.gni")
+import("variables.gni")
+
+#=============================================================================
+# Default Args
+#=============================================================================
+if (!defined(default_is_one_test_exe_per_file)) {
+  default_is_one_test_exe_per_file = false
+}
+if (!defined(default_test_suffix)) {
+  default_test_suffix = "_UT"
+}
+if (!defined(default_test_group_suffix)) {
+  default_test_group_suffix = "_Test"
+}
+
+#=============================================================================
+# Platform Setup
+#=============================================================================
+_is_test_disabled = false
+foreach(pf, disabled_platforms) {
+  if (pf == test_platform) {
+    _is_test_disabled = true
+  }
+}
+
+#=============================================================================
+# Build Flags
+#=============================================================================
+declare_args() {
+  # Set to true to create one test executable per unit test source file
+  # This can be overridden on a per target basis.
+  is_one_test_exe_per_file = default_is_one_test_exe_per_file
+
+  # Test executable name suffix
+  # (Only used when `is_one_test_exe_per_file` is `false`)
+  test_suffix = default_test_suffix
+
+  # Test group name suffix
+  # This is the suffix for the name used to define the test group. The test
+  # group defines the set of tasks to complete in order to determine if the
+  # test succeeded (which includes a `pass` token), whereas the test itself
+  # is the executable test file only.
+  test_group_suffix = default_test_group_suffix
+}
+
+assert(test_suffix != test_group_suffix || is_one_test_exe_per_file,
+          "${color_error}Arguments |test_suffix| and |test_group_suffix| cannot be the same${color_none}")
+
+#=============================================================================
+# Variables
+#=============================================================================
+_test_target_variables = binary_target_variables +
+                         test_wrapper_variables - [
+                            "complete_static_lib",
+                            "is_one_test_exe_per_file",
+                            "sources_assignment_filter",
+                            "unittests",
+                         ]
+
+#=============================================================================
+# Generic Test Wrapper Template
+#=============================================================================
+template("test_wrapper") {
+  if (defined(invoker.sources_assignment_filter)) {
+    set_sources_assignment_filter(invoker.sources_assignment_filter)
+  }
+  forward_variables_from(invoker, ["is_one_test_exe_per_file", "unittests"], [], true)
+  if (_is_test_disabled || !defined(unittests)) {
+    unittests = []
+  }
+  test_target_name = target_name
+  test_pass_deps = []
+  if (is_one_test_exe_per_file) {
+    foreach(ut, unittests) {
+      utname = get_path_info(ut, "name")
+      test_pass_deps += [ ":${target_name}_${utname}.pass($test_toolchain)" ]
+      if (is_test) {
+        Test("${target_name}_${utname}") {
+          forward_variables_from(invoker, _test_target_variables - [
+                                            "configs",
+                                            "sources",
+                                          ], [], true)
+          if (!defined(configs)) {
+            configs = []
+          }
+          if (defined(invoker.configs)) {
+            configs += invoker.configs
+          }
+          if (!defined(public_configs)) {
+            public_configs = []
+          }
+          if (defined(invoker.external_deps)) {
+            foreach(d, invoker.external_deps) {
+              configs += ["${external_deps_path}:$d"]
+            }
+          }
+          if (defined(invoker.public_external_deps)) {
+            foreach(d, invoker.public_external_deps) {
+              public_configs += ["${external_deps_path}:$d"]
+            }
+          }
+          if (defined(test_deps)) {
+            if (!defined(deps)) {
+              deps = []
+            }
+            deps += test_deps
+          }
+          if (defined(test_dir)) {
+            output_dir = test_dir
+          } else if (!defined(output_dir)) {
+            output_dir = root_out_dir
+          }
+          if (defined(test_extension)) {
+            output_extension = test_extension
+          }
+          if (defined(test_name)) {
+            output_dir += "/$test_name"
+          } else if (defined(output_name)) {
+            output_dir += "/$output_name"
+          } else {
+            output_dir += "/$test_target_name"
+          }
+          output_name = utname
+          if (defined(invoker.sources)) {
+            sources = invoker.sources + [ ut ]
+          } else {
+            sources = [ ut ]
+          }
+        }
+      }
+    }
+  } else if (unittests != []) {
+    test_pass_deps += [ ":${test_target_name}${test_suffix}.pass($test_toolchain)" ]
+    if (is_test) {
+      Test("${test_target_name}${test_suffix}") {
+        forward_variables_from(invoker, _test_target_variables - [
+                                          "configs",
+                                          "sources",
+                                        ], [], true)
+        if (!defined(configs)) {
+          configs = []
+        }
+        if (defined(invoker.configs)) {
+          configs += invoker.configs
+        }
+        if (!defined(public_configs)) {
+          public_configs = []
+        }
+        if (defined(invoker.external_deps)) {
+          foreach(d, invoker.external_deps) {
+            configs += ["${external_deps_path}:$d"]
+          }
+        }
+        if (defined(invoker.public_external_deps)) {
+          foreach(d, invoker.public_external_deps) {
+            public_configs += ["${external_deps_path}:$d"]
+          }
+        }
+        if (defined(test_deps)) {
+          if (!defined(deps)) {
+            deps = []
+          }
+          deps += test_deps
+        }
+        if (defined(test_dir)) {
+          output_dir = test_dir
+        }
+        if (defined(test_extension)) {
+          output_extension = test_extension
+        }
+        if (defined(test_name)) {
+          output_name = test_name + test_suffix
+        } else if (defined(output_name)) {
+          output_name += test_suffix
+        }
+        if (defined(invoker.sources)) {
+          sources = invoker.sources + unittests
+        } else {
+          sources = unittests
+        }
+      }
+    }
+  }
+  if (!is_test || unittests == []) {
+    # To avoid "Assignment had no effect" error
+    mark_used_from(invoker, binary_target_variables +
+                            external_deps_variables +
+                            test_wrapper_variables)
+  }
+  group("${test_target_name}${test_group_suffix}") {
+    testonly = true
+    deps = test_pass_deps
+    data_deps = []
+    public_deps = []
+    if (!_is_test_disabled) {
+      test_label = get_label_info(":$test_target_name", "label_no_toolchain")
+      if (defined(invoker.deps)) {
+        foreach(d, invoker.deps) {
+          label = get_label_info(d, "label_no_toolchain")
+          if (label != test_label) {
+            deps += ["${label}${test_group_suffix}($test_toolchain)"]
+          }
+        }
+      }
+      if (defined(invoker.data_deps)) {
+        foreach(d, invoker.data_deps) {
+          label = get_label_info(d, "label_no_toolchain")
+          if (label != test_label) {
+            data_deps += ["${label}${test_group_suffix}($test_toolchain)"]
+          }
+        }
+      }
+      if (defined(invoker.public_deps)) {
+        foreach(d, invoker.public_deps) {
+          label = get_label_info(d, "label_no_toolchain")
+          if (label != test_label) {
+            public_deps += ["${label}${test_group_suffix}($test_toolchain)"]
+          }
+        }
+      }
+      if (deps == test_pass_deps && data_deps == [] && public_deps == []) {
+        mark_used(test_label)
+      }
+    }
+  }
+}

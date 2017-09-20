@@ -1,0 +1,164 @@
+import("external_dep.gni")
+import("platforms.gni")
+import("variables.gni")
+
+#=============================================================================
+# Default Args
+#=============================================================================
+if (!defined(all_lint_platforms)) {
+  all_lint_platforms = []
+}
+if (!defined(default_enable_lint)) {
+  default_enable_lint = true
+}
+
+#=============================================================================
+# Build Flags
+#=============================================================================
+declare_args() {
+  # Set to true to enable lint checking
+  # Lint checking can be disabled on a per-target basis. However, setting
+  # this build argument to false will disable lint checking globally for
+  # all targets.
+  enable_lint = default_enable_lint
+
+  lint_platforms = []
+  # List of platforms to lint
+  # Defaults to the lint defined platforms
+  lint_platforms = all_lint_platforms
+}
+
+#=============================================================================
+# LINT Setup
+#=============================================================================
+lint_toolchain = "${toolchain_path}:lint-${current_platform}"
+is_lint = (current_toolchain == lint_toolchain)
+_is_lint_enabled = enable_lint
+
+#=============================================================================
+# LINT Template
+#=============================================================================
+template("lint") {
+  if (defined(invoker.sources_assignment_filter)) {
+    set_sources_assignment_filter(invoker.sources_assignment_filter)
+  }
+  if (defined(invoker.sources)) {
+    sources = invoker.sources
+  } else if (defined(invoker.source_dirs)) {
+    source_dirs = invoker.source_dirs
+  }
+  if (defined(invoker.depth)) {
+    depth = invoker.depth
+  } else {
+    depth = 0
+  }
+  if (defined(invoker.regex)) {
+    regex = invoker.regex
+  } else {
+    regex = ".*\\.(h|hpp|c|cpp)\$"
+  }
+
+  is_lint_disabled = false
+  if (defined(invoker.filter_lint_platforms)) {
+    foreach(pf, all_lint_platforms - invoker.filter_lint_platforms) {
+      if (pf == current_platform) {
+        is_lint_disabled = true
+      }
+    }
+  }
+
+  enable_lint = invoker.enable_lint
+  if (is_lint_disabled || !_is_lint_enabled) {
+    enable_lint = false
+  }
+
+  lint_target_name = target_name
+
+  if (is_lint) {
+    if (enable_lint && !defined(sources) && defined(source_dirs)) {
+      dir_depth = depth - 1
+      file_depth = depth
+      if (depth == 0) {
+        file_depth = -1
+      }
+      lint_dirs = exec_script("$bam_core_path/util/list.py",
+                              [
+                                "--depth=$dir_depth",
+                                "-d"
+                              ] + rebase_path(source_dirs),
+                              "list lines")
+      sources = []
+      foreach(dir, source_dirs) {
+        sources += rebase_path(exec_script("$bam_core_path/util/list.py", [
+                                             "--depth=$file_depth",
+                                             "-f",
+                                             "--regex=$regex",
+                                             rebase_path(dir)
+                                           ],
+                                           "list lines",
+                                           lint_dirs),
+                               ".")
+      }
+    } else {
+      if (!enable_lint) {
+        sources = []
+      }
+      mark_used(["depth", "regex"])
+      if (defined(source_dirs)) {
+        mark_used(source_dirs)
+      }
+    }
+
+    if (defined(invoker.target_type)) {
+      target_type = invoker.target_type
+    } else {
+      target_type = "source_set"
+    }
+
+    target(target_type, lint_target_name) {
+      forward_variables_from(invoker, binary_target_variables - [
+                                        "complete_static_lib",
+                                        "sources",
+                                      ], [], true)
+      if (!defined(configs)) {
+        configs = []
+      }
+      if (defined(invoker.external_deps)) {
+        foreach(d, invoker.external_deps) {
+          configs += ["${external_deps_path}:$d"]
+        }
+      }
+      if (defined(invoker.public_external_deps)) {
+        if (!defined(public_configs)) {
+          public_configs = []
+        }
+        foreach(d, invoker.public_external_deps) {
+          public_configs += ["${external_deps_path}:$d"]
+        }
+      }
+      mark_used_from(invoker, ["complete_static_lib"])
+    }
+  } else {
+    group(lint_target_name) {
+      deps = [ ":$lint_target_name($lint_toolchain)" ]
+    }
+
+    # To avoid "Assignment had no effect" error
+    mark_used([
+      "enable_lint",
+      "depth",
+      "regex",
+    ])
+    if (defined(sources)) {
+      mark_used(sources)
+    } else if (defined(source_dirs)) {
+      mark_used(source_dirs)
+    }
+
+    mark_used_from(invoker, binary_target_variables +
+                            external_deps_variables + [
+                              "sources",
+                              "target_type",
+                            ])
+  }
+}

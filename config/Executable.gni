@@ -1,0 +1,8 @@
+import("target_wrapper.gni")
+
+template("Executable") {
+  target_wrapper(target_name) {
+    target_type = "executable"
+    forward_variables_from(invoker, target_wrapper_variables, [], true)
+  }
+}

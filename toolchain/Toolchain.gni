@@ -1,0 +1,188 @@
+import("../config/colors.gni")
+
+# This template defines a generic toolchain wrapper.
+#
+# It requires the following variables specifying the executables to run:
+#  - cc
+#  - cxx
+#  - ar
+#  - ld
+# the following configuration variables
+#  - toolchain_type
+#      The type of toolchain to load (i.e. gcc, ghs, ti).
+# and a toolchain_args scope variable with the following variables:
+#  - current_cpu
+#  - current_os
+#  - current_platform
+#
+# Optional parameters that control the tools:
+#
+#  - extra_asmflags
+#      Extra flags to be appended when assembling files.
+#  - extra_asmppflags
+#      Extra flags to be appended when assembling files. "ASMPP" stands for
+#      "ASM PreProcessor" in this context, although it can be used for non-
+#      preprocessor flags as well.
+#  - extra_cflags
+#      Extra flags to be appended when compiling C files (but not C++ files).
+#  - extra_cppflags
+#      Extra flags to be appended when compiling both C and C++ files. "CPP"
+#      stands for "C PreProcessor" in this context, although it can be
+#      used for non-preprocessor flags as well. Not to be confused with
+#      "CXX" (which follows).
+#  - extra_cxxflags
+#      Extra flags to be appended when compiling C++ files (but not C files).
+#  - extra_objcflags
+#      Extra flags to be appended when compiling Objective C files.
+#  - extra_objcxxflags
+#      Extra flags to be appended when compiling Objective C++ files.
+#  - extra_ldflags
+#      Extra flags to be appended when linking
+#
+#  - is_builtin (defaults to true)
+#      Specifies whether or not the toolchain_type is a builtin toolchain
+#      that is included as part of the build system. Templates for builtin
+#      toolchains are automatically imported. If this is set to false, you
+#      must manually import your toolchain templates.
+#  - libs_section_prefix
+#  - libs_section_postfix
+#      The contents of these strings, if specified, will be placed around
+#      the libs section of the linker line. It allows one to inject libraries
+#      at the beginning and end for all targets in a toolchain.
+#  - solink_libs_section_prefix
+#  - solink_libs_section_postfix
+#      Same as libs_section_{pre,post}fix except used for solink instead of link.
+#  - link_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the link command. This can be useful in conjunction with
+#      the post_link parameter.
+#  - pool
+#      Just forwarded to the toolchain definition.
+#  - post_link
+#      The content of this string, if specified, will be run as a separate
+#      command following the the link command.
+#  - deps
+#      Just forwarded to the toolchain definition.
+#  - executable_extension
+#      If this string is specified it will be used for the file extension
+#      for an executable, rather than using no extension; targets will
+#      still be able to override the extension using the output_extension
+#      variable.
+#  - loadable_module_extension
+#      If this string is specified it will be used for the file extension
+#      for a loadable module, rather than the shlib_extension.
+#  - object_extensions
+#      List of extensions for object files that are passed straight to the
+#      linker.
+#  - rebuild_define
+#      The contents of this string, if specified, will be passed as a #define
+#      to the toolchain. It can be used to force recompiles whenever a
+#      toolchain is updated.
+#  - shlib_extension
+#      If this string is specified it will be used for the file extension
+#      for a shared library, rather than default value specified in
+#      toolchain_defaults.gni
+#  - source_extensions_asm
+#      List of source file extensions for assembly files.
+#  - source_extensions_cc
+#      List of source file extensions for C files.
+#  - source_extensions_cxx
+#      List of source file extensions for C++ files.
+#  - source_extensions_ld
+#      List of source file extensions for linker tools.
+#      (i.e. linker script files)
+#  - source_extensions_objc
+#      List of source file extensions for Objective C files.
+#  - source_extensions_objcxx
+#      List of source file extensions for Objective C++ files.
+#  - strip
+#      Location of the strip executable. When specified, strip will be run on
+#      all shared libraries and executables as they are built. The pre-stripped
+#      artifacts will be put in lib.stripped/ and exe.stripped/.
+#  - toolchain_forwards
+#      List of additional variable names to forward to the toolchain.
+#
+# Optional build argument contols.
+#
+#  - use_ccache
+#      Enable the use of ccache.
+template("Toolchain") {
+  assert(defined(invoker.toolchain_type), 
+          "${color_error}Toolchain() must specify a \"toolchain_type\" value${color_none}")
+  assert(defined(invoker.cc), "${color_error}Toolchain() must specify a \"cc\" value${color_none}")
+  assert(defined(invoker.cxx), "${color_error}Toolchain() must specify a \"cxx\" value${color_none}")
+  assert(defined(invoker.ar), "${color_error}Toolchain() must specify a \"ar\" value${color_none}")
+  assert(defined(invoker.ld), "${color_error}Toolchain() must specify a \"ld\" value${color_none}")
+
+  # GN's syntax can't handle more than one scope dereference at once, like
+  # "invoker.toolchain_args.foo", so make a temporary to hold the toolchain
+  # args so we can do "invoker_toolchain_args.foo".
+  assert(defined(invoker.toolchain_args),
+         "${color_error}Toolchains must specify toolchain_args")
+  invoker_toolchain_args = invoker.toolchain_args
+  assert(defined(invoker_toolchain_args.current_cpu),
+         "${color_error}toolchain_args must specify a \"current_cpu\"${color_none}")
+  assert(defined(invoker_toolchain_args.current_os),
+         "${color_error}toolchain_args must specify a \"current_os\"${color_none}")
+  assert(defined(invoker_toolchain_args.current_platform),
+         "${color_error}toolchain_args must specify a \"current_platform\"${color_none}")
+  mark_used(invoker_toolchain_args)
+
+  toolchain_type = invoker.toolchain_type
+  is_builtin = (!defined(invoker.is_builtin) || invoker.is_builtin)
+
+  if (is_builtin) {
+    # Toolchain type is built into build system, so import the necessary gn
+    # files.  Otherwise, this is a user defined toolchain and the invoker must
+    # manually import the necessary gn files since only the invoker knows where
+    # they are located.
+    import("$bam_core_path/toolchain/${toolchain_type}_toolchain.gni")
+  }
+
+  if (defined(invoker.toolchain_forwards)) {
+    toolchain_forwards = invoker.toolchain_forwards
+  } else {
+    toolchain_forwards = []
+  }
+
+  target("${toolchain_type}_toolchain", target_name) {
+    forward_variables_from(invoker, [
+      "ar",
+      "cc",
+      "cxx",
+      "deps",
+      "executable_extension",
+      "extra_asmflags",
+      "extra_asmppflags",
+      "extra_cflags",
+      "extra_cppflags",
+      "extra_cxxflags",
+      "extra_objcflags",
+      "extra_objcxxflags",
+      "extra_ldflags",
+      "ld",
+      "libs_section_prefix",
+      "libs_section_postfix",
+      "link_outputs",
+      "loadable_module_extension",
+      "object_extensions",
+      "pkg_config",
+      "pool",
+      "postlink",
+      "rebuild_define",
+      "shlib_extension",
+      "solink_libs_section_prefix",
+      "solink_libs_section_postfix",
+      "source_extensions_asm",
+      "source_extensions_cc",
+      "source_extensions_cxx",
+      "source_extensions_ld",
+      "source_extensions_objc",
+      "source_extensions_objcxx",
+      "strip",
+      "toolchain_args",
+      "use_ccache",
+    ] + toolchain_forwards,
+    [], true)
+  }
+}

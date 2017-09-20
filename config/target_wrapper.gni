@@ -1,0 +1,159 @@
+import("colors.gni")
+import("external_dep.gni")
+import("lint.gni")
+import("style.gni")
+import("test_wrapper.gni")
+import("variables.gni")
+
+#=============================================================================
+# Platform Setup
+#=============================================================================
+_is_platform_disabled = false
+foreach(pf, disabled_platforms) {
+  if (pf == current_platform) {
+    _is_platform_disabled = true
+  }
+}
+
+#=============================================================================
+# Generic Target Template for Multiple Platforms with LINT and Style Checking
+#=============================================================================
+template("target_wrapper") {
+  if (defined(invoker.sources_assignment_filter)) {
+    set_sources_assignment_filter(invoker.sources_assignment_filter)
+  }
+  is_codegen = (defined(invoker.is_codegen) && invoker.is_codegen)
+  if (defined(invoker.filter_platforms)) {
+    has_platform = (is_codegen && is_host || is_style)
+    foreach(pf, invoker.filter_platforms) {
+      if (pf == current_platform) {
+        has_platform = true
+      }
+    }
+    assert(has_platform, "${color_error}Platform '$current_platform' is not supported by target '$target_name'${color_none}")
+  }
+
+  target_type = invoker.target_type
+  if (is_style) {
+    target_type = "style"
+  } else if (is_lint) {
+    target_type = "lint"
+  }
+
+  this_target_name = target_name
+  if (target_type == "executable" && is_test) {
+    group(this_target_name) {}
+    mark_used(is_codegen)
+    mark_used_from(invoker, binary_target_variables +
+                            lint_variables + style_variables)
+  } else {
+    target(target_type, this_target_name) {
+      forward_variables_from(invoker, binary_target_variables - [
+                                        "configs",
+                                        "deps",
+                                        "public_configs",
+                                        "public_deps",
+                                        "sources",
+                                      ], [], true)
+      if (is_style || is_lint) {
+        target_type = invoker.target_type
+        forward_variables_from(invoker, ["sources_assignment_filter"], [], true)
+      }
+      if (!defined(configs)) {
+        configs = []
+      }
+      if (defined(invoker.configs)) {
+        configs += invoker.configs
+      }
+      if (!defined(public_configs)) {
+        public_configs = []
+      }
+      if (defined(invoker.public_configs)) {
+        public_configs += invoker.public_configs
+      }
+      if (defined(invoker.external_deps)) {
+        foreach(d, invoker.external_deps) {
+          configs += ["${external_deps_path}:$d"]
+        }
+      }
+      if (defined(invoker.public_external_deps)) {
+        foreach(d, invoker.public_external_deps) {
+          public_configs += ["${external_deps_path}:$d"]
+        }
+      }
+
+      if (!defined(deps)) {
+        deps = []
+      }
+      if (defined(invoker.deps)) {
+        deps += invoker.deps
+      }
+      if (!defined(public_deps)) {
+        public_deps = []
+      }
+      if (defined(invoker.public_deps)) {
+        public_deps += invoker.public_deps
+      }
+
+      if (is_style) {
+        forward_variables_from(invoker, ["enable_style"], [], true)
+        depth = invoker.style_depth
+        regex = invoker.style_regex
+        root_dir = invoker.style_root_dir
+        if (invoker.style_mode == "list") {
+          if (defined(invoker.sources)) {
+            sources = invoker.sources
+          }
+          if (!defined(sources)) {
+            sources = []
+          }
+          if (defined(invoker.unittests)) {
+            sources += invoker.unittests
+          }
+        } else {
+          if (defined(invoker.style_dirs)) {
+            source_dirs = invoker.style_dirs
+          } else {
+            source_dirs = [ "." ]
+          }
+          mark_used_from(invoker, ["sources"])
+        }
+        mark_used_from(invoker, lint_variables)
+      } else if (is_lint) {
+        forward_variables_from(invoker, lint_variables, [], true)
+        if (defined(invoker.sources)) {
+          sources = invoker.sources
+        }
+        mark_used_from(invoker, style_variables)
+      } else {
+        if (defined(invoker.sources)) {
+          sources = invoker.sources
+        }
+        mark_used_from(invoker, lint_variables + style_variables)
+      }
+      if ((!is_codegen || !is_host) && _is_platform_disabled) {
+        sources = []
+      }
+      if (is_test) {
+        testonly = true
+      } else if (defined(invoker.testonly)) {
+        testonly = invoker.testonly
+      }
+    }
+  }
+
+  test_wrapper(this_target_name) {
+    forward_variables_from(invoker, binary_target_variables +
+                                    external_deps_variables +
+                                    test_wrapper_variables -
+                                    ["complete_static_lib"],
+                                    [], true)
+    if (target_type != "executable") {
+      if (!defined(deps)) {
+        deps = []
+      }
+      deps += [":$this_target_name($test_toolchain)"]
+      sources = []
+    }
+  }
+}

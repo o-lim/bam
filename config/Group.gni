@@ -1,0 +1,91 @@
+import("platforms.gni")
+import("Test.gni")
+
+template("Group") {
+  forward_variables_from(invoker, ["testgroup"])
+  if (!defined(testgroup)) {
+    testgroup = false
+  }
+  group_name = target_name
+  group(group_name) {
+    forward_variables_from(invoker, [
+      "testonly",
+      "all_dependent_configs",
+      "data_deps",
+      "deps",
+      "public_configs",
+      "public_deps",
+    ])
+
+    foreach(pf, disabled_platforms) {
+      if (defined(invoker.deps)) {
+        foreach(d, invoker.deps) {
+          tc = get_label_info(d, "toolchain")
+          if (tc == "${toolchain_path}:$pf" ||
+              tc == "${toolchain_path}:lint-$pf") {
+            deps -= [d]
+          }
+        }
+      }
+      if (defined(invoker.data_deps)) {
+        foreach(d, invoker.data_deps) {
+          tc = get_label_info(d, "toolchain")
+          if (tc == "${toolchain_path}:$pf" ||
+              tc == "${toolchain_path}:lint-$pf") {
+            data_deps -= [d]
+          }
+        }
+      }
+      if (defined(invoker.public_deps)) {
+        foreach(d, invoker.public_deps) {
+          tc = get_label_info(d, "toolchain")
+          if (tc == "${toolchain_path}:$pf" ||
+              tc == "${toolchain_path}:lint-$pf") {
+            public_deps -= [d]
+          }
+        }
+      }
+    }
+
+    if (testgroup || is_test) {
+      testonly= true
+      if (defined(deps)) {
+        extra_deps = []
+        foreach(d, deps) {
+          tc = get_label_info(d, "toolchain")
+          if (tc == test_toolchain) {
+            label = get_label_info(d, "label_no_toolchain")
+            extra_deps += ["${label}${test_group_suffix}($test_toolchain)"]
+          }
+        }
+        deps += extra_deps
+      }
+      if (defined(data_deps)) {
+        extra_data_deps = []
+        foreach(d, data_deps) {
+          tc = get_label_info(d, "toolchain")
+          if (tc == test_toolchain) {
+            label = get_label_info(d, "label_no_toolchain")
+            extra_data_deps += ["${label}${test_group_suffix}($test_toolchain)"]
+          }
+        }
+        data_deps += extra_data_deps
+      }
+      if (defined(public_deps)) {
+        extra_public_deps = []
+        foreach(d, public_deps) {
+          tc = get_label_info(d, "toolchain")
+          if (tc == test_toolchain) {
+            label = get_label_info(d, "label_no_toolchain")
+            extra_public_deps += ["${label}${test_group_suffix}($test_toolchain)"]
+          }
+        }
+        public_deps += extra_public_deps
+      }
+    }
+  }
+  group("${group_name}${test_group_suffix}") {
+    testonly = true
+    deps = [ ":${group_name}($test_toolchain)" ]
+  }
+}

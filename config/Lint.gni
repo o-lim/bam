@@ -1,0 +1,16 @@
+import("lint.gni")
+import("Test.gni")
+import("variables.gni")
+
+template("Lint") {
+  lint(target_name) {
+    forward_variables_from(invoker, config_variables +
+                                    external_deps_variables +
+                                    lint_variables +
+                                    search_variables +
+                                    ["sources"], [], true)
+  }
+  group("${target_name}${test_group_suffix}") {
+    testonly = true
+  }
+}

@@ -1,0 +1,138 @@
+import("colors.gni")
+import("variables.gni")
+
+#=============================================================================
+# Defines a config specifying the result of running pkg-config for the given
+# packages. Put the package names you want to query in the "packages" variable
+# inside the template invocation.
+#
+# You can also add cflags, defines, include_dirs, libs, lib_dirs, ldflags via
+# their respective variables. This can be useful to add to the config to pass
+# cflags, defines, include_dirs, etc. that the library expects to get by users
+# of its headers. In addition, prefix the variable names with "extra_" to
+# append the specified values to the config variable.
+#
+# Example:
+#   pkg_config("mything") {
+#     packages = [ "mything1", "mything2" ]
+#     defines = [ "ENABLE_AWESOME" ]
+#     cflags = [ "-g" ]
+#     libs = [ "mything1_dep" ]        # inserted before libs from pkg-config
+#     extra_libs = [ "mything2_dep" ]  # inserted after libs from pkg-config
+#   }
+#
+# You can use "extra args" to pass additional arguments to pkg-config:
+#   extra_args = [ "--atleast-version=1.2.3" ]
+# To use linker flags for static linking set:
+#   ignore_libs = true
+# To ignore libs and ldflags (only cflags/defines will be set, which is useful
+# when doing manual dynamic linking), set:
+#   static = true
+#=============================================================================
+
+if (!defined(default_pkg_config)) {
+  default_pkg_config = ""
+}
+if (!defined(default_pkg_config_lib_switch)) {
+  default_pkg_config_lib_switch = ""
+}
+if (!defined(default_pkg_config_lib_dir_switch)) {
+  default_pkg_config_lib_dir_switch = ""
+}
+
+declare_args() {
+  # A pkg-config wrapper to call instead of the default pkg-config. Wrappers
+  # like this are common in cross-compilation environments.
+  # Leaving it blank defaults to the 'pkg-config' in the PATH.
+  pkg_config = default_pkg_config
+
+  # The switch used to identify system libraries in the pkg-config output. This
+  # may be different for cross-compilation environments. This value is used to
+  # parse the pkg-config output to identifiy system libraries to pass to the
+  # 'libs' config variable.
+  # Leaving it blank defaults to '-l'.
+  pkg_config_lib_switch = default_pkg_config_lib_switch
+
+  # The switch used to identify system library paths in the pkg-config output.
+  # This may be different for cross-compilation environments. This value is
+  # used to parse the pkg-config output to identifiy system library directory
+  # paths to pass to the 'lib_dirs' config variable.
+  # Leaving it blank defaults to '-L'.
+  pkg_config_lib_dir_switch = default_pkg_config_lib_dir_switch
+}
+
+pkg_config_script = "$bam_core_path/util/pkg-config.py"
+pkg_config_args = []
+
+if (pkg_config == "") {
+  pkg_config = "pkg-config"
+}
+if (pkg_config_lib_switch == "") {
+  pkg_config_lib_switch = "-l"
+}
+if (pkg_config_lib_dir_switch == "") {
+  pkg_config_lib_dir_switch = "-L"
+}
+
+template("pkg_config") {
+  assert(defined(invoker.packages),
+         "${color_error}Variable |packages| must be defined to be a list in pkg_config.${color_none}")
+  config(target_name) {
+    args = [
+      "-p", pkg_config,
+      "--cflags",
+      "--lib-switch=" + pkg_config_lib_switch,
+      "--lib-dir-switch=" + pkg_config_lib_dir_switch,
+    ]
+    if (!defined(invoker.ignore_libs) || !invoker.ignore_libs) {
+      args += ["--libs"]
+    }
+    if ((defined(invoker.static) && invoker.static) ||
+        (!defined(invoker.static) && is_mingw)) {
+      args += ["--static"]
+    }
+    if (defined(invoker.extra_args)) {
+      args += invoker.extra_args
+    }
+    args += pkg_config_args + invoker.packages
+
+    forward_variables_from(invoker, [
+      "cflags",
+      "defines",
+      "include_dirs",
+      "ldflags",
+      "libs",
+      "lib_dirs",
+      "extra_cflags",
+      "extra_defines",
+      "extra_include_dirs",
+      "extra_ldflags",
+      "extra_libs",
+      "extra_lib_dirs",
+      "visibility"
+    ])
+
+    pkgresult = exec_script(pkg_config_script, args, "scope")
+
+    if (!defined(cflags))       { cflags = [] }
+    if (!defined(defines))      { defines = [] }
+    if (!defined(include_dirs)) { include_dirs = [] }
+    if (!defined(ldflags))      { ldflags = [] }
+    if (!defined(libs))         { libs = [] }
+    if (!defined(lib_dirs))     { lib_dirs = [] }
+
+    cflags += pkgresult.cflags
+    defines += pkgresult.defines
+    include_dirs += pkgresult.include_dirs
+    ldflags += pkgresult.ldflags
+    libs += pkgresult.libs
+    lib_dirs += pkgresult.lib_dirs
+
+    if (defined(extra_cflags))        { cflags += extra_cflags }
+    if (defined(extra_defines))       { defines += extra_defines }
+    if (defined(extra_include_dirs))  { include_dirs += extra_include_dirs }
+    if (defined(extra_ldflags))       { ldflags += extra_ldflags }
+    if (defined(extra_libs))          { libs += extra_libs }
+    if (defined(extra_lib_dirs))      { lib_dirs += extra_lib_dirs }
+  }
+}

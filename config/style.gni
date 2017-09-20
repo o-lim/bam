@@ -1,0 +1,193 @@
+import("colors.gni")
+import("variables.gni")
+
+assert(defined(style_toolchain), "${color_error}Variable |style_toolchain| must be defined in the global scope.${color_none}")
+
+#=============================================================================
+# Default Args
+#=============================================================================
+if (!defined(default_enable_style)) {
+  default_enable_style = true
+}
+if (!defined(default_style_mode)) {
+  default_style_mode = "discover"
+}
+if (!defined(default_style_depth)) {
+  default_style_depth = 0
+}
+if (!defined(default_style_regex)) {
+    default_style_regex = ".*\\.(h|hh|hpp|hxx|H|c|cc|cpp|cxx|c\\+\\+|C)\$"
+}
+if (!defined(default_style_root_dir)) {
+    default_style_root_dir = "."
+}
+
+#=============================================================================
+# Build Flags
+#=============================================================================
+declare_args() {
+  # Set to true to enable style checking
+  # Style checking can be disabled on a per-target basis. However, setting
+  # this build argument to false will disable style checking globally for
+  # all targets.
+  enable_style = default_enable_style
+
+  # Set to "discover" or "list"
+  # Sets the default style checking mode to either "discover" to auto-discover
+  # files to style check, or "list" to only style check the files listed in
+  # sources and unittests, and only those files with file extensions supported
+  # by the style toolchain.
+  style_mode = default_style_mode
+
+  # Sets the default directory depth to search for files to style check
+  # This option is only valid when style_mode = "discover"
+  # Use 0 for unlimited depth
+  style_depth = default_style_depth
+
+  # Sets the regular expression used to search for files to style check
+  # This option is only valid when style_mode = "discover"
+  style_regex = default_style_regex
+
+  # Set the root directory used by the style checker for deriving the header
+  # guard CPP variable.
+  # Use "." for the current target directory
+  style_root_dir = default_style_root_dir
+}
+
+assert(style_mode == "discover" || style_mode == "list",
+          "${color_error}Invalid value '" + style_mode + "' for |style_mode|${color_none}")
+
+#=============================================================================
+# Style Setup
+#=============================================================================
+is_style = (current_toolchain == style_toolchain)
+_is_style_enabled = enable_style
+_is_build_root_in_source_root = (root_build_dir ==
+                                 "//" + rebase_path(root_build_dir, "//"))
+
+#=============================================================================
+# Style Template
+#=============================================================================
+template("style") {
+  if (defined(invoker.sources_assignment_filter)) {
+    set_sources_assignment_filter(invoker.sources_assignment_filter)
+  }
+  if (defined(invoker.sources)) {
+    sources = invoker.sources
+  } else if (defined(invoker.source_dirs)) {
+    source_dirs = invoker.source_dirs
+  }
+  if (defined(invoker.root_dir)) {
+    root_dir = invoker.root_dir
+  } else {
+    root_dir = default_style_root_dir
+  }
+  if (defined(invoker.depth)) {
+    depth = invoker.depth
+  } else {
+    depth = default_style_depth
+  }
+  if (defined(invoker.regex)) {
+    regex = invoker.regex
+  } else {
+    regex = default_style_regex
+  }
+
+  enable_style = invoker.enable_style
+  if (!_is_style_enabled) {
+    enable_style = false
+  }
+
+  style_target_name = target_name
+
+  if (is_style) {
+    if (enable_style && !defined(sources) && defined(source_dirs)) {
+      dir_depth = depth - 1
+      file_depth = depth
+      if (depth == 0) {
+        file_depth = -1
+      }
+      style_dirs = exec_script("$bam_core_path/util/list.py",
+                               [
+                                 "--depth=$dir_depth",
+                                 "-d"
+                               ] + rebase_path(source_dirs),
+                               "list lines")
+      sources = []
+      foreach(dir, source_dirs) {
+        sources += rebase_path(exec_script("$bam_core_path/util/list.py", [
+                                             "--depth=$file_depth",
+                                             "-f",
+                                             "--regex=$regex",
+                                             rebase_path(dir)
+                                           ],
+                                           "list lines",
+                                           style_dirs),
+                               ".")
+      }
+    } else {
+      if (!enable_style) {
+        sources = []
+      }
+      mark_used(["depth", "regex", "root_dir"])
+      if (defined(source_dirs)) {
+        mark_used(source_dirs)
+      }
+    }
+
+    if (defined(invoker.target_type)) {
+      target_type = invoker.target_type
+    } else {
+      target_type = "source_set"
+    }
+
+    target(target_type, style_target_name) {
+      forward_variables_from(invoker, binary_target_variables - [
+                                        "asmppflags",
+                                        "complete_static_lib",
+                                        "cppflags",
+                                        "sources",
+                                      ], [], true)
+      if (_is_build_root_in_source_root) {
+        style_root = rebase_path(root_dir, root_build_dir)
+      } else {
+        style_root = rebase_path(root_dir)
+      }
+      style_flags = [
+        "--root=" + style_root,
+      ]
+      cppflags = style_flags
+      asmppflags = style_flags
+      if (defined(invoker.cppflags)) {
+        cppflags += invoker.cppflags
+      }
+      if (defined(invoker.asmppflags)) {
+        asmppflags += invoker.asmppflags
+      }
+      mark_used_from(invoker, external_deps_variables + ["complete_static_lib"])
+    }
+  } else {
+    group(style_target_name) {
+      deps = [ ":$style_target_name($style_toolchain)" ]
+    }
+
+    # To avoid "Assignment had no effect" error
+    mark_used([
+      "enable_style",
+      "depth",
+      "regex",
+      "root_dir",
+    ])
+    if (defined(sources)) {
+      mark_used(sources)
+    } else if (defined(source_dirs)) {
+      mark_used(source_dirs)
+    }
+
+    mark_used_from(invoker, binary_target_variables +
+                            external_deps_variables + [
+                              "sources",
+                              "target_type",
+                            ])
+  }
+}

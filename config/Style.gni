@@ -1,0 +1,16 @@
+import("style.gni")
+import("Test.gni")
+import("variables.gni")
+
+template("Style") {
+  style(target_name) {
+    forward_variables_from(invoker, config_variables +
+                                    search_variables + [
+                                      "enable_style",
+                                      "sources"
+                                    ], [], true)
+  }
+  group("${target_name}${test_group_suffix}") {
+    testonly = true
+  }
+}

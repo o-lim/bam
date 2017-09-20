@@ -1,0 +1,8 @@
+import("target_wrapper.gni")
+
+template("SourceSet") {
+  target_wrapper(target_name) {
+    target_type = "source_set"
+    forward_variables_from(invoker, target_wrapper_variables, [], true)
+  }
+}

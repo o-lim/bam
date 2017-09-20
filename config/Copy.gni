@@ -1,0 +1,10 @@
+import("Test.gni")
+
+template("Copy") {
+  copy(target_name) {
+    forward_variables_from(invoker, "*")
+  }
+  group("${target_name}${test_group_suffix}") {
+    testonly = true
+  }
+}

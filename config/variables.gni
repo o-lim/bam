@@ -1,0 +1,146 @@
+binary_target_variables = [
+  "all_dependent_configs",
+  "allow_circular_includes_from",
+  "arflags",
+  "asmflags",
+  "asmppflags",
+  "cflags",
+  "cflags_c",
+  "cflags_cc",
+  "cflags_objc",
+  "cflags_objcc",
+  "check_includes",
+  "complete_static_lib",
+  "configs",
+  "cppflags",
+  "cppflags_c",
+  "cppflags_cc",
+  "cppflags_objc",
+  "cppflags_objcc",
+  "data",
+  "data_deps",
+  "defines",
+  "deps",
+  "include_dirs",
+  "inputs",
+  "ldflags",
+  "lib_dirs",
+  "libs",
+  "output_dir",
+  "output_extension",
+  "output_name",
+  "precompiled_header",
+  "precompiled_source",
+  "public",
+  "public_configs",
+  "public_deps",
+  "sources",
+  "sys_include_dirs",
+  "visibility",
+]
+
+codegen_variables = [
+  "is_codegen",
+]
+
+config_variables = [
+  "arflags",
+  "asmflags",
+  "asmppflags",
+  "cflags",
+  "cflags_c",
+  "cflags_cc",
+  "cflags_objc",
+  "cflags_objcc",
+  "configs",
+  "cppflags",
+  "cppflags_c",
+  "cppflags_cc",
+  "cppflags_objc",
+  "cppflags_objcc",
+  "defines",
+  "include_dirs",
+  "ldflags",
+  "lib_dirs",
+  "libs",
+  "precompiled_header",
+  "precompiled_source",
+  "sys_include_dirs",
+]
+
+external_deps_variables = [
+  "external_deps",
+  "public_external_deps",
+]
+
+pkg_config_variables = [
+  "cflags",
+  "defines",
+  "include_dirs",
+  "ldflags",
+  "libs",
+  "lib_dirs",
+  "extra_args",
+  "extra_cflags",
+  "extra_defines",
+  "extra_include_dirs",
+  "extra_ldflags",
+  "extra_libs",
+  "extra_lib_dirs",
+  "ignore_libs",
+  "packages",
+  "static",
+  "visibility",
+]
+
+lint_variables = [
+  "enable_lint",
+  "filter_lint_platforms",
+  "sources_assignment_filter",
+]
+
+search_variables = [
+  "depth",
+  "regex",
+  "root_dir",
+  "source_dirs",
+  "sources_assignment_filter",
+]
+
+style_variables = [
+  "enable_style",
+  "sources_assignment_filter",
+  "style_depth",
+  "style_dirs",
+  "style_mode",
+  "style_regex",
+  "style_root_dir",
+]
+
+test_variables = [
+  "pre_test",
+  "test_args",
+  "test_console",
+  "test_runner",
+  "test_runner_args",
+]
+
+test_wrapper_variables = test_variables + [
+  "is_one_test_exe_per_file",
+  "sources_assignment_filter",
+  "test_deps",
+  "test_dir",
+  "test_extension",
+  "test_name",
+  "unittests",
+]
+
+target_wrapper_variables = binary_target_variables +
+                           codegen_variables +
+                           external_deps_variables +
+                           lint_variables +
+                           style_variables +
+                           test_wrapper_variables + [
+                             "filter_platforms",
+                             "sources_assignment_filter",
+                           ]

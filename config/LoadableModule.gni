@@ -1,0 +1,8 @@
+import("target_wrapper.gni")
+
+template("LoadableModule") {
+  target_wrapper(target_name) {
+    target_type = "loadable_module"
+    forward_variables_from(invoker, target_wrapper_variables, [], true)
+  }
+}

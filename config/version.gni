@@ -1,0 +1,8 @@
+bam_version_major = 0
+bam_version_minor = 0
+bam_version_patchlevel = 0
+bam_version_suffix = ""
+bam_version = bam_version_major + "." +
+              bam_version_minor + "." +
+              bam_version_patchlevel +
+              bam_version_suffix

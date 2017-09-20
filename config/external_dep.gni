@@ -1,0 +1,25 @@
+import("colors.gni")
+import("pkg_config.gni")
+import("variables.gni")
+
+#=============================================================================
+# External Dependencies Setup
+#=============================================================================
+if (!defined(external_deps_path)) {
+  external_deps_path = "${config_path}/external"
+}
+
+# Define a template for specifying external dependencies
+template("external_dep") {
+  if (!is_style) {
+    assert(defined(invoker.packages),
+          "${color_error}Variable |packages| must be defined to be a list in external_dep.${color_none}")
+
+    pkg_config(target_name) {
+      forward_variables_from(invoker, pkg_config_variables)
+    }
+  } else {
+    config(target_name) {}
+    mark_used_from(invoker, pkg_config_variables)
+  }
+}

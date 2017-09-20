@@ -1,0 +1,25 @@
+import("colors.gni")
+
+assert(defined(all_platforms), "${color_error}Variable |all_platforms| must be defined in the global scope.${color_none}")
+assert(defined(host_platform), "${color_error}Variable |host_platform| must be defined in the global scope.${color_none}")
+
+#=============================================================================
+# Platform Build Flags
+#=============================================================================
+declare_args() {
+  platforms = []
+  # List of platforms to build
+  # Defaults to all defined platforms
+  platforms = all_platforms
+
+  # Target build platform
+  target_platform = host_platform
+
+  # Current build platform
+  current_platform = host_platform
+}
+
+#=============================================================================
+# Platform Setup
+#=============================================================================
+disabled_platforms = all_platforms - platforms

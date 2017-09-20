@@ -1,0 +1,125 @@
+import("../../config/colors.gni")
+import("lint_wrapper.gni")
+
+# This template defines a lint toolchain for TI compiliers.
+#
+# It requires the following variables specifying the executables to run:
+#  - cc
+#  - cxx
+# and a toolchain_args scope variable with the following variables:
+#  - current_cpu
+#  - current_os
+#  - current_platform
+#
+# Optional parameters that control the tools:
+#
+#  - extra_asmflags
+#      Extra flags to be appended when linting assembly files.
+#  - extra_asmppflags
+#      Extra flags to be appended when linting assembly files. "ASMPP" stands
+#      for "ASM PreProcessor" in this context, although it can be used for non-
+#      preprocessor flags as well.
+#  - extra_cflags
+#      Extra flags to be appended when linting C files (but not C++ files).
+#  - extra_cppflags
+#      Extra flags to be appended when linting both C and C++ files. "CPP"
+#      stands for "C PreProcessor" in this context, although it can be
+#      used for non-preprocessor flags as well. Not to be confused with
+#      "CXX" (which follows).
+#  - extra_cxxflags
+#      Extra flags to be appended when linting C++ files (but not C files).
+#  - extra_objcflags
+#      Extra flags to be appended when linting Objective C files.
+#  - extra_objcxxflags
+#      Extra flags to be appended when linting Objective C++ files.
+#
+#  - lintasm
+#      The lint executable to run for assembly source files.
+#  - lintcc
+#      The lint executable to run for C source files.
+#  - lintcxx
+#      The lint executable to run for C++ source files.
+#  - deps
+#      Just forwarded to the toolchain definition.
+#  - executable_extension
+#      If this string is specified it will be used for the file extension
+#      for an executable, rather than using no extension; targets will
+#      still be able to override the extension using the output_extension
+#      variable.
+#  - loadable_module_extension
+#      If this string is specified it will be used for the file extension
+#      for a loadable module, rather than the shlib_extension.
+#  - rebuild_define
+#      The contents of this string, if specified, will be passed as a #define
+#      to the toolchain. It can be used to force recompiles whenever a
+#      toolchain is updated.
+#  - shlib_extension
+#      If this string is specified it will be used for the file extension
+#      for a shared library, rather than default value specified in
+#      toolchain_defaults.gni
+#
+template("ti_lint") {
+  assert(defined(invoker.cc), "${color_error}ti_lint() must specify a \"cc\" value${color_none}")
+  assert(defined(invoker.cxx), "${color_error}ti_lint() must specify a \"cxx\" value${color_none}")
+
+  # GN's syntax can't handle more than one scope dereference at once, like
+  # "invoker.toolchain_args.foo", so make a temporary to hold the toolchain
+  # args so we can do "invoker_toolchain_args.foo".
+  assert(defined(invoker.toolchain_args),
+         "${color_error}Toolchains must specify toolchain_args")
+  invoker_toolchain_args = invoker.toolchain_args
+  assert(defined(invoker_toolchain_args.current_cpu),
+         "${color_error}toolchain_args must specify a \"current_cpu\"${color_none}")
+  assert(defined(invoker_toolchain_args.current_os),
+         "${color_error}toolchain_args must specify a \"current_os\"${color_none}")
+  assert(defined(invoker_toolchain_args.current_platform),
+         "${color_error}toolchain_args must specify a \"current_platform\"${color_none}")
+  mark_used(invoker_toolchain_args)
+
+  cc = invoker.cc
+  cxx = invoker.cxx
+
+  lint_wrapper(target_name) {
+    depfile = "{{output}}.d"
+    depsformat = "gcc"
+    depfixup = "sed -i -e '\$!s/\$/ \\\\/' -e '1s|.*\\.lint:|{{output}}:|' -e '1!s|.*\\.lint:||' $depfile"
+
+    if (defined(invoker.extra_asmppflags) && invoker.extra_asmppflags != "") {
+      extra_asmppflags = " " + invoker.extra_asmppflags
+    } else {
+      extra_asmppflags = ""
+    }
+    if (defined(invoker.extra_cppflags) && invoker.extra_cppflags != "") {
+      extra_cppflags = " " + invoker.extra_cppflags
+    } else {
+      extra_cppflags = ""
+    }
+
+    pre_lintcc = "$cc -ppd=$depfile --obj_extension=.lint {{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags} {{cflags}} {{cflags_c}} {{source}} && $depfixup"
+    pre_lintcxx = "$cxx -ppd=$depfile --obj_extension=.lint {{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags} {{cflags}} {{cflags_cc}} {{source}} && $depfixup"
+    pre_lintasm = "$cc -ppd=$depfile --obj_extension=.lint {{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_asmppflags} {{asmflags}} {{source}} && $depfixup"
+
+    forward_variables_from(invoker, [
+      "deps",
+      "executable_extension",
+      "extra_asmflags",
+      "extra_cflags",
+      "extra_cxxflags",
+      "extra_objcflags",
+      "extra_objcxxflags",
+      "lintasm",
+      "lintcc",
+      "lintcxx",
+      "loadable_module_extension",
+      "pkg_config",
+      "rebuild_define",
+      "shlib_extension",
+      "source_extensions_asm",
+      "source_extensions_cc",
+      "source_extensions_cxx",
+      "source_extensions_objc",
+      "source_extensions_objcxx",
+      "toolchain_args",
+    ], [], true)
+  }
+}

@@ -1,0 +1,8 @@
+import("target_wrapper.gni")
+
+template("SharedLibrary") {
+  target_wrapper(target_name) {
+    target_type = "shared_library"
+    forward_variables_from(invoker, target_wrapper_variables, [], true)
+  }
+}

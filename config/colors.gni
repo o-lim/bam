@@ -1,0 +1,8 @@
+if (color_console) {
+  color_bright_red = "$0x1B[1;31m"
+  color_none = "$0x1B[0m"
+} else {
+  color_bright_red = ""
+  color_none = ""
+}
+color_error = color_bright_red
