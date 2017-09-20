@@ -1,0 +1,14 @@
+if (is_test) {
+  external_dep("gmock") {
+    packages = ["gmock"]
+  }
+  external_dep("gmock_main") {
+    packages = ["gmock_main"]
+  }
+  external_dep("gtest") {
+    packages = ["gtest"]
+  }
+  external_dep("gtest_main") {
+    packages = ["gtest_main"]
+  }
+}

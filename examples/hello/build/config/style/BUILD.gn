@@ -1,0 +1,6 @@
+config("style") {
+  cppflags = [
+    "--filter=-readability/fn_size,-readability/casting,-readability/utf8,-build/include_what_you_use",
+  ]
+  asmppflags = cppflags
+}

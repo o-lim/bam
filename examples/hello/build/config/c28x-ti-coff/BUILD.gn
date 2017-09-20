@@ -1,0 +1,78 @@
+common_flags = [
+  "--silicon_version=28",
+  "--symdebug:dwarf",
+  "--large_memory_model",
+  "--unified_memory",
+  "--gen_func_subsections",
+  "--no_rpt",
+  "--single_inline",
+  "--gen_opt_info=2",
+  "-O1",
+  "--opt_for_speed",
+  "--optimize_with_debug",
+]
+
+config("c28x-ti-coff") {
+  defines = [
+    "BOOST_NO_CXX11_EXTERN_TEMPLATE",
+    "BOOST_NO_CXX11_RVALUE_REFERENCES",
+    "BOOST_NO_CXX11_STATIC_ASSERT",
+    "BOOST_NO_CXX11_VARIADIC_MACROS",
+    "BOOST_NO_CXX11_DECLTYPE",
+    "BOOST_NO_CXX11_AUTO_DECLARATIONS",
+    "BOOST_NO_CXX11_AUTO_MULTIDECLARATIONS",
+    "BOOST_NO_CXX11_CHAR16_T",
+    "BOOST_NO_CXX11_CHAR32_T",
+    "BOOST_NO_CXX11_CONSTEXPR",
+    "BOOST_NO_CXX11_DECLTYPE",
+    "BOOST_NO_CXX11_DECLTYPE_N3276",
+    "BOOST_NO_CXX11_DEFAULTED_FUNCTIONS",
+    "BOOST_NO_CXX11_DELETED_FUNCTIONS",
+    "BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS",
+    "BOOST_NO_CXX11_FUNCTION_TEMPLATE_DEFAULT_ARGS",
+    "BOOST_NO_CXX11_LAMBDAS",
+    "BOOST_NO_CXX11_LOCAL_CLASS_TEMPLATE_PARAMETERS",
+    "BOOST_NO_CXX11_NOEXCEPT",
+    "BOOST_NO_CXX11_NULLPTR",
+    "BOOST_NO_CXX11_RANGE_BASED_FOR",
+    "BOOST_NO_CXX11_RAW_LITERALS",
+    "BOOST_NO_CXX11_RVALUE_REFERENCES",
+    "BOOST_NO_CXX11_SCOPED_ENUMS",
+    "BOOST_NO_CXX11_STATIC_ASSERT",
+    "BOOST_NO_CXX11_TEMPLATE_ALIASES",
+    "BOOST_NO_CXX11_UNICODE_LITERALS",
+    "BOOST_NO_CXX11_VARIADIC_TEMPLATES",
+    "BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX",
+    "BOOST_NO_CXX11_USER_DEFINED_LITERALS",
+    "BOOST_NO_CXX11_ALIGNAS",
+    "BOOST_NO_CXX11_TRAILING_RESULT_TYPES",
+    "BOOST_NO_CXX11_INLINE_NAMESPACES",
+    "BOOST_NO_CXX11_REF_QUALIFIERS",
+    "BOOST_NO_CXX11_FINAL",
+    "BOOST_NO_IS_ABSTRACT",
+  ]
+  cflags = common_flags + [
+    "--diag_warning=225",
+    "--set_error_limit=1",
+    "--diag_suppress=552,193,499,230,70,21,112,177,179,1369",
+    "--display_error_number",
+    "--emit_warnings_as_errors",
+  ]
+  asmflags = cflags
+  ldflags = [
+    "--symdebug:dwarf",
+    "--large_memory_model",
+    "--emit_warnings_as_errors",
+    "--warn_sections",
+    "--run_abs",
+    "--file_value=0",
+    "--reread_libs",
+    "--rom_model",
+  ]
+}
+
+lint_dep("lnt") {
+  cc = "cl2000"
+  vendor = "ti"
+  cflags = common_flags
+}

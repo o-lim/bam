@@ -1,0 +1,178 @@
+
+source_extensions_lintasm = ["."] # disables lint checking for asm files
+source_extensions_lintcc = ["h", "c"]
+source_extensions_lintcxx = ["hpp", "hh", "hxx", "h++", "H", "cpp", "cc", "cxx", "c++", "C"]
+
+Toolchain("style") {
+  toolchain_type = "style"
+
+  cc = "cpplint.py"
+  cxx = "cpplint.py"
+  ar = ""
+  ld = ""
+
+  source_extensions_asm = ["."] # disables style checking for asm files
+  source_extensions_cc = ["h", "c"]
+  source_extensions_cxx = ["hpp", "hh", "hxx", "h++", "H", "cpp", "cc", "cxx", "c++", "C"]
+
+  toolchain_args = {
+    current_cpu = "style"
+    current_os = "style"
+    current_platform = "style"
+  }
+}
+
+ToolchainWithLint("ut") {
+  toolchain_type = "gcc"
+
+  cc = "gcc"
+  cxx = "g++"
+  ar = "ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    current_cpu = "i686"
+    current_os = "linux"
+    current_platform = "ut"
+  }
+}
+
+ToolchainWithLint("armv7-ghs-eabihf") {
+  toolchain_type = "ghs"
+
+  cc = "ccarm"
+  cxx = "cxarm"
+  ar = cxx
+  ld = cxx
+
+  source_extensions_asm = ["asm", "s", "S", "arm"]
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    pkg_config = "armv7-ghs-eabihf-pkg-config"
+
+    current_cpu = "am35xx"
+    current_os = "tx"
+    current_platform = "armv7-ghs-eabihf"
+  }
+}
+
+ToolchainWithLint("armv7-gnu-eabihf") {
+  toolchain_type = "gcc"
+  toolprefix = "arm-none-eabi-"
+
+  cc = "${toolprefix}gcc"
+  cxx = "${toolprefix}g++"
+  ar = "${toolprefix}ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    pkg_config = "armv7-gnu-eabihf-pkg-config"
+
+    current_cpu = "arm"
+    current_os = "none"
+    current_platform = "armv7-gnu-eabihf"
+  }
+}
+
+ToolchainWithLint("c28x-ti-coff") {
+  toolchain_type = "ti"
+
+  cc = "cl2000"
+  cxx = "cl2000"
+  ar = "ar2000"
+  ld = cxx
+  hex = "hex2000"
+
+  source_extensions_ld = ["ld", "cmd"]
+
+  toolchain_args = {
+    pkg_config = "c28x-ti-coff-pkg-config"
+
+    current_cpu = "f2803x"
+    current_os = "none"
+    current_platform = "c28x-ti-coff"
+  }
+
+  toolchain_forwards = ["hex"]
+}
+
+ToolchainWithLint("i686-linux-gnu") {
+  toolchain_type = "gcc"
+
+  cc = "gcc"
+  cxx = "g++"
+  ar = "ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    current_cpu = "i686"
+    current_os = "linux"
+    current_platform = "i686-linux-gnu"
+  }
+}
+
+ToolchainWithLint("i686-pc-mingw32") {
+  toolchain_type = "gcc"
+  toolprefix = "i686-pc-mingw32-"
+
+  cc = "${toolprefix}gcc"
+  cxx = "${toolprefix}g++"
+  ar = "${toolprefix}ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    pkg_config = "${toolprefix}pkg-config"
+
+    current_cpu = "i686"
+    current_os = "win"
+    current_platform = "i686-pc-mingw32"
+  }
+}
+
+ToolchainWithLint("msp430-ti-eabi") {
+  toolchain_type = "ti"
+
+  cc = "cl430"
+  cxx = "cl430"
+  ar = "ar430"
+  ld = cxx
+  hex = "hex430"
+
+  source_extensions_ld = ["ld", "cmd"]
+
+  toolchain_args = {
+    pkg_config = "msp430-ti-eabi-pkg-config"
+
+    current_cpu = "msp430"
+    current_os = "none"
+    current_platform = "msp430-ti-eabi"
+  }
+
+  toolchain_forwards = ["hex"]
+}
+
+ToolchainWithLint("x86_64-linux-gnu") {
+  toolchain_type = "gcc"
+
+  cc = "gcc"
+  cxx = "g++"
+  ar = "ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    current_cpu = "x86_64"
+    current_os = "linux"
+    current_platform = "x86_64-linux-gnu"
+  }
+}

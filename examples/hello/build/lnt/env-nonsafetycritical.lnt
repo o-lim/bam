@@ -1,0 +1,92 @@
++libdir(/usr/include/qt4)
++libdir(/usr/include/qt4/QtCore)
++libdir(/usr/include/qt4/QtGui)
++libdir(/usr/include/qt4/QtXml)
+
+-efunc(923,QReadLocker::QReadLocker)
+-efunc(923,QWriteLocker::QWriteLocker)
+
+// Safe/Bounded Enum Support
+-esym(788,*Enum::EMPTY)
+-esym(788,*Enum::END)
+
+// Permitted by Carefusion coding standard (not MISSRA nor Myers)
+-e1790 // Permit "Base class '<>' has no non-destructor virtual functions".
+-e1760 // Permit "Redundant template '<>' defined identically at same file location
+-e1725 // Permit "class member <> is a reference".
+-e1712 // Permit "default constructor not defined for class '<>'.
+-e1705 // Permit "static class members may be accessed by the scoping operator".
+-e1704 // Permit "Constructor <> has private access specification".
+-e1702 // Permit "operator '<>' is both an ordinary function '<>' and a member function '<>'".
+-e1579 // Permit "Pointer member '<>' might have been freed by a separate function but no '-sem(<>::reset,cleanup)' was seen".
+-e1573 // Permit "Name of generic function template '<>' declared in namespace associated with type '<>'
+-e1550 // Permit "Exception '...' thrown by function '<>' is not on throw-list of function '<>'
+-e1502 // Permit "Defined object '<>' of type '<>' has no nonstatic data members
+-e1060 // Permit "private member '<>' is not accessible to non-member non-friend functions
+-e950  // Permit "Non-ANSI reserved word or construct: '//'"
+-e948  // Permit "Operator '<>' always evaluates to True/False"
+-e944  // Permit "Left argument for operator '?' always evaluates to True/False"
+-e845  // Permit "The right argument to operator '|' is certain to be 0".
+-e835  // Permit "A zero has been given as left argument to operator '<<'"
+-e829  // Permit "A +headerwarn option was previously issued for header '<>'"
+-e826  // Permit "Suspicious pointer-to-pointer conversion (area too small)"
+-e788  // Permit "enum constant '<>' not used within defaulted switch
+-e747  // Permit "Significant prototype coercion (arg. no. <>) <> to <>"
+-e763  // Permit "Redundant declaration for symbol '<>' previously declared at line <>"
+-e762  // Permit "Redundantly declared symbol '<>' previously declared at line <>" (this affects explicit template instantiation).
+-e734  // Permit "Loss of precision (assignment) (16 bits to 15 bits)".
+-e731  // Permit "Boolean argument to equal/not equal".
+-e717  // Permit "do ... while(0)"
+-e641  // Permit "Converting enum '<>' to 'int'".
+-e613  // Permit "Possible use of NULL pointer."
+-e537  // Permit "Repeated include file '<>'".
+-e429  // Permit "Custodial pointer '<>' has not been freed or returned".
+
+// MISRA or Meyers Rules we choose to ignore
+-esym(1928, *_Pure) // Note 1928 - Symbol '<>_Pure' did not appear in the constructor initializer list -- Effective C++ #12, [MISRA C++ Rule 12-1-2]
+-esym(1509, *_Pure) // Warning 1509 - base class destructor for class '<>' is not virtual -- Effective C++ #14 & Eff. C++ 3rd Ed. item 7
+-esym(1960,3-2-3)  // Permit the use of forward declarations by suppressing Note 1960 - Violates MISRA C++ 2008 Required Rule 3-2-3, type previously declared: '<>' at location <>
+-esym(1960,5-2-12) // Permit the use of literal strings
+-esym(1960,5-0-6)  // The implementation of this rule mistakenly assumes comparison operators return type int.
+-esym(1960,0-1-8)  // Permit functions without external side effects (because of virtual base classes).
+-esym(1963,5-0-2)  // Do not require the explicit use of parenthesis.  MISRA only suggests using when appropriate.
+-esym(1963,14-8-2) // Permit the use of stream objects.
+-esym(1960,3-1-1)  // BUG with Violates MISRA C++ 2008 Required Rule 3-1-1, no object/function definitions in header files
+-esym(1960,16-0-3) // Permit "use of '#undef' is discouraged" because of FILE_ID.  Detect #undef in style checker instead.
+-esym(1960,11-0-1) // BUG with Violates MISRA C++ 2008 Required Rule 11-0-1, Non-private data member within a non-POD structure: <>
+-e1741             // Permit member '<array>' conceivably not initialized by constructor --- Eff. C++ 3rd Ed. item 4 & Eff. C++ 3rd Ed. item 13
+-e1961             // Permit "virtual member function <> could be made const --- Eff. C++ 3rd E. item 3."
+-e1932             // Permit "Base class '<>' is not abstract -- More Effective C++ #33
+-e586              // Permit "function 'operator delete' is deprecated. [MISRA C++ Rule 18-4-1]"
+
+//Boost header file errors
++macros
++macros
+
+////////////////////////////////////////////////
+// GCC 4.4 and 4.2.1 header file errors
+
+// This fix will be incorporated into a future release of Flexelint
+-emacro(910,NULL) // Allow "Implicit conversion (assignment) from 0 to pointer".  MISRA 4-10-2 DOES allow NULL
+-e451
+// -e451 Permits inclusion of headers which do not have include guards which includes
+//   all of GCC/Qt etc...  Note however that rule 967 [MISRA C++ Rule 16-2-3] still
+//   applies which requires all OUR headers to have a standard include guard.
+
+// QT4 header file errors
+-emacro(1516,Q_OBJECT)
+-emacro(1511,Q_OBJECT)
+-emacro(952,Q_OBJECT)
+-emacro(970,Q_OBJECT)  // Use of type 'int, char, etc...' outside of a typedef
+-emacro(910,Q_OBJECT)
+-emacro(840,SIGNAL)
+-emacro(840,SLOT)
+-emacro(1774,qApp)
+-emacro(929,qApp)
+
+// QT4 errors in our source
+-e1960
+-e1736
+-e1512
+-e970  // Use of type 'int, char, etc...' outside of a typedef
+-e451

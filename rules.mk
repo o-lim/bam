@@ -20,7 +20,7 @@ install-bin:
 	@cp -fr bin/* $(PREFIX)/bin
 	@cp -fr libexec/* $(PREFIX)/libexec/bam-core
 	@cp -fr config toolchain util $(PREFIX)/share/bam-core
-	@cp -fr templates $(PREFIX)/share/bam-core
+	@cp -fr examples templates $(PREFIX)/share/bam-core
 	@sed -i -e 's|\@prefix\@|$(shell echo $(PREFIX) | sed -r 's/([\\@\s])/\\\1/g')|g' $(patsubst %,$(PREFIX)/%,$(PATCH_INSTALL_FILES))
 
 include $(TOP_LEVEL_DIR)/footer.mk

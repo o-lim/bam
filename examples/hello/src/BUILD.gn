@@ -1,0 +1,34 @@
+SourceSet("hello_set") {
+  enable_style = false
+  sources = [
+    "hello_set.cpp",
+  ]
+  unittests = [
+    "hello_set_UT.cpp",
+  ]
+}
+
+StaticLibrary("hello_static") {
+  enable_style = false
+  sources = [
+    "hello_static.cpp",
+  ]
+  unittests = [
+    "hello_static_UT.cpp",
+  ]
+}
+
+Executable("hello") {
+  deps = [
+    ":hello_set",
+    ":hello_static",
+  ]
+  if (!is_test) {
+    sources = [
+      "hello.cpp",
+    ]
+  }
+  unittests = [
+    "hello_UT.cpp",
+  ]
+}
