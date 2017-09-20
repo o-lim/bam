@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+source bam-sh-setup
+
+command="$1"
+shift
+case "$command" in
+  -h|--help)
+    exec man bam-gn
+    ;;
+  help|format)
+    exec gn "$command" "$@"
+    ;;
+  *)
+    exec gn --root="$BAM_SOURCE_ROOT" "$command" "$BAM_OUTPUT_PATH" "$@"
+    ;;
+esac

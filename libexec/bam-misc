@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+set -o pipefail
+
+function usage() {
+  cat << EOF
+Usage: bam misc [options]
+
+Options:
+    --show-bam-dir        show path to .bam directory
+    --show-cdup           show relative path to top-level directory
+    --show-out-dir        show path of output directory relative to top-level
+    --show-prefix         show path of current directory relative to top-level
+    --show-source-root    show absolutepath of source root directory
+    --show-top-level      show absolutepath of top-level directory
+
+EOF
+  exit 1
+}
+
+source bam-sh-setup
+
+cmd=$(basename "$0")
+args=$(getopt -o h -l "help,show-bam-dir,show-cdup,show-out-dir,show-prefix,show-source-root,show-top-level" -n "$cmd" -- "$@")
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+show=0
+
+eval set -- "$args"
+while true; do
+  case "$1" in
+    -h|--help)
+      exec man "$cmd"
+      shift
+      ;;
+    --show-bam-dir)
+      echo "$BAM_DIR"
+      show=1
+      shift
+      ;;
+    --show-cdup)
+      echo "$BAM_CDUP"
+      show=1
+      shift
+      ;;
+    --show-out-dir)
+      echo "$BAM_OUTPUT_DIR"
+      show=1
+      shift
+      ;;
+    --show-prefix)
+      echo "$BAM_PREFIX"
+      show=1
+      shift
+      ;;
+    --show-source-root)
+      echo "$BAM_SOURCE_ROOT"
+      show=1
+      shift
+      ;;
+    --show-top-level)
+      echo "$BAM_TOP_LEVEL"
+      show=1
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+[ "$show" -ne 0 ] || usage

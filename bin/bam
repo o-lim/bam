@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+# This script is a wrapper for bam-* sub-commands. Any arguments are forwarded
+# to the specified bam-* sub-command.
+
+BAM_INSTALL_PREFIX="${BAM_INSTALL_PREFIX:-@prefix@}"
+DEFAULT_CORE_PATH="$BAM_INSTALL_PREFIX/share/bam-core"
+DEFAULT_EXEC_PATH="$BAM_INSTALL_PREFIX/libexec/bam-core"
+BAM_CORE_PATH="${BAM_CORE_PATH:-$DEFAULT_CORE_PATH}"
+BAM_EXEC_PATH="${BAM_EXEC_PATH:-$DEFAULT_EXEC_PATH}"
+
+command=
+while true; do
+  case "$1" in
+    --)
+      shift
+      break
+      ;;
+    -*)
+      case "$1" in
+        -C)
+          if [ -z "$2" ]; then
+            echo "bam: error: no directory given for $1" >&2
+            exit 1
+          fi
+          cd "$2" || exit 1
+          shift 2
+          ;;
+        -h|--help)
+          command="help"
+          shift
+          break
+          ;;
+        --core-path)
+          if [ -z "$2" ]; then
+            echo "$BAM_CORE_PATH"
+            exit 0
+          fi
+          export BAM_CORE_PATH="$2"
+          shift 2
+          ;;
+        --core-path=*)
+          export BAM_CORE_PATH="${1#*=}"
+          shift 1
+          ;;
+        --exec-path)
+          if [ -z "$2" ]; then
+            echo "$BAM_EXEC_PATH"
+            exit 0
+          fi
+          export BAM_EXEC_PATH="$2"
+          shift 2
+          ;;
+        --exec-path=*)
+          export BAM_EXEC_PATH="${1#*=}"
+          shift 1
+          ;;
+        --out-dir=*)
+          if [ "$1" == "--out-dir=" ]; then
+            echo "bam: error: no directory given for ${1:0:${#1}-1}" >&2
+            exit 1
+          fi
+          export BAM_OUTPUT_DIR="${1#*=}"
+          shift 1
+          ;;
+        -o|--out-dir)
+          if [ -z "$2" ]; then
+            echo "bam: error: no directory given for $1" >&2
+            exit 1
+          fi
+          export BAM_OUTPUT_DIR="$2"
+          shift 2
+          ;;
+        --bam-dir=*)
+          if [ "$1" == "--bam-dir=" ]; then
+            echo "bam: error: no directory given for ${1:0:${#1}-1}" >&2
+            exit 1
+          fi
+          export BAM_DIR="${1#*=}"
+          shift 1
+          ;;
+        --bam-dir)
+          if [ -z "$2" ]; then
+            echo "bam: error: no directory given for $1" >&2
+            exit 1
+          fi
+          export BAM_DIR="$2"
+          shift 2
+          ;;
+        --source-root=*|--root=*)
+          if [ "$1" == "--source-root=" -o "$1" == "--root=" ]; then
+            echo "bam: error: no directory given for ${1:0:${#1}-1}" >&2
+            exit 1
+          fi
+          export BAM_SOURCE_ROOT="$(realpath -L -m -s "${1#*=}")"
+          shift 1
+          ;;
+        --source-root|--root)
+          if [ -z "$2" ]; then
+            echo "bam: error: no directory given for $1" >&2
+            exit 1
+          fi
+          export BAM_SOURCE_ROOT="$(realpath -L -m -s "$2")"
+          shift 2
+          ;;
+        --top-level=*)
+          if [ "$1" == "--top-level=" ]; then
+            echo "bam: error: no directory given for ${1:0:${#1}-1}" >&2
+            exit 1
+          fi
+          export BAM_TOP_LEVEL="$(realpath -L -m -s "${1#*=}")"
+          shift 1
+          ;;
+        --top-level)
+          if [ -z "$2" ]; then
+            echo "bam: error: no directory given for $1" >&2
+            exit 1
+          fi
+          export BAM_TOP_LEVEL="$(realpath -L -m -s "$2")"
+          shift 2
+          ;;
+        --version)
+          command="version"
+          shift
+          break
+          ;;
+        --)
+          shift
+          break
+          ;;
+        *)
+          echo "bam: error: unknown option $1" >&2
+          exit 1
+          ;;
+      esac
+      ;;
+    '')
+      break
+      ;;
+    *)
+      command="$1"
+      shift
+      break
+      ;;
+  esac
+done
+
+export PATH="${BAM_EXEC_PATH:-$DEFAULT_EXEC_PATH}:$PATH"
+if [ -z "$command" ]; then
+  bam-help
+  exit 1
+fi
+type -P "bam-$command" > /dev/null 2>&1 && exec bam-$command "$@"
+
+# Command not found, check to see if there is an alias instead
+type -P "bam-sh-setup" > /dev/null 2>&1
+if [ "$?" -eq 0 ]; then
+  source "bam-sh-setup"
+  alias="$(get_config_value "$BAM_CONFIG" alias "$command" | tail -n 1)"
+  if [ "$alias" != "$(null_value)" ]; then
+    args=("$@")
+    if [ "${alias:0:1}" == "!" ]; then
+      # This is a shell command
+      eval set -- "${alias:1}"
+      export BAM_PREFIX && cd "$BAM_TOP_LEVEL" && exec "$@" "${args[@]}"
+    fi
+    eval set -- "$alias"
+    exec bam-"$@" "${args[@]}"
+  fi
+fi
+
+# Error: no command or alias
+echo "bam: error: '$command' is not a bam command. See 'bam --help'" >&2
+exit 1

@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+
+set -e
+
+source bam-sh-setup
+
+out="$BAM_OUTPUT_PATH"
+cwd="$(realpath -s "$(pwd)")"
+envlog="build-env.log"
+jsonfile="build.json"
+cmd=$(basename "$0")
+args=$(getopt -o t: -l "toolchain:,all-toolchains" -n "$cmd" -- "$@")
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+eval set -- "$args"
+while true; do
+  case "$1" in
+    -t|--toolchain)
+      toolchain="$2"
+      alltoolchains=0
+      shift 2
+      ;;
+    --all-toolchains)
+      toolchains=
+      alltoolchains=1
+      shift 1
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+# Use gn to create the JSON project file if it does not already exist
+if ! [ -f "$out/$jsonfile" ]; then
+  gn gen "$out" --envlog="$envlog" --ide=json --json-file-name="$jsonfile"
+fi
+
+# Get the default toolchain if none provided
+if [ -z "$toolchain" ]; then
+  toolchain="$(cat "$out/$jsonfile" | jq -r '.build_settings.default_toolchain')"
+fi
+
+tcmatch=".value.toolchain == \"$toolchain\""
+if [ "$alltoolchains" == "1" ]; then
+  tcmatch="true"
+fi
+
+# Get gcc default include search path
+gcc_include_paths=
+for path in $(echo | gcc -Wp,-v -x c++ - -fsyntax-only 2>&1 | grep '^ '); do
+  gcc_include_paths="$(echo "$gcc_include_paths" && echo \"$(realpath -L -m -s "$path")\")"
+done
+gcc_include_paths="$(echo "$gcc_include_paths" | jq -s '.')"
+
+# Get defines
+defines=$(cat "$out/$jsonfile" | jq -r ".targets | to_entries | map(select($tcmatch and .value.defines != null)) | [.[].value.defines] | flatten | unique")
+
+# Get include dirs
+include_dirs=$(cat "$out/$jsonfile" | jq -r ".targets | to_entries | map(select($tcmatch and .value.include_dirs != null)) | [.[].value.include_dirs] | flatten | unique | map(select(startswith(\"//\"))) | map(sub(\"^//\"; \"\${workspaceRoot}/\")) | map(sub(\"/\$\"; \"\"))")
+
+# Create vscode project directory
+mkdir -p .vscode
+
+# Create C/C++ properties file
+jq -n --indent 4 \
+   --slurpfile args <(echo "$defines" && \
+                      echo "$include_dirs" && \
+                      echo "$gcc_include_paths") \
+    '$args[0] as $defines |
+     $args[1] as $include_dirs |
+     $args[2] as $gcc_include_paths |
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "defines": $defines,
+            "includePath": ($include_dirs + $gcc_include_paths),
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "",
+                "path": $gcc_include_paths
+            }
+        }
+    ]
+}' > ".vscode/c_cpp_properties.json"
+
+if [ -e ".vscode/tasks.json" ]; then
+  exit 0
+fi
+
+# Create Tasks file
+cat > ".vscode/tasks.json" << EOF
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "0.1.0",
+    "runner": "terminal",
+    "command": "bam",
+    "isShellCommand": true,
+    "args": [
+        "-o", "//out/Debug"
+    ],
+    "showOutput": "always",
+    "echoCommand": true,
+    "suppressTaskName": true,
+    "promptOnClose": true,
+
+    "tasks": [{
+        "taskName": "clean",
+        "args": [ "clean" ]
+    }, {
+        "taskName": "gen",
+        "args": [ "gen" ],
+        "problemMatcher": "\$gn"
+    }, {
+        "taskName": "all",
+        "args": [ "build", "all" ],
+        "isBuildCommand": true,
+        "problemMatcher": [ "\$gn", "\$gcc_abs", "\$gcc", "\$edg_abs", "\$edg", "\$flexelint_abs", "\$flexelint", "\$gtest" ]
+    }, {
+        "taskName": "integrate",
+        "args": [ "build", "integrate" ],
+        "problemMatcher": [ "\$gn", "\$gcc_abs", "\$gcc", "\$edg_abs", "\$edg" ]
+    }, {
+        "taskName": "lint",
+        "args": [ "build", "lint" ],
+        "problemMatcher": [ "\$gn", "\$flexelint_abs", "\$flexelint" ]
+    }, {
+        "taskName": "style",
+        "args": [ "build", "style" ],
+        "problemMatcher": [ "\$gn", "\$gcc_abs", "\$gcc" ]
+    }, {
+        "taskName": "test",
+        "args": [ "build", "test" ],
+        "problemMatcher": [ "\$gn", "\$gcc_abs", "\$gcc", "\$gtest" ]
+    }, {
+        "taskName": "build .",
+        "args": [ "-C", "\${fileDirname}", "build", ".:*" ],
+        "problemMatcher": [ "\$gn", "\$gcc_abs", "\$gcc", "\$edg_abs", "\$edg", "\$flexelint_abs", "\$flexelint", "\$gtest" ]
+    }, {
+        "taskName": "build \${file}",
+        "args": [ "build", "//\${relativeFile}^" ],
+        "problemMatcher": [ "\$gn", "\$gcc_abs", "\$gcc", "\$edg_abs", "\$edg", "\$flexelint_abs", "\$flexelint" ]
+    }, {
+        "taskName": "test .",
+        "args": [ "-C", "\${fileDirname}", "test", ".:*" ],
+        "problemMatcher": [ "\$gn", "\$gcc_abs", "\$gcc", "\$gtest" ]
+    }, {
+        "taskName": "test -r .",
+        "args": [ "-C", "\${fileDirname}", "test", "-r", ".:*" ],
+        "problemMatcher": [ "\$gn", "\$gcc_abs", "\$gcc", "\$gtest" ]
+    }]
+}
+EOF

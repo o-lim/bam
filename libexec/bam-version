@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+cmd=$(basename "$0")
+args=$(getopt -o h -l "help" -n "$cmd" -- "$@")
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+eval set -- "$args"
+while true; do
+  case "$1" in
+    -h|--help)
+      exec man "$cmd"
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+echo "0.0.0"

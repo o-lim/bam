@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+source bam-sh-setup
+
+case "$1" in
+  -h|--help)
+    exec man bam-desc
+    shift
+    ;;
+esac
+
+exec gn --root="$BAM_SOURCE_ROOT" desc "$BAM_OUTPUT_PATH" "$@"

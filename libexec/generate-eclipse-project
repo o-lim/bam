@@ -1,0 +1,309 @@
+#!/usr/bin/env lua
+
+function interp(s, tab)
+  return (s:gsub('(@%b{})', function(w)
+      return tab[w:sub(3, -2)] or w
+    end))
+end
+
+getmetatable("").__mod = interp
+local project_template = [[
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+  <name>@{ProjectName}</name>
+  <comment></comment>
+  <projects>
+  </projects>
+  <buildSpec>
+    <buildCommand>
+      <name>org.eclipse.cdt.managedbuilder.core.genmakebuilder</name>
+      <triggers>clean,full,incremental,</triggers>
+      <arguments>
+      </arguments>
+    </buildCommand>
+    <buildCommand>
+      <name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
+      <triggers>full,incremental,</triggers>
+      <arguments>
+      </arguments>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+    <nature>org.eclipse.cdt.core.cnature</nature>
+    <nature>org.eclipse.cdt.core.ccnature</nature>
+    <nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
+    <nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
+  </natures>
+  <filteredResources>
+    <filter>
+      <id>1452733171550</id>
+      <name></name>
+      <type>22</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-projectRelativePath-matches-true-false-out/*.o</arguments>
+      </matcher>
+    </filter>
+    <filter>
+      <id>1452733171553</id>
+      <name></name>
+      <type>22</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-projectRelativePath-matches-true-false-out/*.stamp</arguments>
+      </matcher>
+    </filter>
+    <filter>
+      <id>1452733171557</id>
+      <name></name>
+      <type>22</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-projectRelativePath-matches-true-false-out/*.lint</arguments>
+      </matcher>
+    </filter>
+    <filter>
+      <id>1452733171560</id>
+      <name></name>
+      <type>22</type>
+      <matcher>
+        <id>org.eclipse.ui.ide.multiFilter</id>
+        <arguments>1.0-projectRelativePath-matches-true-false-out/*.style</arguments>
+      </matcher>
+    </filter>
+  </filteredResources>
+</projectDescription>
+]]
+
+local cproject_template = [[
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+  <storageModule moduleId="org.eclipse.cdt.core.settings">
+    <cconfiguration id="cdt.managedbuild.toolchain.gnu.base.1299515352">
+      <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.base.1299515352" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+        <externalSettings/>
+        <extensions>
+          <extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+          <extension id="org.eclipse.cdt.ui.Texas Instruments Error Parser" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.ui.Green Hills" point="org.eclipse.cdt.core.ErrorParser"/>
+        </extensions>
+      </storageModule>
+      <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+        <configuration buildProperties="" description="" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.ui.Texas Instruments Error Parser;org.eclipse.cdt.ui.Green Hills" id="cdt.managedbuild.toolchain.gnu.base.1299515352" name="Debug" parent="org.eclipse.cdt.build.core.emptycfg">
+          <folderInfo id="cdt.managedbuild.toolchain.gnu.base.1299515352.563582778" name="/" resourcePath="">
+            <toolChain id="cdt.managedbuild.toolchain.gnu.base.383913772" name="cdt.managedbuild.toolchain.gnu.base" superClass="cdt.managedbuild.toolchain.gnu.base">
+              <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.756104708" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
+              <builder arguments="-o //out/${ConfigName}" buildPath="${ProjDirPath}" command="bam" id="cdt.managedbuild.target.gnu.builder.base.2000421591" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.base"/>
+              <tool id="cdt.managedbuild.tool.gnu.archiver.base.1320526316" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
+              <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.2084412954" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
+                <option id="gnu.cpp.compiler.option.include.paths.1953391363" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScanner="false" valueType="includePath">
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src&quot;"/>
+                </option>
+                <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1529678880" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+              </tool>
+              <tool id="cdt.managedbuild.tool.gnu.c.compiler.base.769392146" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
+                <option id="gnu.c.compiler.option.include.paths.863479121" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScanner="false" valueType="includePath">
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src&quot;"/>
+                </option>
+                <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.680659506" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+              </tool>
+              <tool id="cdt.managedbuild.tool.gnu.c.linker.base.248386494" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base"/>
+              <tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.659759763" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
+                <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1641775097" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+                  <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+                  <additionalInput kind="additionalinput" paths="$(LIBS)"/>
+                </inputType>
+              </tool>
+              <tool id="cdt.managedbuild.tool.gnu.assembler.base.1302931582" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
+                <option id="gnu.both.asm.option.include.paths.1268271936" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" useByScanner="false" valueType="includePath">
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src&quot;"/>
+                </option>
+                <inputType id="cdt.managedbuild.tool.gnu.assembler.input.1460822706" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+              </tool>
+            </toolChain>
+          </folderInfo>
+        </configuration>
+      </storageModule>
+      <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+    </cconfiguration>
+    <cconfiguration id="cdt.managedbuild.toolchain.gnu.base.1299515352.592749614">
+      <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.base.1299515352.592749614" moduleId="org.eclipse.cdt.core.settings" name="Release">
+        <externalSettings/>
+        <extensions>
+          <extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+          <extension id="org.eclipse.cdt.ui.Texas Instruments Error Parser" point="org.eclipse.cdt.core.ErrorParser"/>
+          <extension id="org.eclipse.cdt.ui.Green Hills" point="org.eclipse.cdt.core.ErrorParser"/>
+        </extensions>
+      </storageModule>
+      <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+        <configuration buildProperties="" description="" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.ui.Texas Instruments Error Parser;org.eclipse.cdt.ui.Green Hills" id="cdt.managedbuild.toolchain.gnu.base.1299515352.592749614" name="Release" parent="org.eclipse.cdt.build.core.emptycfg">
+          <folderInfo id="cdt.managedbuild.toolchain.gnu.base.1299515352.592749614" name="/" resourcePath="">
+            <toolChain id="cdt.managedbuild.toolchain.gnu.base.383913772" name="cdt.managedbuild.toolchain.gnu.base" superClass="cdt.managedbuild.toolchain.gnu.base">
+              <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.756104708" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
+              <builder arguments="-o //out/${ConfigName}" buildPath="${ProjDirPath}" command="bam" id="cdt.managedbuild.target.gnu.builder.base.2000421591" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.base"/>
+              <tool id="cdt.managedbuild.tool.gnu.archiver.base.1320526316" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
+              <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.2084412954" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
+                <option id="gnu.cpp.compiler.option.include.paths.1953391363" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScanner="false" valueType="includePath">
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src&quot;"/>
+                </option>
+                <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1529678880" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+              </tool>
+              <tool id="cdt.managedbuild.tool.gnu.c.compiler.base.769392146" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
+                <option id="gnu.c.compiler.option.include.paths.863479121" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScanner="false" valueType="includePath">
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src&quot;"/>
+                </option>
+                <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.680659506" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+              </tool>
+              <tool id="cdt.managedbuild.tool.gnu.c.linker.base.248386494" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base"/>
+              <tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.659759763" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
+                <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1641775097" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
+                  <additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+                  <additionalInput kind="additionalinput" paths="$(LIBS)"/>
+                </inputType>
+              </tool>
+              <tool id="cdt.managedbuild.tool.gnu.assembler.base.1302931582" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
+                <option id="gnu.both.asm.option.include.paths.1268271936" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" useByScanner="false" valueType="includePath">
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/include&quot;"/>
+                  <listOptionValue builtIn="false" value="&quot;${ProjDirPath}/src&quot;"/>
+                </option>
+                <inputType id="cdt.managedbuild.tool.gnu.assembler.input.1460822706" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+              </tool>
+            </toolChain>
+          </folderInfo>
+        </configuration>
+      </storageModule>
+      <storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+    </cconfiguration>
+  </storageModule>
+  <storageModule moduleId="cdtBuildSystem" version="4.0.0">
+    <project id="@{ProjectName}.null.783524910" name="@{ProjectName}"/>
+  </storageModule>
+  <storageModule moduleId="scannerConfiguration">
+    <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+  </storageModule>
+  <storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+  <storageModule moduleId="refreshScope" versionNumber="2">
+    <configuration configurationName="Debug">
+      <resource resourceType="PROJECT" workspacePath="/@{ProjectName}"/>
+    </configuration>
+    <configuration configurationName="Release">
+      <resource resourceType="PROJECT" workspacePath="/@{ProjectName}"/>
+    </configuration>
+  </storageModule>
+  <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
+    <buildTargets>
+      <target name="build all" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+        <buildCommand>bam</buildCommand>
+        <buildTarget>build all</buildTarget>
+        <stopOnError>true</stopOnError>
+        <useDefaultCommand>true</useDefaultCommand>
+        <runAllBuilders>true</runAllBuilders>
+      </target>
+      <target name="gen" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+        <buildCommand>bam</buildCommand>
+        <buildTarget>gen --args='config="${ConfigName}"'</buildTarget>
+        <stopOnError>true</stopOnError>
+        <useDefaultCommand>true</useDefaultCommand>
+        <runAllBuilders>true</runAllBuilders>
+      </target>
+      <target name="clean" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+        <buildCommand>bam</buildCommand>
+        <buildTarget>clean</buildTarget>
+        <stopOnError>true</stopOnError>
+        <useDefaultCommand>true</useDefaultCommand>
+        <runAllBuilders>true</runAllBuilders>
+      </target>
+      <target name="build integrate" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+        <buildCommand>bam</buildCommand>
+        <buildTarget>build integrate</buildTarget>
+        <stopOnError>true</stopOnError>
+        <useDefaultCommand>true</useDefaultCommand>
+        <runAllBuilders>true</runAllBuilders>
+      </target>
+      <target name="build test" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+        <buildCommand>bam</buildCommand>
+        <buildTarget>build test</buildTarget>
+        <stopOnError>true</stopOnError>
+        <useDefaultCommand>true</useDefaultCommand>
+        <runAllBuilders>true</runAllBuilders>
+      </target>
+      <target name="build lint" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+        <buildCommand>bam</buildCommand>
+        <buildTarget>build lint</buildTarget>
+        <stopOnError>true</stopOnError>
+        <useDefaultCommand>true</useDefaultCommand>
+        <runAllBuilders>true</runAllBuilders>
+      </target>
+      <target name="build style" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+        <buildCommand>bam</buildCommand>
+        <buildTarget>build style</buildTarget>
+        <stopOnError>true</stopOnError>
+        <useDefaultCommand>true</useDefaultCommand>
+        <runAllBuilders>true</runAllBuilders>
+      </target>
+    </buildTargets>
+  </storageModule>
+</cproject>
+]]
+
+local language_settings_xml_template = [[
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project>
+  <configuration id="cdt.managedbuild.toolchain.gnu.base.1299515352" name="Debug">
+    <extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
+      <provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
+      <provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>
+      <provider copy-of="extension" id="org.eclipse.cdt.managedbuilder.core.GCCBuildCommandParser"/>
+      <provider class="org.eclipse.cdt.managedbuilder.language.settings.providers.GCCBuiltinSpecsDetector" console="false" env-hash="629415851793275498" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot;">
+        <language-scope id="org.eclipse.cdt.core.gcc"/>
+        <language-scope id="org.eclipse.cdt.core.g++"/>
+      </provider>
+      <provider-reference id="org.eclipse.cdt.managedbuilder.core.MBSLanguageSettingsProvider" ref="shared-provider"/>
+    </extension>
+  </configuration>
+  <configuration id="cdt.managedbuild.toolchain.gnu.base.1299515352.592749614" name="Release">
+    <extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
+      <provider copy-of="extension" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider"/>
+      <provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>
+      <provider copy-of="extension" id="org.eclipse.cdt.managedbuilder.core.GCCBuildCommandParser"/>
+      <provider class="org.eclipse.cdt.managedbuilder.language.settings.providers.GCCBuiltinSpecsDetector" console="false" env-hash="629415851793275498" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot;">
+        <language-scope id="org.eclipse.cdt.core.gcc"/>
+        <language-scope id="org.eclipse.cdt.core.g++"/>
+      </provider>
+      <provider-reference id="org.eclipse.cdt.managedbuilder.core.MBSLanguageSettingsProvider" ref="shared-provider"/>
+    </extension>
+  </configuration>
+</project>
+]]
+
+local data = {
+  ProjectName = arg[1] or os.getenv('PWD'):gsub('.*/', '')
+}
+assert(data.ProjectName, "project name not defined")
+
+os.execute("mkdir -p .settings")
+io.open(".project", "w"):write(project_template % data)
+io.open(".cproject", "w"):write(cproject_template % data)
+io.open(".settings/language.settings.xml", "w"):write(language_settings_xml_template)
+
+local org_eclipse_cdt_core_prefs_file = io.open(".settings/org.eclipse.cdt.core.prefs","w")
+org_eclipse_cdt_core_prefs_file:write("eclipse.preferences.version=1\n")
+org_eclipse_cdt_core_prefs_file:write("environment/project/cdt.managedbuild.toolchain.gnu.base.1299515352/append=false\n")
+org_eclipse_cdt_core_prefs_file:write("environment/project/cdt.managedbuild.toolchain.gnu.base.1299515352/appendContributed=false\n")
+org_eclipse_cdt_core_prefs_file:write("environment/project/cdt.managedbuild.toolchain.gnu.base.1299515352.592749614/append=false\n")
+org_eclipse_cdt_core_prefs_file:write("environment/project/cdt.managedbuild.toolchain.gnu.base.1299515352.592749614/appendContributed=false\n")

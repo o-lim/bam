@@ -1,0 +1,384 @@
+#!/usr/bin/env bash
+# bam-sh-setup: sourced by bam-* bash scripts
+# This shell scriptlet is meant to be included by other shell scripts
+# to set up some variables pointing at the normal bam directories and
+# a few helper shell functions.
+
+# Make sure sorting uses traditional sort order of native byte values.
+# From the `sort` manual:
+#  If you use a non-POSIX locale (e.g., by setting `LC_ALL` to `en_US`),
+#  then `sort` may produce output that is sorted differently than you're
+#  accustomed to.  In that case, set the `LC_ALL` environment variable to
+#  `C`.  Note that setting only `LC_COLLATE` has two problems.  First, it
+#  is ineffective if `LC_ALL` is also set.  Second, it has undefined
+#  behavior if `LC_CTYPE` (or `LANG`, if `LC_CTYPE` is unset) is set to
+#  an incompatible value.  For example, you get undefined behavior if
+#  `LC_CTYPE` is `ja_JP.PCK` but `LC_COLLATE` is `en_US.UTF-8`.
+export LC_ALL=C
+
+# Make sure coloring is disabled for grep
+alias grep='grep --color=never'
+
+function write_buildenv() {
+  local buildenv="$1"
+  mkdir -p "$(dirname "$buildenv")"
+  cat > "$buildenv" << EOF
+GN_VERSION="$(gn --version)"
+BAM_SOURCE_ROOT="$BAM_SOURCE_ROOT"
+PKG_CONFIG_PATH="$PKG_CONFIG_PATH"
+CROSS_PKG_CONFIG_PATH="$CROSS_PKG_CONFIG_PATH"
+EOF
+}
+
+function write_envvars() {
+  local envfile="$1"
+  shift
+  mkdir -p "$(dirname "$envfile")"
+  cat /dev/null >| "$envfile"
+  for var in "$@"; do
+    echo "$var=${!var}" >> "$envfile"
+  done
+}
+
+function check_buildenv() {
+  local out="$1"
+  local buildenv="$out/.buildenv"
+  local ninjafile="$out/build.ninja"
+  local envlog="$(realpath -L -m -s "$out/bam-env.log")"
+  if ! [ -f "$ninjafile" ]; then
+    gn --root="$BAM_SOURCE_ROOT" --envlog="build-env.log" --ide=json --json-file-name="build.json" gen "$out"
+    write_buildenv "$buildenv"
+  else
+    local gn_cmd="$(sed -nre "2s| *command *= *.* +--root=.* -q (.*)|gn --root=$BAM_SOURCE_ROOT \\1|p" "$ninjafile")"
+    if [[ "$gn_cmd" != *" --envlog=build-env.log "* ]]; then
+      gn_cmd="$gn_cmd --envlog=build-env.log"
+    fi
+    if [[ "$gn_cmd" != *" --ide=json --json-file-name=build.json "* ]]; then
+      gn_cmd="$gn_cmd --ide=json --json-file-name=build.json"
+    fi
+    local vars=()
+    if [ -f "$envlog" ]; then
+      vars="$(sed -nr 's/^([a-zA-Z0-9_]+)=.*/\1/p' "$envlog")"
+      IFS=$'\n' read -rd '' -a vars <<< "$vars"
+    fi
+    write_buildenv "$buildenv.tmp"
+    write_envvars "$envlog.tmp" "${vars[@]}"
+    (diff -Naq "$buildenv" "$buildenv.tmp" > /dev/null && \
+     diff -Naq "$envlog" "$envlog.tmp" > /dev/null && \
+     rm -f "$buildenv.tmp" "$envlog.tmp") || \
+    (rm -f "$envlog.tmp" && mv -f "$buildenv.tmp" "$buildenv" && (cd "$out" && $gn_cmd)) || exit 1
+  fi
+}
+
+function is_caret_target() {
+  local tgt="${1/#\/\//$BAM_SOURCE_ROOT/}"
+  local outrelpath="$(realpath -L -m -s --relative-to="$BAM_OUTPUT_PATH" "$tgt")"
+  if [[ "$outrelpath" == "../"* && "$tgt" == *"^" ]]; then
+    return 0 # success
+  fi
+  return 1 # fail
+}
+
+function is_target_label() {
+  local tgt="$1"
+  local outrelpath="$(realpath -L -m -s --relative-to="$BAM_OUTPUT_PATH" "$tgt")"
+  if [[ "$outrelpath" == "../"* && "$tgt" == *"/"* ||
+        "$tgt" == *"*"* ||
+        "$tgt" == *"("*")" ||
+        "$tgt" == "//"* ||
+        "$tgt" == *":"* ||
+        "$tgt" == *"/" ||
+        "$tgt" == "." ]]; then
+    return 0 # success
+  fi
+  return 1 # fail
+}
+
+function resolvepath() {
+  local path="${1/#\/\//$BAM_SOURCE_ROOT/}"
+  path="$(realpath -L -m -s --relative-base="$BAM_SOURCE_ROOT" "$path")"
+  if [ "${path:0:1}" != "/" ]; then
+    path="//$path"
+  fi
+  echo "$path"
+}
+
+function resolve_caret_targets() {
+  local tgt="$1"
+  local pretgt="${tgt%^}"
+  local src="${pretgt%(*)}"
+  local srcpath="$(resolvepath "$src")"
+  local tcmatch="true"
+  if [ "$src" != "$pretgt" ]; then
+    local toolchain=
+    toolchain="${tgt##*(}"
+    toolchain="${toolchain%)^}"
+    toolchain="$(resolvepath "$toolchain")"
+    tcmatch=".value.toolchain == \"$toolchain\""
+  fi
+  local filter=".targets | to_entries | map(select($tcmatch and .value.source_outputs != null and .value.source_outputs.\"$srcpath\" != null)) | [ .[].value.source_outputs.\"$srcpath\" ] | flatten | .[]"
+  cat "$BAM_OUTPUT_PATH/build.json" | jq -r "$filter"
+}
+
+function find_config_matches() {
+  local cfgfile="$1"
+  local section="${2//./\\.}"
+  local key="$3"
+  if [ -f "$cfgfile" ]; then
+    sed -nr ":top
+        /^\s*\[$section]/,/^\s*\[/{
+          /^\s*\[$section\].*\n\s*$key\s*=[^\n]*/{
+            =
+            s/\n\s*$key\s*=[^\n]*//
+          }
+          s/^\s*\[$section].*\n\s*\[/[/
+        }
+        /^\s*\[$section]/,/^\s*\[/{
+          N
+          b top
+        }
+      " "$cfgfile"
+  fi
+}
+
+function read_config_value() {
+  local cfgfile="$1"
+  local section="$2"
+  local key="$3"
+  local value=
+  if [ -f "$cfgfile" ]; then
+    local matched_lines="$(find_config_matches "$cfgfile" "$section" "$key")"
+    IFS=$'\n' read -rd '' -a matched_lines <<< "$matched_lines"
+
+    local sed_cmds=
+    local sub="s/\\s*$key\\s*=\s*//p;"
+    for line in "${matched_lines[@]}"; do
+      sed_cmds="$sed_cmds $line$sub"
+    done
+    sed -rn "$sed_cmds" "$cfgfile" | sed 's/^$/ /'
+  else
+    echo "$value"
+  fi
+}
+
+function trim_config_value() {
+  local value="$1"
+  local singleQuote=
+  local doubleQuote=
+  local len=${#value}
+  for ((i=0; i < $len; i++)); do
+    case "${value:$i:1}" in
+      "'")
+        if [ -n "$doubleQuote" ]; then
+          continue
+        elif [ -n "$singleQuote" ]; then
+          singleQuote=
+        else
+          singleQuote=1
+        fi
+        ;;
+      '"')
+        if [ -n "$singleQuote" ]; then
+          continue
+        elif [ -n "$doubleQuote" ]; then
+          doubleQuote=
+        else
+          doubleQuote=1
+        fi
+        ;;
+      "\\")
+        if [ -n "$singleQuote" ]; then
+          continue
+        else
+          let i+=1
+        fi
+        ;;
+      "#"|";")
+        if [ -n "$singleQuote" -o -n "$doubleQuote" ]; then
+          continue
+        else
+          len=$i
+        fi
+        ;;
+      *)
+        continue
+        ;;
+    esac
+  done
+  value="${value:0:$len}" # remove comment
+  value="${value#"${value%%[![:space:]]*}"}" # remove leading spaces
+  value="${value%"${value##*[![:space:]]}"}" # remove trailing spaces
+  echo "$value"
+}
+
+function null_value() {
+  echo -e "\b"
+}
+
+function get_config_value() {
+  local cfgfile="$1"
+  local section="$2"
+  local key="$3"
+  local options="$4"
+  local value="$(read_config_value "$@")"
+  if [ -z "$value" -a "$options" != "noglobal" ]; then
+    value="$(read_config_value "$HOME/.bamconfig" "$2" "$3")"
+  fi
+
+  local values=
+  IFS=$'\n' read -rd '' -a values <<< "$value"
+  local i=0
+  for v in "${values[@]}"; do
+    echo "$(trim_config_value "$v")"
+  done
+  if [ "${#values[@]}" -eq 0 ]; then
+    null_value
+  fi
+}
+
+function get_bam_dir() {
+  local cwd="$(pwd)"
+  local path="$(realpath -L -s "$cwd")"
+  local bamdir=
+
+  if [ -n "$BAM_TOP_LEVEL" ]; then
+    bamdir="$(realpath -L -m -s "$BAM_TOP_LEVEL/.bam")"
+  fi
+
+  while [ -z "$bamdir" ]; do
+    if [ -d "$path/.bam" ]; then
+      bamdir="$(realpath -L -m -s "$path/.bam")"
+      break
+    elif [ "$path" != "/" ]; then
+      path="$(realpath -L -s "$path/..")"
+    else
+      break
+    fi
+  done
+
+  if [ -n "$bamdir" ]; then
+    echo "$(realpath -L -m -s --relative-to . "$bamdir")"
+  else
+    echo
+  fi
+}
+
+function get_source_root() {
+  if [ -n "$BAM_DIR" ]; then
+    local root="$(get_config_value "$BAM_CONFIG" core sourceroot | tail -n 1)"
+    if [ -n "$root" -a "$root" != "$(null_value)" ]; then
+      if [ "${root:0:1}" == "/" ]; then
+        echo "$(realpath -L -m -s "$root")"
+      else
+        echo "$(realpath -L -m -s "$BAM_DIR/$root")"
+      fi
+      return
+    fi
+  fi
+
+  local ninjafile="$BAM_OUTPUT_DIR/build.ninja"
+  if [[ -n "$BAM_OUTPUT_DIR" && "$BAM_OUTPUT_DIR" != //* &&
+          -f "$ninjafile" ]]; then
+    echo "$(sed -rn '2s/\s*command\s*= *.* +--root=(.*) -q .*/\1/p' "$ninjafile")"
+  else
+    local cwd="$(pwd)"
+    local path="$(realpath -L -s "$cwd")"
+    local root=
+
+    while true; do
+      if [ -f "$path/.gn" ]; then
+        root="$path"
+        break
+      elif [ "$path" != "/" ]; then
+        path="$(realpath -L -s "$path/..")"
+      else
+        break
+      fi
+    done
+    echo "$root"
+  fi
+}
+
+function get_top_level() {
+  if [ -n "$BAM_DIR" ]; then
+    local path="$(get_config_value "$BAM_CONFIG" core toplevel | tail -n 1)"
+    if [ -z "$path" -o "$path" == "$(null_value)" ]; then
+      path="$(pwd)"
+    elif [[ "$path" != /* ]]; then
+      path="$(realpath -L -m -s "$BAM_DIR/$path")"
+    fi
+    echo "$path"
+    return
+  fi
+
+  local bamdir="$(get_bam_dir)"
+  if [ -n "$bamdir" ]; then
+    local path="$(get_config_value "$bamdir/config" core toplevel | tail -n 1)"
+    if [ -z "$path" -o "$path" == "$(null_value)" ]; then
+      path="$(realpath -L -m -s "$bamdir/..")"
+    elif [[ "$path" != /* ]]; then
+      path="$(realpath -L -m -s "$bamdir/$path")"
+    fi
+    echo "$path"
+  else
+    local path="$(get_source_root)"
+    if [ -n "$path" ]; then
+      echo "$path"
+    else
+      echo "$(pwd)"
+    fi
+  fi
+}
+
+function get_out_dir() {
+  local outdir="$BAM_OUTPUT_DIR"
+  if [ -z "$outdir" ]; then
+    outdir="$(get_config_value "$BAM_CONFIG" core outdir | tail -n 1)"
+    if [ -z "$outdir" -o "$outdir" == "$(null_value)" ]; then
+      outdir="//"
+    elif [[ "$outdir" != /* ]]; then
+      outdir="$(realpath -L -m -s "$BAM_DIR/$outdir")"
+    fi
+  fi
+  echo "$outdir"
+}
+
+BAM_INSTALL_PREFIX="${BAM_INSTALL_PREFIX:-@prefix@}"
+
+if [ -z "$BAM_CONFIG" ]; then
+  if [ -n "$BAM_DIR" ]; then
+    BAM_CONFIG="$BAM_DIR/config"
+  fi
+fi
+if [ -z "$BAM_TOP_LEVEL" ]; then
+  BAM_TOP_LEVEL="$(get_top_level)"
+fi
+if [ -z "$BAM_DIR" ]; then
+  BAM_DIR="$(get_bam_dir)"
+fi
+if [ -z "$BAM_CONFIG" ]; then
+  BAM_CONFIG="$BAM_DIR/config"
+fi
+BAM_OUTPUT_DIR="$(get_out_dir)"
+if [ -z "$BAM_SOURCE_ROOT" ]; then
+  BAM_SOURCE_ROOT="$(get_source_root)"
+fi
+BAM_CDUP="$(realpath -L -m -s --relative-to "$(pwd)" "$BAM_TOP_LEVEL")"
+BAM_PREFIX="$(realpath -L -m -s --relative-to "$BAM_TOP_LEVEL" "$(pwd)")"
+
+if [ "${BAM_OUTPUT_DIR:0:2}" == "//" ]; then
+  # output dir is source absolute path
+  BAM_OUTPUT_PATH="${BAM_SOURCE_ROOT}/${BAM_OUTPUT_DIR:2}"
+  BAM_OUTPUT_PATH="$(realpath -L -m -s --relative-to "$(pwd)" "$BAM_OUTPUT_PATH")"
+else
+  # output dir is system absolute or relative path
+  BAM_OUTPUT_PATH="$BAM_OUTPUT_DIR"
+
+  # rewrite output dir to be source absolute path if possible
+  if [ -n "$BAM_SOURCE_ROOT" -a -n "$BAM_OUTPUT_DIR" ]; then
+    BAM_OUTPUT_DIR="$(realpath -L -m -s --relative-base "$BAM_SOURCE_ROOT" "$BAM_OUTPUT_DIR")"
+  fi
+  if [ "${BAM_OUTPUT_DIR:0:1}" != "/" ]; then
+    BAM_OUTPUT_DIR="//$BAM_OUTPUT_DIR"
+  fi
+fi

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+source bam-sh-setup
+
+case "$1" in
+  -h|--help)
+    exec man bam-ninja
+    shift
+    ;;
+esac
+
+check_buildenv "$BAM_OUTPUT_PATH"
+
+exec ninja -C "$BAM_OUTPUT_PATH" "$@"

@@ -1,0 +1,338 @@
+#!/usr/bin/env bash
+
+set -o pipefail
+
+source bam-sh-setup
+
+cmd=$(basename "$0")
+args=$(getopt -o j:l:hkSt:nrv -l "jobs:,load-average:,run-under:,replace-test-args,test-arg:,keep-going,no-keep-going,stop,runs-per-test:,cache-results:,check-up-to-date,dry-run,recursive,only:,skip:,verbose,help" -n "$cmd" -- "$@")
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+only=
+skip=
+runner=
+runs_per_test=1
+cache_results="auto"
+check_uptodate=0
+recursive=0
+replace_test_args=0
+test_args=()
+num_jobs=
+load_avg=
+keep_going=0
+dry_run=0
+verbose=0
+EVAL_="eval"
+
+eval set -- "$args"
+while true; do
+  case "$1" in
+    -h|--help)
+      exec man "$cmd"
+      shift
+      ;;
+    -j|--jobs)
+      num_jobs="$2"
+      shift 2
+      ;;
+    -l|--load-average)
+      load_avg="$2"
+      shift 2
+      ;;
+    -k|--keep-going)
+      keep_going=1
+      shift
+      ;;
+    -S|--no-keep-going|--stop)
+      keep_going=0
+      shift
+      ;;
+    --check-up-to-date)
+      check_uptodate=1
+      shift
+      ;;
+    -t|--cache-results)
+      case "$2" in
+        yes|no|auto)
+          cache_results="$2"
+          ;;
+        *)
+          echo "$cmd: error: cache-results must be one of yes|no|auto" >&2
+          exit 1
+          ;;
+      esac
+      shift 2
+      ;;
+    -r|--recursive)
+      recursive=1
+      shift
+      ;;
+    --runs-per-test)
+      runs_per_test="$2"
+      shift 2
+      ;;
+    --run-under)
+      runner="$2"
+      shift 2
+      ;;
+    --replace-test-args)
+      replace_test_args=1
+      shift
+      ;;
+    --test-arg)
+      test_args=("${test_args[@]}" "$2")
+      shift 2
+      ;;
+    -n|--dry-run)
+      dry_run=1
+      EVAL_="echo"
+      shift
+      ;;
+    --only)
+      only="$2"
+      shift 2
+      ;;
+    --skip)
+      skip="$2"
+      shift 2
+      ;;
+    -v|--verbose)
+      verbose=1
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+ninja_runs_tests=1
+if [ "$check_uptodate" -ne 0 ]; then
+  ninja_runs_tests=1
+elif [ -n "$run_under" -o "$runs_per_test" -ne 1 -o \
+     "${#test_args}" -gt 0 -o "$replace_test_args" -ne 0 -o \
+     "$cache_results" == "no" ]; then
+  ninja_runs_tests=0
+fi
+
+if ! [ -e "$BAM_OUTPUT_PATH/build.ninja" ]; then
+  echo "$cmd: error: output directory '$BAM_OUTPUT_PATH' does not contain a previously generated build" >&2
+  exit 1
+fi
+check_buildenv "$BAM_OUTPUT_PATH"
+
+args="$(gn --root="$BAM_SOURCE_ROOT" args "$BAM_OUTPUT_PATH" --list --short)"
+test_toolchain="$(echo "$args"| sed -n '/^test_toolchain = /p')"
+test_group_suffix="$(echo "$args" | sed -n '/^test_group_suffix = /p')"
+if [ -f "$BAM_OUTPUT_PATH/args.gn" ]; then
+  args_test_group_suffix=$(grep '^\s*test_group_suffix\s*=' "$BAM_OUTPUT_PATH/args.gn" 2> /dev/null)
+  if [ "$?" -eq 0 ]; then
+    test_group_suffix="$args_test_group_suffix"
+  fi
+fi
+test_toolchain="${test_toolchain#*\"}"
+test_toolchain="${test_toolchain%\"*}"
+test_group_suffix="${test_group_suffix#*\"}"
+test_group_suffix="${test_group_suffix%\"*}"
+
+# Default args search for all tests
+if [ "$#" -eq 0 ]; then
+  set -- '*'
+fi
+
+# Get the test labels we need to run
+test_list=
+for target_label in "$@"; do
+  if [[ "$target_label" == *"*"* ]]; then
+    test_labels="$(gn --root="$BAM_SOURCE_ROOT" ls "$BAM_OUTPUT_PATH" --as=label --testonly=true --type=group "${target_label}($test_toolchain)")"
+    if [ "$?" -ne 0 ]; then
+      echo "$cmd: error: $test_labels" >&2
+      exit 1
+    fi
+
+    test_labels="$(echo "$test_labels" | grep "${test_group_suffix}($test_toolchain)$")"
+    if [ "$?" -ne 0 -o -z "$test_labels" ]; then
+      echo "$cmd: error: cannot find any tests for '$target_label($test_toolchain)'" >&2
+      exit 1
+    elif [ "$verbose" -ne 0 ]; then
+      echo "$cmd: found tests for '$target_label($test_toolchain)':"
+      echo "$test_labels" | sort | sed 's/^ */    /'
+    fi
+  else
+    tgt_label="$(gn --root="$BAM_SOURCE_ROOT" ls "$BAM_OUTPUT_PATH" --as=label "${target_label}($test_toolchain)")"
+    if [ "$?" -ne 0 ]; then
+      echo "$cmd: error: $tgt_label" >&2
+      exit 1
+    elif [ -z "$tgt_label" ]; then
+      echo "$cmd: error: cannot find any targets for '$target_label($test_toolchain)'" >&2
+      exit 1
+    fi
+    test_labels="${tgt_label/%($test_toolchain)/$test_group_suffix($test_toolchain)}"
+    if [ "$verbose" -ne 0 ]; then
+      echo "$cmd: found tests for '$target_label($test_toolchain)':"
+      echo "$test_labels" | sort | sed 's/^ */    /'
+    fi
+  fi
+
+  test_list="$(echo "$test_list" && echo "$test_labels")"
+done
+test_list="$(echo "$test_list" | sed '/^$/d' | sort -u)"
+if [ "$verbose" -ne 0 ]; then
+  echo "$cmd: the following test groups were requested:"
+  echo "$test_list" | sed 's/^ */    /'
+fi
+IFS=$'\n' read -rd '' -a test_list <<< "$test_list"
+
+# Get the test pass actions for the test labels
+desc_flags=
+if [ "$recursive" -eq 1 ]; then
+  desc_flags="--all"
+fi
+test_pass="$(gn --root="$BAM_SOURCE_ROOT" desc "$BAM_OUTPUT_PATH" --as=label --testonly=true --type=action --show=deps $desc_flags "${test_list[@]}")"
+if [ "$?" -ne 0 ]; then
+  echo "$cmd: error: $test_pass" >&2
+  exit 1
+fi
+test_pass_list="$(echo "$test_pass" | grep '\.pass(' | sort -u)"
+if [ "$verbose" -ne 0 ]; then
+  echo "$cmd: found these test labels:"
+  echo "$test_pass_list" | sed -e 's/^ */    /' -e 's/\.pass(/(/'
+fi
+
+# Filter out tests based on --skip
+if [ -n "$skip" ]; then
+  test_pass_list="$(echo "$test_pass_list" | grep -v "$skip.*\.pass(")"
+  if [ "$verbose" -ne 0 ]; then
+    echo "$cmd: tests after applying skip filter '$skip':"
+    echo "$test_pass_list" | sed -e 's/^ */    /' -e 's/\.pass(/(/'
+  fi
+fi
+
+# Filter tests based on --only
+if [ -n "$only" ]; then
+  test_pass_list="$(echo "$test_pass_list" | grep "$only.*\.pass(")"
+  if [ "$verbose" -ne 0 ]; then
+    echo "$cmd: tests after applying only filter '$only':"
+    echo "$test_pass_list" | sed -e 's/^ */    /' -e 's/\.pass(/(/'
+  fi
+fi
+
+IFS=$'\n' read -rd '' -a test_pass_list <<< "$test_pass_list"
+if [ "${#test_pass_list}" -eq 0 ]; then
+  target_list=("$@")
+  target_list=(${target_list[@]/%/($test_toolchain)"'"})
+  target_list=(${target_list[@]/#/"'"})
+  echo "$cmd: error: cannot find any tests for ${target_list[@]}" >&2
+  exit 1
+fi
+
+# Get the actual pass tokens and executable targets for ninja
+pass_targets="$(gn --root="$BAM_SOURCE_ROOT" ls "$BAM_OUTPUT_PATH" --as=output "${test_pass_list[@]}")"
+IFS=$'\n' read -rd '' -a pass_targets <<< "$pass_targets"
+pass_targets=("${pass_targets[@]%.stamp}")
+if [ "$ninja_runs_tests" -ne 0 ]; then
+  test_targets=("${pass_targets[@]}")
+else
+  test_targets="$(gn --root="$BAM_SOURCE_ROOT" ls "$BAM_OUTPUT_PATH" --as=output "${test_pass_list[@]/.pass(/(}")"
+  IFS=$'\n' read -rd '' -a test_targets <<< "$test_targets"
+fi
+
+NINJA_FLAGS=
+if [ -n "$num_jobs" ]; then
+  NINJA_FLAGS+=" -j $num_jobs"
+fi
+if [ -n "$load_avg" ]; then
+  NINJA_FLAGS+=" -l $load_avg"
+fi
+if [ "$keep_going" -ne 0 ]; then
+  NINJA_FLAGS+=" -k 0"
+fi
+if [ "$dry_run" -ne 0 -o "$check_uptodate" -ne 0 ]; then
+  NINJA_FLAGS+=" -n"
+fi
+if [ "$verbose" -ne 0 ]; then
+  NINJA_FLAGS+=" -v"
+  echo "$cmd: building test targets: ${test_targets[@]}"
+fi
+
+if [ "$check_uptodate" -ne 0 ]; then
+  ninja -C "$BAM_OUTPUT_PATH" $NINJA_FLAGS "${test_targets[@]}" | tail -n 1 | diff -q <(echo "ninja: no work to do.") - > /dev/null
+  if [ "$?" -eq 0 ]; then
+    exit 0
+  else
+    echo "$cmd: error: tests are out-of-date" >&2
+    exit 1
+  fi
+fi
+ninja -C "$BAM_OUTPUT_PATH" $NINJA_FLAGS "${test_targets[@]}"
+if [ "$?" -eq 0 ]; then
+  err_cnt=0
+else
+  err_cnt=1
+fi
+[ "$err_cnt" -eq 0 -o "$keep_going" -ne 0 ] || exit 1
+[ "$ninja_runs_tests" -ne 0 ] && exit $err_cnt
+
+cd "$BAM_OUTPUT_PATH" || exit 1
+while [ "${#test_targets}" -gt 0 ]; do
+  test_exe="${test_targets[0]}"
+  pass_token="${pass_targets[0]}"
+  test_targets=("${test_targets[@]:1}")
+  pass_targets=("${pass_targets[@]:1}")
+  if [ "$runs_per_test" -eq 1 -a "$cache_results" != "no" -a \
+       -f "$test_exe" -a -f "$pass_token" ]; then
+    if [ "$(stat -Lc %Y "$test_exe")" -lt "$(stat -Lc %Y "$pass_token")" ]; then
+      continue
+    fi
+  fi
+
+  i=0
+  tst_cmd="$(ninja -t commands "$pass_token" | tail -n 1)"
+  tst_cmd="${tst_cmd% && *}" # remove pass token from command
+  pre_test="${tst_cmd% && *}" # save pre_test command
+  if [ "$pre_test" == "$tst_cmd" ]; then
+    pre_test=
+  fi
+  tst_cmd="${tst_cmd##* && }" # strip pre_test command
+  test_args=("${test_args[@]/%/\"}")
+  test_args=("${test_args[@]/#/\"}")
+  if [ "$replace_test_args" -eq 0 ]; then
+    tst_cmd="${tst_cmd} ${test_args[@]}" # append test args
+  else
+    tst_cmd="${tst_cmd/%$test_exe */$test_exe ${test_args[@]}}" # replace test args
+  fi
+  tst_cmd="${tst_cmd/#* $test_exe /$runner $test_exe }" # replace test runner
+  if [ -n "$pre_test" ]; then
+    tst_cmd="${pre_test} && ${tst_cmd}"
+  fi
+
+  while [ "$i" -lt "$runs_per_test" ]; do
+    let i+=1
+    if [ "$runs_per_test" -gt 1 ]; then
+      echo
+      echo "$cmd: running test '$test_exe' ($i of $runs_per_test):"
+      echo
+    fi
+    if [ "$verbose" -ne 0 ]; then
+      echo "$cmd: running command-line: $tst_cmd"
+    fi
+    $EVAL_ "$tst_cmd"
+    if [ "$?" -ne 0 ]; then
+      let err_cnt+=1
+      if [ "$keep_going" -eq 0 ]; then
+        break
+      fi
+    elif [ "$i" -eq "$runs_per_test" -a "$cache_results" != "no" -o \
+           "$cache_results" == "yes" ]; then
+      $EVAL_ touch "$pass_token"
+    fi
+  done
+done
+
+if [ "$err_cnt" -gt 0 ]; then
+  echo "$cmd: error: subcommand failed"
+  exit 1
+fi

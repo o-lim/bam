@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+source bam-sh-setup
+
+name=
+generator="eclipse"
+cmd=$(basename "$0")
+args=$(getopt -o hg:n:t: -l "help,generator:,name:,toolchain:,all-toolchains" -n "$cmd" -- "$@")
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+eval set -- "$args"
+while true; do
+  case "$1" in
+    -h|--help)
+      exec man bam-project
+      shift
+      ;;
+    -g|--generator)
+      generator="$2"
+      shift 2
+      ;;
+    -n|--name)
+      name="$2"
+      shift 2
+      ;;
+    -t|--toolchain)
+      toolchain="$2"
+      alltoolchains=0
+      shift 2
+      ;;
+    --all-toolchains)
+      toolchains=
+      alltoolchains=1
+      shift 1
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+if [ "$generator" == "list" ]; then
+  cat << EOF
+Project generators:
+  eclipse     Generates Eclipse CDT project files
+  qtcreator   Generates QtCreator project files
+  vscode      Generates Visual Studio Code project files
+EOF
+  exit 0
+fi
+
+outdir="$1"
+if [ -n "$outdir" ]; then
+  if ! [ -e "$outdir" ]; then
+    mkdir -p "$outdir"
+  fi
+  cd "$outdir"
+fi
+
+if [ -z "$name" ]; then
+  name="$(basename "$(pwd)")"
+fi
+
+args=("$name")
+if [ -n "$toolchain" ]; then
+  args=("${args[@]}" --toolchain "$toolchain")
+fi
+if [ "$alltoolchains" == "1" ]; then
+  args=("${args[@]}" --all-toolchains)
+fi
+
+type -P "generate-$generator-project" > /dev/null 2>&1 && exec generate-$generator-project "${args[@]}"
+echo "$cmd: error: unknown generator '$generator'" >&2
+exit 1

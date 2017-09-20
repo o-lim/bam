@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+
+set -e
+
+source bam-sh-setup
+
+all_platforms=(
+  "armv7-ghs-eabihf"
+  "armv7-gnu-eabihf"
+  "c28x-ti-coff"
+  "i686-linux-gnu"
+  "i686-w64-mingw32"
+  "msp430-ti-eabi"
+  "x86_64-linux-gnu"
+  "x86_64-w64-mingw32"
+)
+
+configdir="build"
+name=
+platforms="${all_platforms[@]}"
+cmd=$(basename "$0")
+args=$(getopt -o p:n:h -l "platforms:,name:,config:,help" -n "$cmd" -- "$@")
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+eval set -- "$args"
+while true; do
+  case "$1" in
+    -h|--help)
+      exec man "$cmd"
+      shift
+      ;;
+    -p|--platforms)
+      platforms="$2"
+      shift 2
+      ;;
+    -n|--name)
+      name="$2"
+      shift 2
+      ;;
+    --config)
+      configdir="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+if [ "$platforms" == "list" ]; then
+  echo "Available platforms:"
+  for pf in ${all_platforms[@]}; do
+    echo "  $pf"
+  done
+  exit 0
+fi
+
+rootdir="$1"
+if [ -n "$rootdir" ]; then
+  if ! [ -e "$rootdir" ]; then
+    mkdir -p "$rootdir"
+  fi
+  cd "$rootdir"
+fi
+
+if [ -z "$name" ]; then
+  name="$(basename "$(pwd)")"
+fi
+
+if ! [ -e ".bam/config" ]; then
+  mkdir -p .bam
+  echo -e "[core]\n\toutdir = //out" > ".bam/config"
+fi
+
+platforms=$(echo "$platforms" | sed 's/,/ /g')
+template_dir="${BAM_TEMPLATE_DIR:-$BAM_INSTALL_PREFIX/share/bam-core/templates}"
+config_path="$configdir/config"
+toolchain_path="$configdir/toolchain"
+
+mkdir -p "$config_path"
+mkdir -p "$toolchain_path"
+cp "$template_dir/.gn" "$template_dir/BUILD.gn" .
+cp "$template_dir"/config/*.gn* "$config_path/"
+cp -r "$template_dir"/lnt "$configdir"
+
+configs="lint style ut external $platforms"
+for cf in $configs; do
+  cp -r "$template_dir/config/$cf" "$config_path/"
+done
+
+toolchains="lint_common style ut $platforms"
+for tc in $toolchains; do
+  echo >> "$toolchain_path/BUILD.gn"
+  cat < "$template_dir/toolchains/$tc.gn" >> "$toolchain_path/BUILD.gn"
+done
+
+if [ -n "$IN_NIX_SHELL" ]; then
+  HOST_CPU=$(echo $system | sed 's/-.*//')
+else
+  HOST_CPU=$(uname -m)
+fi
+PLATFORMS=$(echo "\"$platforms\"" | sed 's/[, ]/", "/g')
+HOST_OS=$(uname -s | tr A-Z a-z)
+HOST_PLATFORM="${HOST_CPU}-${HOST_OS}-gnu"
+PROJECT_NAME="$name"
+YEAR=$(date +%Y)
+
+for gnfile in "BUILD.gn"  ".gn" $(find "$configdir" -type f -name '*.gn*'); do
+  sed -i "s/@PROJECT_NAME@/$PROJECT_NAME/g" "$gnfile"
+  sed -i "s/@PLATFORMS@/$PLATFORMS/g" "$gnfile"
+  sed -i "s/@GN_SETTINGS_DIR@/$configdir/g" "$gnfile"
+  sed -i "s/@HOST_PLATFORM@/$HOST_PLATFORM/g" "$gnfile"
+  sed -i "s/@HOST_CPU@/$HOST_CPU/g" "$gnfile"
+  sed -i "s/@HOST_OS@/$HOST_OS/g" "$gnfile"
+  sed -i "s/@YEAR@/$YEAR/g" "$gnfile"
+done

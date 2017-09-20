@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+
+source bam-sh-setup
+
+cmd=$(basename "$0")
+args=$(getopt -o j:l:hkSnv -l "jobs:,load-average:,keep-going,no-keep-going,stop,dry-run,verbose,check-up-to-date,help" -n "$cmd" -- "$@")
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+num_jobs=
+load_avg=
+keep_going=0
+dry_run=0
+verbose=0
+check_uptodate=0
+
+eval set -- "$args"
+while true; do
+  case "$1" in
+    -h|--help)
+      exec man "$cmd"
+      shift
+      ;;
+    -j|--jobs)
+      num_jobs="$2"
+      shift 2
+      ;;
+    -l|--load-average)
+      load_avg="$2"
+      shift 2
+      ;;
+    -k|--keep-going)
+      keep_going=1
+      shift
+      ;;
+    -S|--no-keep-going|--stop)
+      keep_going=0
+      shift
+      ;;
+    -n|--dry-run)
+      dry_run=1
+      shift
+      ;;
+    -v|--verbose)
+      verbose=1
+      shift
+      ;;
+    --check-up-to-date)
+      check_uptodate=1
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+check_buildenv "$BAM_OUTPUT_PATH"
+
+if [ "$#" -eq 0 ]; then
+  targets=()
+else
+  targets=
+  for target_label in "$@"; do
+    if is_caret_target "$target_label"; then
+      tgts="$(resolve_caret_targets "$target_label")"
+    elif is_target_label "$target_label"; then
+      tgts="$(gn --root="$BAM_SOURCE_ROOT" ls "$BAM_OUTPUT_PATH" --as=output --all-toolchains "$target_label")"
+    elif [[ "$target_label" == *"/"* ]]; then
+      tgts="$(realpath -L -m --relative-to="$BAM_OUTPUT_PATH" "$target_label")"
+    else
+      tgts="$target_label"
+    fi
+
+    if [ "$?" -ne 0 ]; then
+      echo "$cmd: error: $tgts" >&2
+      exit 1
+    elif [ -z "$tgts" ]; then
+      echo "$cmd: error: cannot find any targets for '$target_label'" >&2
+      exit 1
+    elif [ "$verbose" -ne 0 -a "$tgts" != "$target_label" ]; then
+      echo "$cmd: found targets for '$target_label':"
+      echo "$tgts" | sort | sed 's/^/    /'
+    fi
+
+    targets="$(echo "$targets" && echo "$tgts")"
+  done
+  targets="$(echo "$targets" | sort -u)"
+  IFS=$'\n' read -rd '' -a targets <<< "$targets"
+fi
+
+NINJA_FLAGS=
+if [ -n "$num_jobs" ]; then
+  NINJA_FLAGS+=" -j $num_jobs"
+fi
+if [ -n "$load_avg" ]; then
+  NINJA_FLAGS+=" -l $load_avg"
+fi
+if [ "$keep_going" -ne 0 ]; then
+  NINJA_FLAGS+=" -k 0"
+fi
+if [ "$dry_run" -ne 0 -o "$check_uptodate" -ne 0 ]; then
+  NINJA_FLAGS+=" -n"
+fi
+if [ "$verbose" -ne 0 ]; then
+  NINJA_FLAGS+=" -v"
+  echo "$cmd: building targets: ${targets[@]}"
+fi
+
+if [ "$check_uptodate" -ne 0 ]; then
+  ninja -C "$BAM_OUTPUT_PATH" $NINJA_FLAGS "${targets[@]}" | tail -n 1 | diff -q <(echo "ninja: no work to do.") - > /dev/null
+  if [ "$?" -eq 0 ]; then
+    exit 0
+  else
+    echo "$cmd: error: build is out-of-date" >&2
+    exit 1
+  fi
+fi
+ninja -C "$BAM_OUTPUT_PATH" $NINJA_FLAGS "${targets[@]}"

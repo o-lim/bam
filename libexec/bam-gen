@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+source bam-sh-setup
+
+case "$1" in
+  -h|--help)
+    exec man bam-gen
+    shift
+    ;;
+esac
+
+envlog="build-env.log"
+jsonfile="build.json"
+write_buildenv "$BAM_OUTPUT_PATH/.buildenv"
+
+exec gn --root="$BAM_SOURCE_ROOT" --envlog="$envlog" --ide=json --json-file-name="$jsonfile" gen "$BAM_OUTPUT_PATH" "$@"

@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+function build_gn_synopsis() {
+  local cmd="$1"
+  cat << EOF
+SYNOPSIS
+       bam $cmd [-h|--help] [--args=<args>] [--[no]color] [--markdown]
+                [--dotfile=<filename>] [--root=<root-dir>]
+                [--runtime-deps-list-file=<filename>] [--threads=<N>]
+                [--time] [--tracelog=<logfile>] [-v]
+EOF
+}
+
+function build_gn_synopsis_quiet() {
+  local cmd="$1"
+  build_gn_synopsis "$cmd" | sed -r '2s/(.*)/\1 [-q]/'
+}
+
+function build_gn_options_common_quiet() {
+cat << EOF
+OPTIONS
+       -h, --help
+              Display this help and exit.
+
+       --args=<args>
+              Specifies build argument overrides.
+
+       --color
+              Force colored output.
+
+       --dotfile=<filename>
+              Override the name of the ".gn" file.
+
+       --markdown
+              Write the output in the Markdown format.
+
+       --nocolor
+              Force non-colored output.
+
+       -q     Quiet mode. Don't print output on success.
+
+       --root=<root-dir>
+              Explicitly specify source root.
+
+       --runtime-deps-list-file=<filename>
+              Save runtime dependencies for targets to file.
+
+       --threads=<N>
+              Specify number of worker threads.
+
+       --time Outputs a summary of how long everything took.
+
+       --tracelog=<logfile>
+              Writes a Chrome-compatible trace log to the given file.
+
+       -v     Verbose logging.
+EOF
+}
+
+function build_gn_options_common() {
+  build_gn_options_common_quiet | sed '/  *-q/,/^$/d'
+}

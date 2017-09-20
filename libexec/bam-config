@@ -1,0 +1,297 @@
+#!/usr/bin/env bash
+
+set -o pipefail
+
+function usage() {
+  cat << EOF
+Usage: bam config [options]
+
+Config file location:
+    --global              use global config file
+    --local               use project config file
+    -f, --file <file>     use given config file
+
+Actions:
+    --get                 get value: name
+    --get-all             get all values: name
+    --replace-all         replace all matching variables: name value
+    --add                 add a new variable: name value
+    --unset               remove a variable: name
+    --unset-all           remove all matches: name
+    --rename-section      rename a section: old-name new-name
+    --remove-section      remove a section: name
+    -l, --list            list all
+
+EOF
+  exit 1
+}
+
+function listall() {
+  local cfgfile="$1"
+  local section=
+  local key=
+  local value=
+  if [ -f "$cfgfile" ]; then
+    while IFS='' read -r line || [[ -n "$line" ]]; do
+      if [[ "$line" =~ ^[[:space:]]*\[(.*)].* ]]; then
+        section="${BASH_REMATCH[1]}"
+      elif [[ "$line" =~ ^[[:space:]]*([^#;[:space:]]*)[[:space:]]*=[[:space:]]*(.*) ]]; then
+        key="${BASH_REMATCH[1]}"
+        value="${BASH_REMATCH[2]}"
+        echo "$section.$key=$(trim_config_value "$value")"
+      fi
+    done < "$cfgfile"
+  fi
+}
+
+source bam-sh-setup
+
+cmd=$(basename "$0")
+args=$(getopt -o f:hl -l "add,get,global,local,file:,get-all,replace-all,rename-section,remove-section,unset,unset-all,list,help" -n "$cmd" -- "$@")
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+config_file="$BAM_CONFIG"
+
+options=
+action=
+actions_cnt=0
+is_local=1
+
+eval set -- "$args"
+while true; do
+  case "$1" in
+    -h|--help)
+      exec man "$cmd"
+      shift
+      ;;
+    --global)
+      config_file="$HOME/.bamconfig"
+      options="noglobal"
+      is_local=0
+      shift
+      ;;
+    --local)
+      config_file="$BAM_CONFIG"
+      options="noglobal"
+      is_local=1
+      shift
+      ;;
+    -f|--file)
+      config_file="$2"
+      options="noglobal"
+      is_local=0
+      shift 2
+      ;;
+    --add)
+      actions_cnt+=1
+      action="add"
+      shift
+      ;;
+    --get)
+      actions_cnt+=1
+      action="get"
+      shift
+      ;;
+    --get-all)
+      actions_cnt+=1
+      action="get-all"
+      shift
+      ;;
+    --replace-all)
+      action="set-all"
+      shift
+      ;;
+    --rename-section)
+      actions_cnt+=1
+      action="rename"
+      shift
+      ;;
+    --remove-section)
+      actions_cnt+=1
+      action="remove"
+      shift
+      ;;
+    --unset)
+      actions_cnt+=1
+      action="unset"
+      shift
+      ;;
+    --unset-all)
+      actions_cnt+=1
+      action="unset-all"
+      shift
+      ;;
+    -l|--list)
+      actions_cnt+=1
+      action="list"
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+if [ "$actions_cnt" -gt 1 ]; then
+  echo "$cmd: error: only one action at a time" >&2
+  exit 1
+fi
+
+if [ "$#" == 0 -a "$actions_cnt" -eq 0 ]; then
+  usage
+fi
+
+if [ -z "$action" ]; then
+  if [ "$#" -eq 1 ]; then
+    action="get"
+  else
+    action="set"
+  fi
+fi
+
+case "$action" in
+  get|get-all)
+    if [ "$#" -ne 1 ]; then
+      echo "$cmd: error: wrong number of arguments" >&2
+      exit 1
+    fi
+    section="${1%.*}"
+    key="${1##*.}"
+    if [ "$key" == "$1" ]; then
+      echo "$cmd: error: key does not contain a section: $key" >&2
+      exit 1
+    fi
+    if [ "$action" == "get-all" ]; then
+      last="cat"
+    else
+      last="tail -n 1"
+    fi
+    value="$(get_config_value "$config_file" "$section" "$key" "$options" | $last)"
+    if [ "$value" == "$(null_value)" ]; then
+      exit 1
+    fi
+    echo "$value"
+    [ "$is_local" -eq 0 -o -f "$config_file" ] || exit 1
+    ;;
+  list)
+    if [ "$#" -ne 0 ]; then
+      echo "$cmd: error: wrong number of arguments" >&2
+      exit 1
+    fi
+    if [ "$options" != "noglobal" ]; then
+      listall "$HOME/.bamconfig"
+    fi
+    listall "$config_file"
+    ;;
+  rename)
+    if [ "$#" -ne 2 ]; then
+      echo "$cmd: error: wrong number of arguments" >&2
+      exit 1
+    fi
+    old_name="${1//./\\.}"
+    new_name="$2"
+    sed -ri "s/(^\s*)\[$old_name]/\1[$new_name]/" "$config_file"
+    ;;
+  remove)
+    if [ "$#" -ne 1 ]; then
+      echo "$cmd: error: wrong number of arguments" >&2
+      exit 1
+    fi
+    section="${1//./\\.}"
+    sed -i "\$a[]" "$config_file"
+    sed -i ":top
+      /^\s*\[$section]/,/^\s*\[/{
+        s/^\s*\[$section].*\n\s*\[/[/
+        t top
+      }
+      /^\s*\[$section]/,/^\s*\[/{
+        N
+        b top
+      }
+    " "$config_file"
+    sed -i "\$d" "$config_file"
+    ;;
+  set|set-all|add)
+    if [ "$#" -ne 2 ]; then
+      echo "$cmd: error: wrong number of arguments" >&2
+      exit 1
+    fi
+    section="${1%.*}"
+    key="${1##*.}"
+    value="$2"
+    if [ "$key" == "$1" ]; then
+      echo "$cmd: error: key does not contain a section: $key" >&2
+      exit 1
+    fi
+
+    matched_lines="$(find_config_matches "$config_file" "$section" "$key")"
+    IFS=$'\n' read -rd '' -a matched_lines <<< "$matched_lines"
+
+    if [ "${#matched_lines[@]}" -gt 1 -a "$action" == "set" ]; then
+      echo "$cmd: warning: $1 has multiple values" >&2
+      echo "$cmd: error: cannot overwrite multiple values with a single value" >&2
+      echo "                     use --add or --replace-all to change $1" >&2
+      exit 1
+    elif [ "${#matched_lines[@]}" -eq 0 -o "$action" == "add" ]; then
+      if ! [ -f "$config_file" ]; then
+        mkdir -p "$(dirname "$config_file")"
+        touch "$config_file"
+      fi
+      section_regex="${section//./\\.}"
+      startline="$(sed -n "/^\s*\[$section_regex]/=" "$config_file" | tail -n 1)"
+      if [ -z "$startline" ]; then
+        echo -e "[$section]\n\t$key = $value" >> "$config_file"
+      else
+        value_sub="${value//\//\\/}"
+        sed -ri "
+          $startline,/^\s*\[/{
+            /^\s*\[$section_regex\]\s*/b
+            /^\s*\[/ s/\[/\t$key = $value_sub\n\[/
+            t
+            \$a\\\t$key = $value
+          }
+        " "$config_file"
+      fi
+    else
+      sed_cmds=
+      new_value="${value//\//\\/}"
+      sub="s/(\\s*$key)\\s*=[^\n]*/\\1 = $new_value/;"
+      for line in "${matched_lines[@]}"; do
+        sed_cmds="$sed_cmds $line$sub"
+      done
+      sed -ri "$sed_cmds" "$config_file"
+    fi
+    ;;
+  unset|unset-all)
+    if [ "$#" -ne 1 ]; then
+      echo "$cmd: error: wrong number of arguments" >&2
+      exit 1
+    fi
+    section="${1%.*}"
+    key="${1##*.}"
+    if [ "$key" == "$1" ]; then
+      echo "$cmd: error: key does not contain a section: $key" >&2
+      exit 1
+    fi
+
+    matched_lines="$(find_config_matches "$config_file" "$section" "$key")"
+    IFS=$'\n' read -rd '' -a matched_lines <<< "$matched_lines"
+    if [ "${#matched_lines[@]}" -gt 1 -a "$action" == "unset" ]; then
+      echo "$cmd: warning: $1 has multiple values" >&2
+      echo "$cmd: error: cannot unset multiple values" >&2
+      echo "                     use --unset-all to unset $1" >&2
+      exit 1
+    elif [ "${#matched_lines[@]}" -eq 0 ]; then
+      exit 1
+    fi
+    sed_cmds=
+    echo "${matched_lines[@]}"
+    for line in "${matched_lines[@]}"; do
+      sed_cmds="$sed_cmds ${line}d;"
+    done
+    sed -ri "$sed_cmds" "$config_file"
+    ;;
+esac

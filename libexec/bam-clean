@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+source bam-sh-setup
+
+cmd=$(basename "$0")
+args=$(getopt -o hnvr -l "dry-run,verbose,help" -n "$cmd" -- "$@")
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+rules=0
+dry_run=0
+verbose=0
+
+eval set -- "$args"
+while true; do
+  case "$1" in
+    -h|--help)
+      exec man bam-clean
+      shift
+      ;;
+    -r)
+      rules=1
+      shift
+      ;;
+    -n|--dry-run)
+      dry_run=1
+      shift
+      ;;
+    -v|--verbose)
+      verbose=1
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+GN_FLAGS=
+NINJA_FLAGS=
+show_targets=
+if [ "$dry_run" -ne 0 ]; then
+  NINJA_FLAGS+=" -n"
+fi
+if [ "$verbose" -ne 0 ]; then
+  GN_FLAGS+=" -v"
+  NINJA_FLAGS+=" -v"
+fi
+
+if [ "$rules" -ne 0 ]; then
+  exec ninja -C "$BAM_OUTPUT_PATH" $NINJA_FLAGS -t clean -r "$@"
+elif [ "$#" -eq 0 ]; then
+  if [ "$dry_run" -ne 0 ]; then
+    echo Cleaning build dir "$BAM_OUTPUT_PATH"
+  else
+    exec gn --root="$BAM_SOURCE_ROOT" clean "$BAM_OUTPUT_PATH" $GN_FLAGS
+  fi
+else
+  targets=
+  for target_label in "$@"; do
+    if is_caret_target "$target_label"; then
+      tgts="$(resolve_caret_targets "$target_label")"
+    elif is_target_label "$target_label"; then
+      tgts="$(gn --root="$BAM_SOURCE_ROOT" ls "$BAM_OUTPUT_PATH" --as=output --all-toolchains "$target_label")"
+    elif [[ "$target_label" == *"/"* ]]; then
+      tgts="$(realpath -L -m --relative-to="$BAM_OUTPUT_PATH" "$target_label")"
+    else
+      tgts="$target_label"
+    fi
+
+    if [ "$?" -ne 0 ]; then
+      echo "$cmd: error: $tgts" >&2
+      exit 1
+    elif [ -z "$tgts" ]; then
+      echo "$cmd: error: cannot find any targets for '$target_label'" >&2
+      exit 1
+    elif [ "$verbose" -ne 0 -a "$tgts" != "$target_label" ]; then
+      echo "$cmd: found targets for '$target_label':"
+      echo "$tgts" | sort | sed "s/^/    /"
+    fi
+
+    targets="$(echo "$targets" && echo "$tgts")"
+  done
+  targets="$(echo "$targets" | sort -u)"
+  IFS=$'\n' read -rd '' -a targets <<< "$targets"
+
+  exec ninja -C "$BAM_OUTPUT_PATH" $NINJA_FLAGS -t clean "${targets[@]}"
+fi
