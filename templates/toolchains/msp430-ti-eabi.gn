@@ -1,0 +1,21 @@
+ToolchainWithLint("msp430-ti-eabi") {
+  toolchain_type = "ti"
+
+  cc = "cl430"
+  cxx = "cl430"
+  ar = "ar430"
+  ld = cxx
+  hex = "hex430"
+
+  source_extensions_ld = ["ld", "cmd"]
+
+  toolchain_args = {
+    pkg_config = "msp430-ti-eabi-pkg-config"
+
+    current_cpu = "msp430"
+    current_os = "none"
+    current_platform = "msp430-ti-eabi"
+  }
+
+  toolchain_forwards = ["hex"]
+}

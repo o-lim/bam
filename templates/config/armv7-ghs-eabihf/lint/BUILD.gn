@@ -1,0 +1,10 @@
+config("lint") {
+  include_dirs = [
+    "//build/lnt/ghs",
+    "$lint_supp_dir/ghs",
+  ]
+  cppflags = [
+    "co-ghs.lnt",
+  ]
+  asmppflags = cppflags
+}

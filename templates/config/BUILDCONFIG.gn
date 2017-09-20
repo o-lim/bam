@@ -1,0 +1,100 @@
+#=============================================================================
+# DEFAULT OS/CPU SETUP
+#=============================================================================
+if (target_os == "") {
+  target_os = host_os
+}
+if (target_cpu == "") {
+  target_cpu = host_cpu
+}
+if (current_os == "") {
+  current_os = target_os
+}
+if (current_cpu == "") {
+  current_cpu = target_cpu
+}
+
+#=============================================================================
+# BUILD FLAGS
+#=============================================================================
+declare_args() {
+  # Build configuration ("debug" or "release")
+  config = "debug"
+}
+assert(config == "debug" || config == "Debug" ||
+       config == "release" || config == "Release",
+  "Build configuration must be either \"debug\" or \"release\"")
+
+#=============================================================================
+# BUILD SYSTEM SETUP
+#=============================================================================
+bam_core_path = getenv("BAM_CORE_PATH")
+config_path = "//@GN_SETTINGS_DIR@/config"
+toolchain_path = "//@GN_SETTINGS_DIR@/toolchain"
+
+all_platforms = [ @PLATFORMS@, "ut" ]
+all_lint_platforms = all_platforms - [ "ut" ]
+host_platform = "@HOST_PLATFORM@"
+test_platform = "ut"
+style_toolchain = "$toolchain_path:style"
+
+default_is_debug = (config == "debug" || config == "Debug")
+default_enable_valgrind = false
+default_enable_lint = true
+default_enable_style = true
+default_pre_test = "find . -name '*.gcda' -exec rm -f {} \\; "
+default_test_args = [
+  "--gtest_print_time=1",
+  "--gtest_repeat=1",
+  "--gtest_shuffle",
+  "--gtest_filter=\"-*.*_MANUAL:*.*_DISABLED:*.*_INTEGRATION:*.*_LENGTHY:*.*_SPIKE:*.*_INFO\"",
+]
+
+import("${config_path}/lint_dep.gni")
+import("${bam_core_path}/config/buildconfig.gni")
+
+#=============================================================================
+# TARGET DEFAULTS
+#=============================================================================
+#
+# Set up the default configuration for every build target of the given type.
+# The values configured here will be automatically set on the scope of the
+# corresponding target. Target definitions can add or remove to the settings
+# here as needed.
+
+# Debug/release-related defines.
+if (is_debug) {
+  compiler_configs = [ "$config_path:debug" ]
+} else {
+  compiler_configs = [ "$config_path:release" ]
+}
+
+default_configs = [ "$config_path:default" ]
+
+set_defaults("Lint") {
+  configs = compiler_configs + default_configs
+}
+set_defaults("LoadableModule") {
+  configs = compiler_configs + default_configs
+}
+set_defaults("SourceSet") {
+  configs = compiler_configs + default_configs
+}
+set_defaults("StaticLibrary") {
+  configs = compiler_configs + default_configs
+}
+set_defaults("SharedLibrary") {
+  configs = compiler_configs + default_configs
+}
+set_defaults("Executable") {
+  configs = compiler_configs + default_configs
+}
+set_defaults("Style") {
+  configs = default_configs
+}
+set_defaults("Test") {
+  configs = [ "$external_deps_path:gtest_main" ]
+}
+set_defaults("lint") {
+  deps = ["$config_path/$current_platform:lnt"]
+}

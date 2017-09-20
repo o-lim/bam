@@ -1,0 +1,51 @@
+config("i686-w64-mingw32") {
+  defines = [
+    "_WIN32_WINNT=0x0501",
+  ]
+  cflags = [
+    "-m32",
+    "-g",
+    "-O0",
+    "-fno-strict-aliasing",
+    "-fno-strict-overflow",
+    "-ansi",
+    "-Wall",
+    "-Werror",
+    "-Wextra",
+    "-Wunused",
+    "-Winit-self",
+    "-Wswitch-default",
+    "-Wfloat-equal",
+    "-Wshadow",
+    "-Wformat=2",
+    "-Wcast-qual",
+    "-Wcast-align",
+    "-Wwrite-strings",
+    "-Wlogical-op",
+    "-Wmissing-format-attribute",
+    "-Wpacked",
+    "-Winvalid-pch",
+    "-Wdisabled-optimization",
+    "-Wmissing-include-dirs",
+    "-Wmissing-field-initializers",
+    "-Wvolatile-register-var",
+    "-Woverlength-strings",
+    "-Wconversion",
+    "-Wno-endif-labels",
+    "-Wno-variadic-macros",
+  ]
+  asmflags = cflags
+  ldflags = [
+    "-m32",
+    "-static",
+  ]
+}
+
+lint_dep("lnt") {
+  cc = "i686-w64-mingw-gcc"
+  cxx = "i686-w64-mingw-g++"
+  vendor = "gcc"
+  cflags = [
+    "-m32",
+  ]
+}

@@ -133,10 +133,12 @@ template("Toolchain") {
 
   if (is_builtin) {
     # Toolchain type is built into build system, so import the necessary gn
-    # files.  Otherwise, this is a user defined toolchain and the invoker must
-    # manually import the necessary gn files since only the invoker knows where
-    # they are located.
+    # files.
     import("$bam_core_path/toolchain/${toolchain_type}_toolchain.gni")
+  } else {
+    # This is a user defined toolchain, so import the necessary gn files from
+    # the user specified toolchain_path.
+    import("$toolchain_path/${toolchain_type}_toolchain.gni")
   }
 
   if (defined(invoker.toolchain_forwards)) {
@@ -167,8 +169,9 @@ template("Toolchain") {
       "loadable_module_extension",
       "object_extensions",
       "pkg_config",
+      "pkg_config_args",
       "pool",
-      "postlink",
+      "post_link",
       "rebuild_define",
       "shlib_extension",
       "solink_libs_section_prefix",

@@ -1,0 +1,16 @@
+ToolchainWithLint("i686-linux-gnu") {
+  toolchain_type = "gcc"
+
+  cc = "gcc"
+  cxx = "g++"
+  ar = "ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    current_cpu = "i686"
+    current_os = "linux"
+    current_platform = "i686-linux-gnu"
+  }
+}

@@ -1,0 +1,36 @@
+common_flags = [
+  "-bsp=generic",
+  "-cpu=cortexa8",
+  "-G",
+  "-align8",
+  "--gnu_asm",
+  "--no_implicit_include",
+  "--no_exceptions",
+  "--no_rtti",
+  "-fhard",
+  "-time64",
+]
+
+config("armv7-ghs-eabihf") {
+  defines = [
+  ]
+  cflags = common_flags + [
+    "-lnk=-no_full_path_execname",
+    "--quit_after_warnings",
+    "--link_once_templates",
+    "--diag_suppress", "494,667,1795,550,191,497,951,68,177,1518,228,76",
+    "-O1",
+    "-OI",
+  ]
+  asmflags = cflags
+  ldflags = cflags + [
+    "-lnk=-no_full_path_execname",
+  ]
+}
+
+lint_dep("lnt") {
+  cc = "ccarm"
+  cxx = "cxarm"
+  vendor = "ghs"
+  cflags = common_flags
+}

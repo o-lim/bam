@@ -1,0 +1,21 @@
+ToolchainWithLint("c28x-ti-coff") {
+  toolchain_type = "ti"
+
+  cc = "cl2000"
+  cxx = "cl2000"
+  ar = "ar2000"
+  ld = cxx
+  hex = "hex2000"
+
+  source_extensions_ld = ["ld", "cmd"]
+
+  toolchain_args = {
+    pkg_config = "c28x-ti-coff-pkg-config"
+
+    current_cpu = "f2803x"
+    current_os = "none"
+    current_platform = "c28x-ti-coff"
+  }
+
+  toolchain_forwards = ["hex"]
+}

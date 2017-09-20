@@ -1,0 +1,16 @@
+ToolchainWithLint("ut") {
+  toolchain_type = "gcc"
+
+  cc = "gcc"
+  cxx = "g++"
+  ar = "ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    current_cpu = "@HOST_CPU@"
+    current_os = "@HOST_OS@"
+    current_platform = "ut"
+  }
+}

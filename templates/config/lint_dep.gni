@@ -1,0 +1,83 @@
+lint_supp_dir = "$bam_core_path/lnt"
+
+template("lint_dep") {
+  lint_dep_name = target_name
+  action("_${lint_dep_name}_lint_dir") {
+    command = "mkdir -p " + rebase_path("$root_gen_dir/lnt", root_build_dir)
+    command += " && touch " + rebase_path("$root_gen_dir/lnt/.dirstamp", root_build_dir)
+    description = "LINTDEP DIR $root_gen_dir/lnt"
+    outputs = ["$root_gen_dir/lnt/.dirstamp"]
+  }
+
+  action(target_name) {
+    forward_variables_from(invoker, [
+      "cc",
+      "cxx",
+      "cflags",
+      "cflags_c",
+      "cflags_cc",
+      "cppflags",
+      "makefile",
+      "vendor",
+    ])
+
+    if (!defined(cxx)) {
+      cxx = cc
+    }
+
+    if (!defined(cflags)) {
+      cflags = []
+    }
+    if (!defined(cflags_c)) {
+      cflags_c = []
+    }
+    if (!defined(cflags_cc)) {
+      cflags_cc = []
+    }
+    if (!defined(cppflags)) {
+      cppflags = []
+    }
+    if (!defined(makefile)) {
+      makefile = "//build/lnt/co-$vendor.mak"
+    }
+
+    cflags_string = ""
+    foreach (flag, cflags) {
+      cflags_string += " " + flag
+    }
+    cflags_c_string = ""
+    foreach (flag, cflags_c) {
+      cflags_c_string += " " + flag
+    }
+    cflags_cc_string = ""
+    foreach (flag, cflags_cc) {
+      cflags_cc_string += " " + flag
+    }
+    cppflags_string = ""
+    foreach (flag, cppflags) {
+      cppflags_string += " " + flag
+    }
+
+    command = "make"
+    args = [
+      "--silent",
+      "-C", rebase_path("$root_gen_dir/lnt", root_build_dir),
+      "-f", rebase_path(makefile, "$root_gen_dir/lnt"),
+      "CC_BIN=$cc",
+      "CXX_BIN=$cxx",
+      "COMMON_FLAGS=$cflags_string",
+      "CFLAGS=$cflags_c_string",
+      "CXXFLAGS=$cflags_cc_string",
+      "CPPFLAGS=$cppflags_string",
+    ]
+    inputs = [ makefile ]
+    data_deps = [":_${lint_dep_name}_lint_dir"]
+    description = "LINTDEP $root_gen_dir/lnt"
+    outputs = [
+      "$root_gen_dir/lnt/$vendor-include-path.lnt",
+      "$root_gen_dir/lnt/lint_cmac.h",
+      "$root_gen_dir/lnt/lint_cppmac.h",
+      "$root_gen_dir/lnt/size-options.lnt",
+    ]
+  }
+}

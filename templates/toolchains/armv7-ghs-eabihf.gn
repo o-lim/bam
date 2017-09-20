@@ -1,0 +1,19 @@
+ToolchainWithLint("armv7-ghs-eabihf") {
+  toolchain_type = "ghs"
+
+  cc = "ccarm"
+  cxx = "cxarm"
+  ar = cxx
+  ld = cxx
+
+  source_extensions_asm = ["asm", "s", "S", "arm"]
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    pkg_config = "armv7-ghs-eabihf-pkg-config"
+
+    current_cpu = "am35xx"
+    current_os = "tx"
+    current_platform = "armv7-ghs-eabihf"
+  }
+}

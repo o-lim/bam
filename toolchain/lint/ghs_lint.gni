@@ -113,6 +113,7 @@ template("ghs_lint") {
       "lintcxx",
       "loadable_module_extension",
       "pkg_config",
+      "pkg_config_args",
       "rebuild_define",
       "shlib_extension",
       "source_extensions_asm",

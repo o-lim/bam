@@ -1,0 +1,34 @@
+Style("style-headers") {
+  root_dir = "//include"
+  source_dirs = [
+    "//include",
+  ]
+}
+
+Group("style") {
+  deps = [
+    ":style-headers($style_toolchain)",
+    "src:@PROJECT_NAME@($style_toolchain)"
+  ]
+}
+
+Group("integrate") {
+  deps = []
+  foreach(pf, platforms) {
+    if (pf != test_platform) {
+      deps += [ "src:@PROJECT_NAME@($toolchain_path:$pf)" ]
+    }
+  }
+}
+
+Group("lint") {
+  deps = []
+  foreach(pf, lint_platforms) {
+    deps += [ "src:@PROJECT_NAME@($toolchain_path:lint-$pf)" ]
+  }
+}
+
+Group("test") {
+  testgroup = true
+  deps = [ "src:@PROJECT_NAME@($test_toolchain)" ]
+}

@@ -1,0 +1,18 @@
+Toolchain("style") {
+  toolchain_type = "style"
+
+  cc = "cpplint.py"
+  cxx = "cpplint.py"
+  ar = ""
+  ld = ""
+
+  source_extensions_asm = ["."] # disables style checking for asm files
+  source_extensions_cc = ["h", "c"]
+  source_extensions_cxx = ["hpp", "hh", "hxx", "h++", "H", "cpp", "cc", "cxx", "c++", "C"]
+
+  toolchain_args = {
+    current_cpu = "style"
+    current_os = "style"
+    current_platform = "style"
+  }
+}

@@ -1,0 +1,19 @@
+ToolchainWithLint("x86_64-w64-mingw32") {
+  toolchain_type = "gcc"
+  toolprefix = "x86_64-w64-mingw32-"
+
+  cc = "${toolprefix}gcc"
+  cxx = "${toolprefix}g++"
+  ar = "${toolprefix}ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    pkg_config = "${toolprefix}pkg-config"
+
+    current_cpu = "x86_64"
+    current_os = "win"
+    current_platform = "x86_64-w64-mingw32"
+  }
+}

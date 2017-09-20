@@ -1,0 +1,3 @@
+source_extensions_lintasm = ["."] # disables lint checking for asm files
+source_extensions_lintcc = ["h", "c"]
+source_extensions_lintcxx = ["hpp", "hh", "hxx", "h++", "H", "cpp", "cc", "cxx", "c++", "C"]

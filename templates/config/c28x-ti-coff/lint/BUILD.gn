@@ -1,0 +1,10 @@
+config("lint") {
+  include_dirs = [
+    "//build/lnt/ti",
+    "$lint_supp_dir/ti",
+  ]
+  cppflags = [
+    "co-ti.lnt",
+  ]
+  asmppflags = cppflags
+}

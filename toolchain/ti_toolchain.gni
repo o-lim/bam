@@ -391,8 +391,8 @@ template("ti_toolchain") {
         strip_command = "${invoker.strip} --outfile=\"$outfile\" \"$unstripped_outfile\""
         command += " && cp -af \"$outfile\" \"$unstripped_outfile\" && " + strip_command
       }
-      if (defined(invoker.postlink)) {
-        command += " && " + invoker.postlink
+      if (defined(invoker.post_link)) {
+        command += " && " + invoker.post_link
       }
       description = "LINK $outfile"
       outputs = [
@@ -425,6 +425,9 @@ template("ti_toolchain") {
     toolchain_args = {
       if (defined(invoker.pkg_config)) {
         pkg_config = invoker.pkg_config
+      }
+      if (defined(invoker.pkg_config_args)) {
+        pkg_config_args = invoker.pkg_config_args
       }
       pkg_config_lib_switch = lib_switch
       pkg_config_lib_dir_switch = lib_dir_switch

@@ -1,0 +1,34 @@
+config("ut") {
+  optimization = [ "-O0" ]
+  profile_flags = [ "-pg" ]
+  coverage_flags = [ "-ftest-coverage", "-fprofile-arcs", "-lgcov" ]
+  defines = [
+    "UNIT_TEST",
+    "GTEST_USE_OWN_TR1_TUPLE=1",
+  ]
+  cflags =
+    optimization +
+    coverage_flags +
+    profile_flags + [
+    "-g",
+    "-Wall",
+    "-Werror",
+    "-Wextra",
+    "-Winit-self",
+    "-Wno-endif-labels",
+    "-Wno-sign-compare",
+    "-Wno-missing-field-initializers",
+    "-Wno-unused-but-set-variable",
+    "-Wno-unused-variable",
+    "-Wno-unused-parameter",
+    "-fno-strict-aliasing",
+    "-fno-strict-overflow",
+  ]
+  cflags_cc = [
+    "-Wno-conversion-null",
+  ]
+  ldflags = [
+    "-rdynamic",
+    "-lSegFault",
+  ] + coverage_flags
+}
