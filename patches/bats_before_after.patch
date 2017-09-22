@@ -1,0 +1,84 @@
+diff -Nuar a/libexec/bats-exec-test b/libexec/bats-exec-test
+--- a/libexec/bats-exec-test
++++ b/libexec/bats-exec-test
+@@ -71,6 +71,14 @@
+   true
+ }
+ 
++before_each() {
++  true
++}
++
++after_each() {
++  true
++}
++
+ skip() {
+   BATS_TEST_SKIPPED=${1:-1}
+   BATS_TEST_COMPLETED=1
+@@ -82,7 +90,7 @@
+   if [ -n "$BATS_EXTENDED_SYNTAX" ]; then
+     echo "begin $BATS_TEST_NUMBER $BATS_TEST_DESCRIPTION" >&3
+   fi
+-  setup
++  before_each
+ }
+ 
+ bats_test_function() {
+@@ -95,8 +103,8 @@
+   BATS_CURRENT_STACK_TRACE=()
+ 
+   local test_pattern=" $BATS_TEST_NAME $BATS_TEST_SOURCE"
+-  local setup_pattern=" setup $BATS_TEST_SOURCE"
+-  local teardown_pattern=" teardown $BATS_TEST_SOURCE"
++  local before_each_pattern=" before_each $BATS_TEST_SOURCE"
++  local after_each_pattern=" after_each $BATS_TEST_SOURCE"
+ 
+   local frame
+   local index=1
+@@ -104,8 +112,8 @@
+   while frame="$(caller "$index")"; do
+     BATS_CURRENT_STACK_TRACE["${#BATS_CURRENT_STACK_TRACE[@]}"]="$frame"
+     if [[ "$frame" = *"$test_pattern"     || \
+-          "$frame" = *"$setup_pattern"    || \
+-          "$frame" = *"$teardown_pattern" ]]; then
++          "$frame" = *"$before_each_pattern"    || \
++          "$frame" = *"$after_each_pattern" ]]; then
+       break
+     else
+       let index+=1
+@@ -222,10 +230,10 @@
+   trap - debug
+ }
+ 
+-bats_teardown_trap() {
++bats_after_each_trap() {
+   trap "bats_exit_trap" exit
+   local status=0
+-  teardown >>"$BATS_OUT" 2>&1 || status="$?"
++  after_each >>"$BATS_OUT" 2>&1 || status="$?"
+ 
+   if [ $status -eq 0 ]; then
+     BATS_TEARDOWN_COMPLETED=1
+@@ -269,10 +277,12 @@
+   echo "1..$#"
+   test_number=1
+   status=0
++  setup
+   for test_name in "$@"; do
+     "$0" $BATS_EXTENDED_SYNTAX "$BATS_TEST_FILENAME" "$test_name" "$test_number" || status=1
+     let test_number+=1
+   done
++  teardown
+   exit "$status"
+ }
+ 
+@@ -289,7 +299,7 @@
+     BATS_TEARDOWN_COMPLETED=""
+     trap "bats_debug_trap \"\$BASH_SOURCE\"" debug
+     trap "bats_error_trap" err
+-    trap "bats_teardown_trap" exit
++    trap "bats_after_each_trap" exit
+     "$BATS_TEST_NAME" >>"$BATS_OUT" 2>&1
+     BATS_TEST_COMPLETED=1
+ 

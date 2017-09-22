@@ -3,6 +3,7 @@ CURRENT_DIR := .
 
 DIR := $(CURRENT_DIR)
 include $(DIR)/rules.mk
+-include $(DIR)/deps.mk
 
 DIR := $(CURRENT_DIR)/docs
 include $(DIR)/rules.mk

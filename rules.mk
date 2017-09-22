@@ -2,6 +2,10 @@ include $(TOP_LEVEL_DIR)/header.mk
 
 PATCH_INSTALL_FILES = bin/bam libexec/bam-core/bam-sh-setup
 
+.PHONY: default
+default: all
+	@true
+
 .PHONY: all
 all:
 	@true

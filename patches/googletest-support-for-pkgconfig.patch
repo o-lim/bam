@@ -1,0 +1,159 @@
+From 43d1e7938eac73e5f0065b0b84aa8cc161f1031a Mon Sep 17 00:00:00 2001
+From: David Seifert <soap@gentoo.org>
+Date: Mon, 14 Aug 2017 13:45:56 +0200
+Subject: [PATCH] Add support for pkgconfig
+
+---
+ googlemock/CMakeLists.txt             | 12 ++++++++++++
+ googlemock/cmake/gmock.pc.in          | 10 ++++++++++
+ googlemock/cmake/gmock_main.pc.in     | 10 ++++++++++
+ googletest/CMakeLists.txt             | 12 ++++++++++++
+ googletest/cmake/gtest.pc.in          | 10 ++++++++++
+ googletest/cmake/gtest_main.pc.in     | 11 +++++++++++
+ googletest/cmake/internal_utils.cmake |  6 ++++--
+ 7 files changed, 69 insertions(+), 2 deletions(-)
+ create mode 100644 googlemock/cmake/gmock.pc.in
+ create mode 100644 googlemock/cmake/gmock_main.pc.in
+ create mode 100644 googletest/cmake/gtest.pc.in
+ create mode 100644 googletest/cmake/gtest_main.pc.in
+
+diff --git a/googlemock/CMakeLists.txt b/googlemock/CMakeLists.txt
+index beb259a..9467058 100644
+--- a/googlemock/CMakeLists.txt
++++ b/googlemock/CMakeLists.txt
+@@ -108,6 +108,18 @@ install(TARGETS gmock gmock_main
+ install(DIRECTORY ${gmock_SOURCE_DIR}/include/gmock
+   DESTINATION include)
+ 
++# configure and install pkgconfig files
++configure_file(
++  cmake/gmock.pc.in
++  "${CMAKE_BINARY_DIR}/gmock.pc"
++  @ONLY)
++configure_file(
++  cmake/gmock_main.pc.in
++  "${CMAKE_BINARY_DIR}/gmock_main.pc"
++  @ONLY)
++install(FILES "${CMAKE_BINARY_DIR}/gmock.pc" "${CMAKE_BINARY_DIR}/gmock_main.pc"
++  DESTINATION lib/pkgconfig)
++
+ ########################################################################
+ #
+ # Google Mock's own tests.
+diff --git a/googlemock/cmake/gmock.pc.in b/googlemock/cmake/gmock.pc.in
+new file mode 100644
+index 0000000..51f818b
+--- /dev/null
++++ b/googlemock/cmake/gmock.pc.in
+@@ -0,0 +1,10 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++libdir=${prefix}/lib
++includedir=${prefix}/include
++
++Name: gmock
++Description: GoogleMock (without main() function)
++Version: @PROJECT_VERSION@
++URL: https://github.com/google/googletest
++Libs: -L${libdir} -lgmock @CMAKE_THREAD_LIBS_INIT@
++Cflags: -I${includedir} @GTEST_HAS_PTHREAD_MACRO@ @CMAKE_THREAD_LIBS_INIT@
+diff --git a/googlemock/cmake/gmock_main.pc.in b/googlemock/cmake/gmock_main.pc.in
+new file mode 100644
+index 0000000..59245df
+--- /dev/null
++++ b/googlemock/cmake/gmock_main.pc.in
+@@ -0,0 +1,10 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++libdir=${prefix}/lib
++includedir=${prefix}/include
++
++Name: gmock_main
++Description: GoogleMock (with main() function)
++Version: @PROJECT_VERSION@
++URL: https://github.com/google/googletest
++Libs: -L${libdir} -lgmock_main @CMAKE_THREAD_LIBS_INIT@
++Cflags: -I${includedir} @GTEST_HAS_PTHREAD_MACRO@ @CMAKE_THREAD_LIBS_INIT@
+diff --git a/googletest/CMakeLists.txt b/googletest/CMakeLists.txt
+index 621d0f0..5b1b512 100644
+--- a/googletest/CMakeLists.txt
++++ b/googletest/CMakeLists.txt
+@@ -107,6 +107,18 @@ install(TARGETS gtest gtest_main
+ install(DIRECTORY ${gtest_SOURCE_DIR}/include/gtest
+   DESTINATION include)
+ 
++# configure and install pkgconfig files
++configure_file(
++  cmake/gtest.pc.in
++  "${CMAKE_BINARY_DIR}/gtest.pc"
++  @ONLY)
++configure_file(
++  cmake/gtest_main.pc.in
++  "${CMAKE_BINARY_DIR}/gtest_main.pc"
++  @ONLY)
++install(FILES "${CMAKE_BINARY_DIR}/gtest.pc" "${CMAKE_BINARY_DIR}/gtest_main.pc"
++  DESTINATION lib/pkgconfig)
++
+ ########################################################################
+ #
+ # Samples on how to link user tests with gtest or gtest_main.
+diff --git a/googletest/cmake/gtest.pc.in b/googletest/cmake/gtest.pc.in
+new file mode 100644
+index 0000000..d89fa24
+--- /dev/null
++++ b/googletest/cmake/gtest.pc.in
+@@ -0,0 +1,10 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++libdir=${prefix}/lib
++includedir=${prefix}/include
++
++Name: gtest
++Description: GoogleTest (without main() function)
++Version: @PROJECT_VERSION@
++URL: https://github.com/google/googletest
++Libs: -L${libdir} -lgtest @CMAKE_THREAD_LIBS_INIT@
++Cflags: -I${includedir} @GTEST_HAS_PTHREAD_MACRO@ @CMAKE_THREAD_LIBS_INIT@
+diff --git a/googletest/cmake/gtest_main.pc.in b/googletest/cmake/gtest_main.pc.in
+new file mode 100644
+index 0000000..c232d32
+--- /dev/null
++++ b/googletest/cmake/gtest_main.pc.in
+@@ -0,0 +1,11 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++libdir=${prefix}/lib
++includedir=${prefix}/include
++
++Name: gtest_main
++Description: GoogleTest (with main() function)
++Version: @PROJECT_VERSION@
++URL: https://github.com/google/googletest
++Requires: gtest
++Libs: -L${libdir} -lgtest_main @CMAKE_THREAD_LIBS_INIT@
++Cflags: -I${includedir} @GTEST_HAS_PTHREAD_MACRO@ @CMAKE_THREAD_LIBS_INIT@
+diff --git a/googletest/cmake/internal_utils.cmake b/googletest/cmake/internal_utils.cmake
+index 777b91e..e92bc4a 100644
+--- a/googletest/cmake/internal_utils.cmake
++++ b/googletest/cmake/internal_utils.cmake
+@@ -48,6 +48,7 @@ endmacro()
+ macro(config_compiler_and_linker)
+   if (NOT gtest_disable_pthreads)
+     # Defines CMAKE_USE_PTHREADS_INIT and CMAKE_THREAD_LIBS_INIT.
++    set(THREADS_PREFER_PTHREAD_FLAG ON)
+     find_package(Threads)
+   endif()
+ 
+@@ -124,10 +125,11 @@ macro(config_compiler_and_linker)
+   endif()
+ 
+   if (CMAKE_USE_PTHREADS_INIT)  # The pthreads library is available and allowed.
+-    set(cxx_base_flags "${cxx_base_flags} -DGTEST_HAS_PTHREAD=1")
++    set(GTEST_HAS_PTHREAD_MACRO "-DGTEST_HAS_PTHREAD=1")
+   else()
+-    set(cxx_base_flags "${cxx_base_flags} -DGTEST_HAS_PTHREAD=0")
++    set(GTEST_HAS_PTHREAD_MACRO "-DGTEST_HAS_PTHREAD=0")
+   endif()
++  set(cxx_base_flags "${cxx_base_flags} ${GTEST_HAS_PTHREAD_MACRO}")
+ 
+   # For building gtest's own tests and samples.
+   set(cxx_exception "${CMAKE_CXX_FLAGS} ${cxx_base_flags} ${cxx_exception_flags}")
+-- 
+2.7.4
+
