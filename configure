@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -e
+
+args=$(getopt -o h -l "help,prefix:" -n "configure" -- "$@")
+if [ $? != 0 ]; then
+  exit 1
+fi
+
+prefix="/usr/local"
+
+eval set -- "$args"
+while true; do
+  case "$1" in
+    -h|--help)
+      shift
+      echo "usage: ./configure [-h|--help] [--prefix <path>]"
+      break
+      ;;
+    --prefix=*)
+      if [ "$1" == "--prefix=" ]; then
+        echo "configure: error: no directory given for ${1:0:${#1}-1}" >&2
+        exit 1
+      fi
+      prefix="${1#*=}"
+      shift 1
+      ;;
+    --prefix)
+      prefix="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+sed -e "s|@prefix@|$prefix|g" prefix.mk.in > prefix.mk

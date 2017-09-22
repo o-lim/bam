@@ -8,4 +8,5 @@
 .atom-build.json
 **/.*.swp
 **/.*.swo
+/prefix.mk
 /man/**/*.1.gz
