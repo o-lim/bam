@@ -1,0 +1,43 @@
+--- a/cpplint.py	2017-09-19 16:17:31.809825857 -0700
++++ b/cpplint.py	2017-09-19 17:09:17.156059545 -0700
+@@ -546,7 +546,7 @@
+ 
+ # The allowed extensions for file names
+ # This is set by --extensions flag.
+-_valid_extensions = set(['cc', 'h', 'cpp', 'cu', 'cuh'])
++_valid_extensions = set(['cc', 'h', 'cpp', 'cu', 'cuh', 'C', 'cxx', 'c++', 'H', 'hpp', 'hxx', 'hh' ])
+ 
+ # Treat all headers starting with 'h' equally: .h, .hpp, .hxx etc.
+ # This is set by --headers flag.
+@@ -936,7 +936,8 @@
+     for category, count in self.errors_by_category.iteritems():
+       sys.stderr.write('Category \'%s\' errors found: %d\n' %
+                        (category, count))
+-    sys.stdout.write('Total errors found: %d\n' % self.error_count)
++    if self.error_count > 0:
++      sys.stdout.write('Total errors found: %d\n' % self.error_count)
+ 
+ _cpplint_state = _CppLintState()
+ 
+@@ -1777,12 +1778,7 @@
+   fileinfo = FileInfo(filename)
+   file_path_from_root = fileinfo.RepositoryName()
+   if _root:
+-    suffix = os.sep
+-    # On Windows using directory separator will leave us with
+-    # "bogus escape error" unless we properly escape regex.
+-    if suffix == '\\':
+-      suffix += '\\'
+-    file_path_from_root = re.sub('^' + _root + suffix, '', file_path_from_root)
++    file_path_from_root = os.path.relpath(filename, _root)
+   return re.sub(r'[^a-zA-Z0-9]', '_', file_path_from_root).upper() + '_'
+ 
+ 
+@@ -6002,7 +5998,6 @@
+         Error(filename, linenum, 'whitespace/newline', 1,
+               'Unexpected \\r (^M) found; better to use only \\n')
+ 
+-  sys.stdout.write('Done processing %s\n' % filename)
+   _RestoreFilters()
+ 
+ 
