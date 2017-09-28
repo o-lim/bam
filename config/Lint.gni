@@ -1,4 +1,4 @@
-import("lint.gni")
+import("lint.gn")
 import("Test.gni")
 import("variables.gni")
 

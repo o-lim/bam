@@ -1,4 +1,4 @@
-import("style.gni")
+import("style.gn")
 import("Test.gni")
 import("variables.gni")
 
