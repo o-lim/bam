@@ -1,7 +1,7 @@
 import("colors.gni")
 import("external_dep.gni")
-import("lint.gni")
-import("style.gni")
+import("lint.gn")
+import("style.gn")
 import("test_wrapper.gni")
 import("variables.gni")
 
