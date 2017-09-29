@@ -11,6 +11,7 @@ all_platforms=(
   "i686-linux-gnu"
   "i686-w64-mingw32"
   "msp430-ti-eabi"
+  "x86_64-darwin-gnu"
   "x86_64-linux-gnu"
   "x86_64-w64-mingw32"
 )
@@ -97,14 +98,35 @@ for tc in $toolchains; do
   cat < "$template_dir/toolchains/$tc.gn" >> "$toolchain_path/BUILD.gn"
 done
 
+function get_host_os() {
+  case "$1" in
+    linux | linux-*)
+      echo linux
+      ;;
+    darwin | darwin-*)
+      echo mac
+      ;;
+    android | android-*)
+      echo android
+      ;;
+    windows | windows-* | mingw | mingw* | *cygwin*)
+      echo win
+      ;;
+    *)
+      echo $1
+      ;;
+  esac
+}
+
 if [ -n "$IN_NIX_SHELL" ]; then
   HOST_CPU=$(echo $system | sed 's/-.*//')
 else
   HOST_CPU=$(uname -m)
 fi
 PLATFORMS=$(echo "\"$platforms\"" | sed 's/[, ]/", "/g')
-HOST_OS=$(uname -s | tr A-Z a-z)
-HOST_PLATFORM="${HOST_CPU}-${HOST_OS}-gnu"
+UNAME=$(uname -s | tr A-Z a-z)
+HOST_OS=$(get_host_os "$UNAME")
+HOST_PLATFORM="${HOST_CPU}-${UNAME}-gnu"
 PROJECT_NAME="$name"
 YEAR=$(date +%Y)
 

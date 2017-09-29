@@ -123,6 +123,8 @@ EOF
     echo ".tmp/build/config/style/BUILD.gn"
     echo ".tmp/build/config/ut/BUILD.gn"
     echo ".tmp/build/config/ut/lint/BUILD.gn"
+    echo ".tmp/build/config/x86_64-darwin-gnu/BUILD.gn"
+    echo ".tmp/build/config/x86_64-darwin-gnu/lint/BUILD.gn"
     echo ".tmp/build/config/x86_64-linux-gnu/BUILD.gn"
     echo ".tmp/build/config/x86_64-linux-gnu/lint/BUILD.gn"
     echo ".tmp/build/config/x86_64-w64-mingw32/BUILD.gn"

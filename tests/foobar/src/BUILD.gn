@@ -72,8 +72,11 @@ SharedLibrary("fu") {
       "lua",
     ]
   }
+  sources = [
+    "fu.cc",
+  ]
   if (!is_test) {
-    sources = [
+    sources += [
       "fu.m",
       "fu.mm",
     ]

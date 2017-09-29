@@ -3,15 +3,15 @@ config("arm") {
     "ARM_DEFINES",
   ]
   cflags = [
-    "-arm-cflag",
+    "-g",
   ]
   ldflags = [
-    "-arm-ldflag",
+    "-lSegFault",
   ]
 }
 
 lint_dep("lnt") {
-  cc = "gcc"
-  cxx = "g++"
+  cc = "arm-none-eabi-gcc"
+  cxx = "arm-none-eabi-g++"
   vendor = "gcc"
 }

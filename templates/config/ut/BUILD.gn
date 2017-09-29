@@ -27,8 +27,12 @@ config("ut") {
   cflags_cc = [
     "-Wno-conversion-null",
   ]
-  ldflags = [
-    "-rdynamic",
-    "-lSegFault",
-  ] + coverage_flags
+  if (!is_mac) {
+    ldflags = [
+      "-rdynamic",
+      "-lSegFault",
+    ] + coverage_flags
+  } else {
+    ldflags = coverage_flags
+  }
 }
