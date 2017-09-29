@@ -118,8 +118,9 @@ template("gcc_toolchain") {
 
   # Note: OS definitions do not work for toolchains,
   # so we must redefine them here
+  _is_mac = (invoker_toolchain_args.current_os == "mac")
   _is_win = (invoker_toolchain_args.current_os == "win")
-  mark_used(_is_win)
+  mark_used([ "_is_mac", "_is_win" ])
 
   toolchain(target_name) {
     if (defined(invoker.use_ccache)) {
@@ -320,7 +321,11 @@ template("gcc_toolchain") {
     }
 
     tool("alink") {
-      command = "rm -f {{output}} && $ar {{arflags}} rcsD {{output}} {{inputs}}"
+      arflags = "rcsD"
+      if (_is_mac) {
+        arflags = "rcs"
+      }
+      command = "rm -f {{output}} && $ar {{arflags}} $arflags {{output}} {{inputs}}"
       description = "AR {{output}}"
       outputs = [
         "{{output_dir}}/{{target_output_name}}{{output_extension}}",
@@ -336,13 +341,25 @@ template("gcc_toolchain") {
       }
       soname = "{{target_output_name}}{{output_extension}}"
       sofile = "{{output_dir}}/$soname"
+      mapfile = "{{output_dir}}/{{target_output_name}}.map"
 
       unstripped_sofile = sofile
       if (defined(invoker.strip)) {
         unstripped_sofile = "{{output_dir}}/lib.unstripped/$soname"
       }
 
-      command = "$ld -shared {{ldflags}}${extra_ldflags} -o \"$unstripped_sofile\" -Wl,-soname=$soname -Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive $solink_libs_section_prefix {{libs}} $solink_libs_section_postfix"
+      wl_map = "-Wl,-Map=\"$mapfile\""
+      wl_soname = "-Wl,-soname=$soname"
+      wl_whole_archive = "-Wl,--whole-archive"
+      wl_no_whole_archive = "-Wl,--no-whole-archive"
+      if (_is_mac) {
+        wl_map = ""
+        wl_soname = ""
+        wl_whole_archive = ""
+        wl_no_whole_archive = ""
+      }
+
+      command = "$ld -shared {{ldflags}}${extra_ldflags} -o \"$unstripped_sofile\" $wl_map $wl_soname $wl_whole_archive {{inputs}} {{solibs}} $wl_no_whole_archive $solink_libs_section_prefix {{libs}} $solink_libs_section_postfix"
       if (defined(invoker.strip)) {
         strip_command = "${invoker.strip} --strip-unneeded -o \"$sofile\" \"$unstripped_sofile\""
         command += " && " + strip_command
@@ -366,6 +383,7 @@ template("gcc_toolchain") {
 
       outputs = [
         sofile,
+        mapfile,
       ]
       if (sofile != unstripped_sofile) {
         outputs += [ unstripped_sofile ]
@@ -387,7 +405,18 @@ template("gcc_toolchain") {
         unstripped_sofile = "{{output_dir}}/lib.unstripped/$soname"
       }
 
-      command = "$ld -shared {{ldflags}}${extra_ldflags} -o \"$unstripped_sofile\" -Wl,-Map=\"$mapfile\" -Wl,-soname=$soname -Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive $solink_libs_section_prefix {{libs}} $solink_libs_section_postfix"
+      wl_map = "-Wl,-Map=\"$mapfile\""
+      wl_soname = "-Wl,-soname=$soname"
+      wl_whole_archive = "-Wl,--whole-archive"
+      wl_no_whole_archive = "-Wl,--no-whole-archive"
+      if (_is_mac) {
+        wl_map = ""
+        wl_soname = ""
+        wl_whole_archive = ""
+        wl_no_whole_archive = ""
+      }
+
+      command = "$ld -shared {{ldflags}}${extra_ldflags} -o \"$unstripped_sofile\" $wl_map $wl_soname $wl_whole_archive {{inputs}} {{solibs}} $wl_no_whole_archive $solink_libs_section_prefix {{libs}} $solink_libs_section_postfix"
       if (defined(invoker.strip)) {
         strip_command = "${invoker.strip} --strip-unneeded -o \"$sofile\" \"$unstripped_sofile\""
         command += " && " + strip_command
@@ -400,6 +429,8 @@ template("gcc_toolchain") {
       # specifies).
       if (defined(invoker.loadable_module_extension)) {
         default_output_extension = invoker.loadable_module_extension
+      } else if (_is_mac) {
+        default_output_extension = ".so"
       } else {
         default_output_extension = default_shlib_extension
       }
@@ -450,7 +481,12 @@ template("gcc_toolchain") {
         unstripped_outfile = "{{output_dir}}/exe.unstripped/$exename"
       }
 
-      command = "$ld {{ldflags}}${extra_ldflags} -o \"$unstripped_outfile\" -Wl,-Map=\"$mapfile\" {{inputs}} {{solibs}} $libs_section_prefix {{libs}} $libs_section_postfix"
+      wl_map = "-Wl,-Map=\"$mapfile\""
+      if (_is_mac) {
+        wl_map = ""
+      }
+
+      command = "$ld {{ldflags}}${extra_ldflags} -o \"$unstripped_outfile\" $wl_map {{inputs}} {{solibs}} $libs_section_prefix {{libs}} $libs_section_postfix"
       if (defined(invoker.strip)) {
         strip_command = "${invoker.strip} --strip-unneeded -o \"$outfile\" \"$unstripped_outfile\""
         command += " && " + strip_command

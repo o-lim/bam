@@ -34,7 +34,7 @@ ToolchainWithLint("x86") {
 
   toolchain_args = {
     current_cpu = "x86"
-    current_os = "linux"
+    current_os = host_os
     current_platform = "x86"
   }
 }
@@ -69,8 +69,8 @@ Toolchain("ut") {
   object_extensions = ["o", "obj", "oo"]
 
   toolchain_args = {
-    current_cpu = "x86"
-    current_os = "linux"
+    current_cpu = host_cpu
+    current_os = host_os
     current_platform = "ut"
   }
 }

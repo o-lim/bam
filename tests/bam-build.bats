@@ -177,27 +177,27 @@ EOF
 
 @test "'bam build <target(toolchain)^>' finds targets with rule containing target for toolchain only" {
   function expected() {
-    echo "bam-build: found targets for 'src/foo.cxx(//build/toolchain:mingw32)^':"
-    echo "    mingw32/obj/src/foo.cxx.o"
+    echo "bam-build: found targets for 'src/foo.cxx(//build/toolchain:arm)^':"
+    echo "    arm/obj/src/foo.cxx.o"
   }
   gn gen out --ide=json --json-file-name=build.json
-  run bam build -v 'src/foo.cxx(//build/toolchain:mingw32)^'
+  run bam build -v 'src/foo.cxx(//build/toolchain:arm)^'
 
   diff -u <(expected) <(print_result | sed -n '/bam-build/,/bam-build/p' | head -n -1)
-  [ -f out/mingw32/obj/src/foo.cxx.o ]
-  ! [ -e out/arm/obj/src/foo.cxx.o ]
+  [ -f out/arm/obj/src/foo.cxx.o ]
+  ! [ -e out/mingw32/obj/src/foo.cxx.o ]
   ! [ -e out/obj/src/foo.cxx.o ]
   ! [ -e out/ut/obj/src/foo.cxx.o ]
 }
 
 @test "'bam build <target> <target-pattern>' can take multiple targets/patterns" {
   gn gen out
-  run bam build foo baz "//:style" "//src:bar(build/toolchain:x86)"
+  run bam build foo baz "//:style" "//src:bar(build/toolchain:arm)"
 
   diff -u <(echo "ninja: Entering directory \`out'") <(print_result | grep '^ninja:')
-  [ -f "out/obj/src/foo.cxx.o" ]
+  [ -f "out//obj/src/foo.cxx.o" ]
   [ -f "out/libbaz.so" ]
-  [ -f "out/obj/src/libbar.a" ]
+  [ -f "out/arm/obj/src/libbar.a" ]
   [ -f "out/style/obj/include/bar.h.style" ]
   [ "$status" -eq 0 ]
 }
@@ -215,16 +215,16 @@ EOF
 
 @test "'bam build -v' enables verbose" {
   function expected() {
-    echo "bam-build: found targets for '//src:baz(build/toolchain:x86)':"
-    echo "    libbaz.so"
-    echo "bam-build: building targets: libbaz.so"
+    echo "bam-build: found targets for '//src:baz(build/toolchain:arm)':"
+    echo "    arm/libbaz.so"
+    echo "bam-build: building targets: arm/libbaz.so"
   }
   gn gen out
-  run bam build -v '//src:baz(build/toolchain:x86)'
+  run bam build -v '//src:baz(build/toolchain:arm)'
 
-  [ -f "out/libbaz.so" ]
+  [ -f "out/arm/libbaz.so" ]
   diff -u <(expected) <(print_result | tail -n +3 | head -n 3)
-  print_result | grep '\[.*\] g++'
+  print_result | grep '\[.*\] arm-none-eabi-g++'
   [ "$status" -eq 0 ]
 }
 

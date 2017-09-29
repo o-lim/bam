@@ -33,8 +33,8 @@ ToolchainWithLint("ut") {
   source_extensions_ld = ["ld"]
 
   toolchain_args = {
-    current_cpu = "i686"
-    current_os = "linux"
+    current_cpu = host_cpu
+    current_os = host_os
     current_platform = "ut"
   }
 }
