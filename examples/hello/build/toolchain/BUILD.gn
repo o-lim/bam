@@ -30,6 +30,13 @@ ToolchainWithLint("ut") {
   ar = "ar"
   ld = cxx
 
+  if (host_os == "mac") {
+    toolchain_type = "mac"
+    cc = "clang"
+    cxx = "clang++"
+    ld = cxx
+  }
+
   source_extensions_ld = ["ld"]
 
   toolchain_args = {
@@ -174,5 +181,22 @@ ToolchainWithLint("x86_64-linux-gnu") {
     current_cpu = "x86_64"
     current_os = "linux"
     current_platform = "x86_64-linux-gnu"
+  }
+}
+
+ToolchainWithLint("x86_64-darwin-gnu") {
+  toolchain_type = "gcc"
+
+  cc = "gcc"
+  cxx = "g++"
+  ar = "ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    current_cpu = "x86_64"
+    current_os = "mac"
+    current_platform = "x86_64-darwin-gnu"
   }
 }

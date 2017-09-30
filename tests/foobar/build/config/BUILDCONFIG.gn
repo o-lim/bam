@@ -82,10 +82,14 @@ set_defaults("Executable") {
   configs = compiler_configs + default_configs
 }
 set_defaults("Test") {
-  configs = [
-     "$external_deps_path:valgrind",
-     "$external_deps_path:gtest_main",
-  ]
+  if (is_linux) {
+    configs = [
+      "$external_deps_path:valgrind",
+      "$external_deps_path:gtest_main",
+    ]
+  } else {
+    configs = [ "$external_deps_path:gtest_main" ]
+  }
 }
 set_defaults("Style") {
   configs = default_configs

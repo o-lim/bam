@@ -32,9 +32,9 @@ bam_core_path = getenv("BAM_CORE_PATH")
 config_path = "//build/config"
 toolchain_path = "//build/toolchain"
 
-all_platforms = [ "armv7-ghs-eabihf", "armv7-gnu-eabihf", "c28x-ti-coff", "i686-linux-gnu", "i686-pc-mingw32", "msp430-ti-eabi", "x86_64-linux-gnu", "ut" ]
+all_platforms = [ "armv7-ghs-eabihf", "armv7-gnu-eabihf", "c28x-ti-coff", "i686-linux-gnu", "i686-pc-mingw32", "msp430-ti-eabi", "x86_64-darwin-gnu", "x86_64-linux-gnu", "ut" ]
 all_lint_platforms = all_platforms - [ "ut" ]
-host_platform = "i686-linux-gnu"
+host_platform = "x86_64-linux-gnu"
 test_platform = "ut"
 style_toolchain = "$toolchain_path:style"
 

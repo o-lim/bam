@@ -4,11 +4,13 @@ set -o pipefail
 
 setup() {
   export BAM_OUTPUT_DIR="out"
+  export UNAME="$(uname -s | tr A-Z a-z)"
 }
 
 before_each() {
   cp -r ../examples .tmp
   cd .tmp
+  sed -i "s/host_platform = \"x86_64-linux-gnu\"/host_platform = \"x86_64-${UNAME}-gnu\"/" hello/build/config/BUILDCONFIG.gn
   touch flint
   chmod +x flint
   PATH="$(pwd):$PATH"
@@ -34,7 +36,7 @@ after_each() {
     echo "Hello World from SetText!!!"
     echo "Hello World from StaticText!!!"
   }
-  bam -C hello gen --args='platforms = ["i686-linux-gnu", "ut"]'
+  bam -C hello gen --args="platforms = [\"x86_64-${UNAME}-gnu\", \"ut\"]"
   bam -C hello ninja
   hello/out/hello | diff -u <(expected) -
 }
@@ -45,7 +47,7 @@ after_each() {
     echo "Hello World from StaticText!!!"
   }
   bam -C hello config core.sourceroot ..
-  bam -C hello gen --args='platforms = ["i686-linux-gnu", "ut"]'
+  bam -C hello gen --args="platforms = [\"x86_64-${UNAME}-gnu\", \"ut\"]"
   bam -C hello ninja
   rm -f hello/out/build-env.log
   mv hello hello_world
@@ -71,7 +73,7 @@ after_each() {
     echo "Hello World from StaticText!!!"
   }
 
-  bam -C hello -o . gen --args='platforms = ["i686-linux-gnu", "ut"]'
+  bam -C hello -o . gen --args="platforms = [\"x86_64-${UNAME}-gnu\", \"ut\"]"
   bam -C hello -o . ninja
   hello/hello | diff -u <(expected) -
   ! [ -d hello/out ]
@@ -83,7 +85,7 @@ after_each() {
     echo "Hello World from StaticText!!!"
   }
 
-  bam -C hello -o ../out gen --args='platforms = ["i686-linux-gnu", "ut"]'
+  bam -C hello -o ../out gen --args="platforms = [\"x86_64-${UNAME}-gnu\", \"ut\"]"
   bam -C hello -o ../out ninja
   out/hello | diff -u <(expected) -
   ! [ -d hello/out ]

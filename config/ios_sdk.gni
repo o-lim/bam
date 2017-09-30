@@ -1,0 +1,5 @@
+declare_args() {
+  # Version of iOS that we're targeting
+  ios_deployment_target = "9.0"
+}
+

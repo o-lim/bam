@@ -18,7 +18,6 @@ config("ut") {
     "-Wno-endif-labels",
     "-Wno-sign-compare",
     "-Wno-missing-field-initializers",
-    "-Wno-unused-but-set-variable",
     "-Wno-unused-variable",
     "-Wno-unused-parameter",
     "-fno-strict-aliasing",

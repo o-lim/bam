@@ -4,8 +4,10 @@ external_dep("lua") {
 external_dep("python") {
   packages = ["python"]
 }
-external_dep("valgrind") {
-  packages = ["valgrind"]
+if (is_linux) {
+  external_dep("valgrind") {
+    packages = ["valgrind"]
+  }
 }
 
 if (is_test) {
