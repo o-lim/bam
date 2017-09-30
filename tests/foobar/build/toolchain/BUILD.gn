@@ -52,7 +52,7 @@ ToolchainWithLint("x64") {
 
   toolchain_args = {
     current_cpu = "x64"
-    current_os = "linux"
+    current_os = host_os
     current_platform = "x64"
   }
 }
@@ -64,6 +64,13 @@ Toolchain("ut") {
   cxx = "g++"
   ar = "ar"
   ld = cxx
+
+  if (host_os == "mac") {
+    toolchain_type = "mac"
+    cc = "clang"
+    cxx = "clang++"
+    ld = cxx
+  }
 
   source_extensions_ld = ["ld"]
   object_extensions = ["o", "obj", "oo"]

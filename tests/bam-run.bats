@@ -6,6 +6,7 @@ setup() {
   export MANWIDTH=80
   cp -r ../examples .tmp
   cd .tmp/hello
+  sed -i "s/host_platform = \"x86_64-linux-gnu\"/host_platform = \"x86_64-$(uname -s | tr A-Z a-z)-gnu\"/" build/config/BUILDCONFIG.gn
 }
 
 teardown() {

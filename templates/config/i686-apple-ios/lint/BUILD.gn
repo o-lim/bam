@@ -1,0 +1,10 @@
+config("lint") {
+  include_dirs = [
+    "//build/lnt/gcc",
+    "$lint_supp_dir/gcc",
+  ]
+  cppflags = [
+    "co-gcc.lnt",
+  ]
+  asmppflags = cppflags
+}

@@ -1,0 +1,49 @@
+config("x86_64-apple-mac") {
+  cflags = [
+    "-m64",
+    "-march=x86-64",
+    "-g",
+    "-O0",
+    "-fno-strict-aliasing",
+    "-fno-strict-overflow",
+    "-ansi",
+    "-Wall",
+    "-Werror",
+    "-Wextra",
+    "-Wunused",
+    "-Winit-self",
+    "-Wswitch-default",
+    "-Wfloat-equal",
+    "-Wshadow",
+    "-Wformat=2",
+    "-Wcast-qual",
+    "-Wcast-align",
+    "-Wwrite-strings",
+    "-Wlogical-op",
+    "-Wmissing-format-attribute",
+    "-Wpacked",
+    "-Winvalid-pch",
+    "-Wdisabled-optimization",
+    "-Wmissing-include-dirs",
+    "-Wmissing-field-initializers",
+    "-Wvolatile-register-var",
+    "-Woverlength-strings",
+    "-Wconversion",
+    "-Wno-endif-labels",
+    "-Wno-variadic-macros",
+  ]
+  asmflags = cflags
+  ldflags = [
+    "-m64",
+  ]
+}
+
+lint_dep("lnt") {
+  cc = "clang"
+  cxx = "clang++"
+  vendor = "gcc"
+  cflags = [
+    "-m64",
+    "-march=x86-64",
+  ]
+}

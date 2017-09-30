@@ -1,7 +1,10 @@
 config("ut") {
   optimization = [ "-O0" ]
   profile_flags = [ "-pg" ]
-  coverage_flags = [ "-ftest-coverage", "-fprofile-arcs", "-lgcov" ]
+  coverage_flags = [ "-ftest-coverage", "-fprofile-arcs" ]
+  if (!is_mac) {
+    coverage_flags += [ "-lgcov" ]
+  }
   defines = [
     "UNIT_TEST",
     "GTEST_USE_OWN_TR1_TUPLE=1",
@@ -18,7 +21,6 @@ config("ut") {
     "-Wno-endif-labels",
     "-Wno-sign-compare",
     "-Wno-missing-field-initializers",
-    "-Wno-unused-but-set-variable",
     "-Wno-unused-variable",
     "-Wno-unused-parameter",
     "-fno-strict-aliasing",
@@ -27,7 +29,7 @@ config("ut") {
   cflags_cc = [
     "-Wno-conversion-null",
   ]
-  if (is_mac) {
+  if (!is_mac) {
     ldflags = [
       "-rdynamic",
       "-lSegFault",

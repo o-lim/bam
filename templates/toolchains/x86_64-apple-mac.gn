@@ -1,0 +1,18 @@
+ToolchainWithLint("x86_64-apple-mac") {
+  toolchain_type = "mac"
+
+  cc = "clang"
+  cxx = "clang++"
+  ar = "ar"
+  ld = cxx
+
+  source_extensions_ld = ["ld"]
+
+  toolchain_args = {
+    current_cpu = "x86_64"
+    current_os = "mac"
+    current_platform = "x86_64-apple-mac"
+
+    mac_deployment_target = "10.9"
+  }
+}

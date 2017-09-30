@@ -20,7 +20,7 @@ config("common") {
       "//include",
       "//src",
     ]
-    if (current_toolchain == host_toolchain || current_toolchain == test_toolchain) {
+    if ((current_toolchain == host_toolchain || current_toolchain == test_toolchain) && !is_mac) {
       ldflags = [
         "-fuse-ld=gold",
       ]

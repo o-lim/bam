@@ -6,6 +6,13 @@ ToolchainWithLint("ut") {
   ar = "ar"
   ld = cxx
 
+  if (host_os == "mac") {
+    toolchain_type = "mac"
+    cc = "clang"
+    cxx = "clang++"
+    ld = cxx
+  }
+
   source_extensions_ld = ["ld"]
 
   toolchain_args = {

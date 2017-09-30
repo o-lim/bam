@@ -5,12 +5,17 @@ set -e
 source bam-sh-setup
 
 all_platforms=(
+  "armv7-apple-ios"
   "armv7-ghs-eabihf"
   "armv7-gnu-eabihf"
+  "armv8-apple-ios"
   "c28x-ti-coff"
+  "i686-apple-ios"
   "i686-linux-gnu"
   "i686-w64-mingw32"
   "msp430-ti-eabi"
+  "x86_64-apple-mac"
+  "x86_64-apple-ios"
   "x86_64-darwin-gnu"
   "x86_64-linux-gnu"
   "x86_64-w64-mingw32"
@@ -101,21 +106,27 @@ done
 function get_host_os() {
   case "$1" in
     linux | linux-*)
-      echo linux
-      ;;
+      echo linux ;;
     darwin | darwin-*)
-      echo mac
-      ;;
+      echo mac ;;
     android | android-*)
-      echo android
-      ;;
+      echo android ;;
     windows | windows-* | mingw | mingw* | *cygwin*)
-      echo win
-      ;;
+      echo win ;;
     *)
-      echo $1
-      ;;
+      echo $1 ;;
   esac
+}
+
+function get_host_platform() {
+  case "$1" in
+    darwin | darwin-*)
+      echo "${HOST_CPU}-apple-mac" ;;
+    windows | windows-* | mingw | mingw* | *cygwin*)
+      echo "${HOST_CPU}-w64-mingw32" ;;
+    *)
+      echo "${HOST_CPU}-${1}-gnu" ;;
+    esac
 }
 
 if [ -n "$IN_NIX_SHELL" ]; then
@@ -126,7 +137,7 @@ fi
 PLATFORMS=$(echo "\"$platforms\"" | sed 's/[, ]/", "/g')
 UNAME=$(uname -s | tr A-Z a-z)
 HOST_OS=$(get_host_os "$UNAME")
-HOST_PLATFORM="${HOST_CPU}-${UNAME}-gnu"
+HOST_PLATFORM="$(get_host_platform "$UNAME")"
 PROJECT_NAME="$name"
 YEAR=$(date +%Y)
 

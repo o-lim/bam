@@ -139,7 +139,7 @@ valgrind_args = ["-q", "--leak-check=full", "--error-exitcode=5", "--gen-suppres
 EOF
   }
   gn gen out
-  bam args --list --short | diff -u <(expected) -
+  bam args --list --short | sed '/deployment_target/d' | diff -u <(expected) -
 }
 
 @test "'bam -o <path> args' changes output dir" {
