@@ -35,6 +35,9 @@ BATS_URL = https://github.com/sstephenson/bats/archive/v$(BATS_VERSION).tar.gz
 GTEST_VERSION = 1.8.0
 GTEST_URL = https://github.com/google/googletest/archive/release-$(GTEST_VERSION).tar.gz
 
+COREUTILS_VERSION = 8.23
+COREUTILS_URL = https://github.com/coreutils/coreutils.git
+
 EXE =
 
 ifeq ($(OS),Mac)
@@ -57,6 +60,12 @@ DEPS_DIR := $(abspath $(CURRENT_DIR)/deps)
 .PHONY: deps
 deps: $(DEPS_DIR)/gn$(EXE) $(DEPS_DIR)/ninja$(EXE) $(DEPS_DIR)/jq$(EXE) $(DEPS_DIR)/pandoc-$(PANDOC_VERSION)$(PANDOC_PLATFORM)
 	@true
+
+ifeq ($(OS),Linux)
+ifeq ($(shell which realpath),)
+deps: $(DEPS_DIR)/realpath
+endif
+endif
 
 .PHONY: test-deps
 test-deps: $(DEPS_DIR)/bats-$(BATS_VERSION)
@@ -101,6 +110,20 @@ $(DEPS_DIR)/googletest-release-$(GTEST_VERSION): | $(DEPS_DIR)
 	@cd $@/build && cmake ..
 	@make -C $@/build
 
+$(DEPS_DIR)/coreutils-v$(COREUTILS_VERSION): | $(DEPS_DIR)
+	@git -C $(@D) clone --depth=50 -b v$(COREUTILS_VERSION) $(COREUTILS_URL) $(@F)
+
+$(DEPS_DIR)/realpath: $(DEPS_DIR)/coreutils-v$(COREUTILS_VERSION)
+	@mkdir -p $</build
+	@cd $< && ./bootstrap
+	@cd $</build && ../configure LDFLAGS=-static
+	@printf '\ngen-sources: $$(BUILT_SOURCES)\n\t@true' >> $</build/Makefile
+	@make -C $</build gen-sources
+	@make -C $</build src/$(@F) man/$(basename $(@F)).1
+	@install -d $(dir $@)/man
+	@install $</build/src/$(@F) $@
+	@install --mode=644 $</build/man/$(basename $(@F)).1 $(dir $@)/man
+
 $(DEPS_DIR)/pandoc-$(PANDOC_VERSION)$(PANDOC_PLATFORM):
 	@curl -o $@ --location $(PANDOC_URL)
 
@@ -108,8 +131,23 @@ $(DEPS_DIR)/pandoc-$(PANDOC_VERSION)$(PANDOC_PLATFORM):
 install-make-deps: install-pandoc
 	@true
 
+.PHONY: install-realpath-deps
+ifeq ($(OS),Linux)
+install-realpath-deps:
+	@apt-get install -qq -y autopoint gperf texinfo
+endif
+ifeq ($(OS),Mac)
+install-realpath-deps:
+	@true
+endif
+
 .PHONY: install-deps
 install-deps: install-gn install-ninja install-jq
+ifeq ($(OS),Linux)
+install-deps: install-realpath
+	@true
+endif
+
 ifeq ($(OS),Mac)
 install-deps:
 	@brew list cmake > /dev/null 2>&1 || brew install cmake
@@ -135,6 +173,17 @@ install-ninja: $(DEPS_DIR)/ninja$(EXE)
 install-jq: $(DEPS_DIR)/jq$(EXE)
 	@install -d $(PREFIX)/bin
 	@install $< $(PREFIX)/bin/
+
+.PHONY: install-realpath
+ifeq ($(shell which realpath),)
+install-realpath: $(DEPS_DIR)/realpath
+	@install -d $(PREFIX)/bin $(PREFIX)/man/man1
+	@install $< $(PREFIX)/bin/
+	@install --mode=644 $(dir $<)/man/$(basename $(<F)).1 $(PREFIX)/man/man1/
+else
+install-realpath:
+	@true
+endif
 
 .PHONY: install-pandoc
 ifeq ($(shell which pandoc),)
