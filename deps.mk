@@ -55,7 +55,7 @@ EXE = .exe
 endif
 
 
-DEPS_DIR := $(abspath $(CURRENT_DIR)/deps)
+DEPS_DIR := $(CURRENT_DIR)/deps
 
 .PHONY: deps
 deps: $(DEPS_DIR)/gn$(EXE) $(DEPS_DIR)/ninja$(EXE) $(DEPS_DIR)/jq$(EXE) $(DEPS_DIR)/pandoc-$(PANDOC_VERSION)$(PANDOC_PLATFORM)
@@ -79,38 +79,38 @@ clean: clean-deps
 clean-deps:
 	@rm -rf $(DEPS_DIR)
 
-$(DEPS_DIR):
+$(DEPS_DIR)/:
 	@mkdir -p $@
 
-$(DEPS_DIR)/gn$(EXE): | $(DEPS_DIR)
+$(DEPS_DIR)/gn$(EXE): | $(DEPS_DIR)/
 	@curl --location $(GN_URL) | tar -C deps -xzf -
 
-$(DEPS_DIR)/ninja$(EXE): | $(DEPS_DIR)
+$(DEPS_DIR)/ninja$(EXE): | $(DEPS_DIR)/
 	@curl -o ninja-$(NINJA_PLATFORM).zip --location $(NINJA_URL)
 	@unzip -d $(@D) ninja-$(NINJA_PLATFORM).zip
 	@rm -f ninja-$(NINJA_PLATFORM).zip
 
-$(DEPS_DIR)/jq$(EXE): | $(DEPS_DIR)
+$(DEPS_DIR)/jq$(EXE): | $(DEPS_DIR)/
 	@curl -o $@ --location $(JQ_URL)
 	@chmod +x $@
 
-$(DEPS_DIR)/cpplint.py: | $(DEPS_DIR)
+$(DEPS_DIR)/cpplint.py: | $(DEPS_DIR)/
 	@curl -o $@ --location $(CPPLINT_URL)
 	@patch -d $(@D) -p1 < patches/cpplint.patch
 	@chmod +x $@
 
-$(DEPS_DIR)/bats-$(BATS_VERSION): | $(DEPS_DIR)
+$(DEPS_DIR)/bats-$(BATS_VERSION): | $(DEPS_DIR)/
 	@curl --location $(BATS_URL) | tar -C $(@D) -xzf -
 	@patch -d $@ -p1 < patches/bats_before_after.patch
 
-$(DEPS_DIR)/googletest-release-$(GTEST_VERSION): | $(DEPS_DIR)
+$(DEPS_DIR)/googletest-release-$(GTEST_VERSION): | $(DEPS_DIR)/
 	@curl --location $(GTEST_URL) | tar -C $(@D) -xzf -
 	@patch -d $@ -p1 < patches/googletest-support-for-pkgconfig.patch
 	@mkdir -p $@/build
 	@cd $@/build && cmake ..
 	@make -C $@/build
 
-$(DEPS_DIR)/coreutils-v$(COREUTILS_VERSION): | $(DEPS_DIR)
+$(DEPS_DIR)/coreutils-v$(COREUTILS_VERSION): | $(DEPS_DIR)/
 	@git -C $(@D) clone --depth=50 -b v$(COREUTILS_VERSION) $(COREUTILS_URL) $(@F)
 
 $(DEPS_DIR)/realpath: $(DEPS_DIR)/coreutils-v$(COREUTILS_VERSION)
