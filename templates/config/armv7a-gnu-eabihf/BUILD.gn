@@ -1,7 +1,7 @@
-config("armv8-apple-ios") {
+config("armv7a-gnu-eabihf") {
   cflags = [
-    "-march=armv8-a",
-    "-mtune=generic-armv8-a",
+    "-march=armv7-a",
+    "-mtune=generic-armv7-a",
     "-mfloat-abi=hard",
     "-g",
     "-O0",
@@ -35,17 +35,18 @@ config("armv8-apple-ios") {
   ]
   asmflags = cflags
   ldflags = [
-    "-m64",
+    "-rdynamic",
+    "-lSegFault",
   ]
 }
 
 lint_dep("lnt") {
-  cc = "clang"
-  cxx = "clang++"
+  cc = "arm-none-eabi-gcc"
+  cxx = "arm-none-eabi-g++"
   vendor = "gcc"
   cflags = [
-    "-march=armv8-a",
-    "-mtune=generic-armv8-a",
+    "-march=armv7-a",
+    "-mtune=generic-armv7-a",
     "-mfloat-abi=hard",
   ]
 }

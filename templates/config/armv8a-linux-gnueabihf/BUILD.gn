@@ -1,4 +1,4 @@
-config("armv8-linux-gnueabihf") {
+config("armv8a-linux-gnueabihf") {
   cflags = [
     "-march=armv8-a",
     "-mtune=generic-armv8-a",

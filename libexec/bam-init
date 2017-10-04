@@ -5,13 +5,13 @@ set -e
 source bam-sh-setup
 
 all_platforms=(
-  "armv7-apple-ios"
-  "armv7-ghs-eabihf"
-  "armv7-gnu-eabihf"
-  "armv7-linux-gnueabihf"
-  "armv8-apple-ios"
-  "armv8-gnu-eabihf"
-  "armv8-linux-gnueabihf"
+  "armv7a-apple-ios"
+  "armv7a-ghs-eabihf"
+  "armv7a-gnu-eabihf"
+  "armv7a-linux-gnueabihf"
+  "armv8a-apple-ios"
+  "armv8a-gnu-eabihf"
+  "armv8a-linux-gnueabihf"
   "c28x-ti-coff"
   "i686-apple-ios"
   "i686-linux-gnu"

@@ -1,4 +1,4 @@
-ToolchainWithLint("armv8-apple-ios") {
+ToolchainWithLint("armv7a-apple-ios") {
   toolchain_type = "mac"
 
   cc = "clang"
@@ -9,9 +9,9 @@ ToolchainWithLint("armv8-apple-ios") {
   source_extensions_ld = ["ld"]
 
   toolchain_args = {
-    current_cpu = "arm64"
+    current_cpu = "arm"
     current_os = "ios"
-    current_platform = "armv8-apple-ios"
+    current_platform = "armv7a-apple-ios"
 
     ios_deployment_target = "9.0"
   }

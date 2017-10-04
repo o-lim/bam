@@ -1,4 +1,4 @@
-ToolchainWithLint("armv8-linux-gnueabihf") {
+ToolchainWithLint("armv8a-linux-gnueabihf") {
   toolchain_type = "gcc"
   toolprefix = "arm-linux-gnueabihf-"
 
@@ -10,10 +10,10 @@ ToolchainWithLint("armv8-linux-gnueabihf") {
   source_extensions_ld = ["ld"]
 
   toolchain_args = {
-    pkg_config = "armv8-linux-gnueabihf-pkg-config"
+    pkg_config = "armv8a-linux-gnueabihf-pkg-config"
 
     current_cpu = "arm64"
     current_os = "linux"
-    current_platform = "armv8-linux-gnueabihf"
+    current_platform = "armv8a-linux-gnueabihf"
   }
 }

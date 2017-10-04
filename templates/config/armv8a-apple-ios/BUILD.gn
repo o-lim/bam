@@ -1,7 +1,7 @@
-config("armv7-apple-ios") {
+config("armv8a-apple-ios") {
   cflags = [
-    "-march=armv7-a",
-    "-mtune=generic-armv7-a",
+    "-march=armv8-a",
+    "-mtune=generic-armv8-a",
     "-mfloat-abi=hard",
     "-g",
     "-O0",
@@ -44,8 +44,8 @@ lint_dep("lnt") {
   cxx = "clang++"
   vendor = "gcc"
   cflags = [
-    "-march=armv7-a",
-    "-mtune=generic-armv7-a",
+    "-march=armv8-a",
+    "-mtune=generic-armv8-a",
     "-mfloat-abi=hard",
   ]
 }
