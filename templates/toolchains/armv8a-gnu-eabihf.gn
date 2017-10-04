@@ -1,4 +1,4 @@
-ToolchainWithLint("armv8-gnu-eabihf") {
+ToolchainWithLint("armv8a-gnu-eabihf") {
   toolchain_type = "gcc"
   toolprefix = "arm-none-eabi-"
 
@@ -10,10 +10,10 @@ ToolchainWithLint("armv8-gnu-eabihf") {
   source_extensions_ld = ["ld"]
 
   toolchain_args = {
-    pkg_config = "armv8-gnu-eabihf-pkg-config"
+    pkg_config = "armv8a-gnu-eabihf-pkg-config"
 
     current_cpu = "arm64"
     current_os = "none"
-    current_platform = "armv8-gnu-eabihf"
+    current_platform = "armv8a-gnu-eabihf"
   }
 }

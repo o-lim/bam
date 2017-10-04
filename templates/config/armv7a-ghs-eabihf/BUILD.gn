@@ -11,7 +11,7 @@ common_flags = [
   "-time64",
 ]
 
-config("armv7-ghs-eabihf") {
+config("armv7a-ghs-eabihf") {
   defines = [
   ]
   cflags = common_flags + [
