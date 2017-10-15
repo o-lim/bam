@@ -1,0 +1,35 @@
+language: cpp
+
+sudo: required
+
+matrix:
+  include:
+    - os: linux
+      env:
+        - system="i686-linux"
+    - os: linux
+      env:
+        - system="x86_64-linux"
+    - os: osx
+      osx_image: xcode8
+      env:
+        - system="x86_64-darwin"
+
+before_install:
+  - source .travis/setenv.sh
+  - ./configure --prefix=/usr/local
+  - make deps
+  - make test-deps
+
+install:
+  - test "$TRAVIS_OS_NAME" == "linux" && sudo make install-deps || make install-deps
+  - test "$TRAVIS_OS_NAME" == "linux" && sudo make install-make-deps || make install-make-deps
+  - test "$TRAVIS_OS_NAME" == "linux" && sudo make install-test-deps || make install-test-deps
+
+script:
+  - source bam.bash
+  - make
+  - make test
+
+notifications:
+  email: false
