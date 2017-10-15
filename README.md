@@ -1,5 +1,7 @@
 # Bam Build System Reference
 
+[![travis-ci status](https://travis-ci.org/o-lim/bam.svg?branch=master)](https://travis-ci.org/o-lim/bam/builds)
+
 [TOC]
 
 The Bam build system provides wrapper scripts facilitating the use of Generate

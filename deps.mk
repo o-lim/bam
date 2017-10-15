@@ -37,9 +37,18 @@ GTEST_URL = https://github.com/google/googletest/archive/release-$(GTEST_VERSION
 
 COREUTILS_VERSION = 8.23
 COREUTILS_URL = https://github.com/coreutils/coreutils.git
+COREUTILS_CFLAGS="-m64"
+COREUTILS_LDFLAGS="-static -m64"
 
 EXE =
 
+ifeq ($(system),i686-linux)
+GN_PLATFORM = i686-linux
+NINJA_PLATFORM = linux
+JQ_PLATFORM = linux32
+COREUTILS_CFLAGS="-m32"
+COREUTILS_LDFLAGS="-static -m32"
+endif
 ifeq ($(OS),Mac)
 GN_PLATFORM = x86_64-darwin
 NINJA_PLATFORM = mac
@@ -55,7 +64,11 @@ EXE = .exe
 endif
 
 
+ifeq ($(TRAVIS),)
 DEPS_DIR := $(CURRENT_DIR)/deps
+else
+DEPS_DIR := $(abspath $(CURRENT_DIR)/deps)
+endif
 
 .PHONY: deps
 deps: $(DEPS_DIR)/gn$(EXE) $(DEPS_DIR)/ninja$(EXE) $(DEPS_DIR)/jq$(EXE) $(DEPS_DIR)/pandoc-$(PANDOC_VERSION)$(PANDOC_PLATFORM)
@@ -116,7 +129,7 @@ $(DEPS_DIR)/coreutils-v$(COREUTILS_VERSION): | $(DEPS_DIR)/
 $(DEPS_DIR)/realpath: $(DEPS_DIR)/coreutils-v$(COREUTILS_VERSION)
 	@mkdir -p $</build
 	@cd $< && ./bootstrap
-	@cd $</build && ../configure LDFLAGS=-static
+	@cd $</build && ../configure CFLAGS=$(COREUTILS_CFLAGS) LDFLAGS=$(COREUTILS_LDFLAGS)
 	@printf '\ngen-sources: $$(BUILT_SOURCES)\n\t@true' >> $</build/Makefile
 	@make -C $</build gen-sources
 	@make -C $</build src/$(@F) man/$(basename $(@F)).1
