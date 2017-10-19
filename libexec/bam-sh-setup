@@ -44,12 +44,12 @@ function check_buildenv() {
   local out="$1"
   local buildenv="$out/.buildenv"
   local ninjafile="$out/build.ninja"
-  local envlog="$(realpath -L -m -s "$out/bam-env.log")"
+  local envlog="$(realpath -L -m -s "$out/build-env.log")"
   if ! [ -f "$ninjafile" ]; then
     gn --root="$BAM_SOURCE_ROOT" --envlog="build-env.log" --ide=json --json-file-name="build.json" gen "$out"
     write_buildenv "$buildenv"
   else
-    local gn_cmd="$(sed -nre "2s| *command *= *.* +--root=.* -q (.*)|gn --root=$BAM_SOURCE_ROOT \\1|p" "$ninjafile")"
+    local gn_cmd="$(sed -nr "/^rule gn$/,+1s| *command *= *.* +--root=.* -q (.*)|gn --root=$BAM_SOURCE_ROOT \\1|p" "$ninjafile")"
     if [[ "$gn_cmd" != *" --envlog=build-env.log "* ]]; then
       gn_cmd="$gn_cmd --envlog=build-env.log"
     fi
@@ -279,7 +279,7 @@ function get_source_root() {
   local ninjafile="$BAM_OUTPUT_DIR/build.ninja"
   if [[ -n "$BAM_OUTPUT_DIR" && "$BAM_OUTPUT_DIR" != //* &&
           -f "$ninjafile" ]]; then
-    echo "$(sed -rn '2s/\s*command\s*= *.* +--root=(.*) -q .*/\1/p' "$ninjafile")"
+    echo "$(sed -rn '/^rule gn$/,+1s/\s*command\s*= *.* +--root=(.*) -q .*/\1/p' "$ninjafile")"
   else
     local cwd="$(pwd)"
     local path="$(realpath -L -s "$cwd")"
