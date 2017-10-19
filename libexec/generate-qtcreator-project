@@ -11,8 +11,8 @@ envlog="build-env.log"
 
 # Use gn to create the project files
 gn gen "$out" --envlog="$envlog" --ide=qtcreator --all-toolchains
-sed -ri '2s/ --ide=qtcreator / --ide=json /' "$out/build.ninja"
-sed -ri '2s/ --all-toolchains / --json-file-name=build.json /' "$out/build.ninja"
+sed -ri '/^rule gn$/,+1s/ --ide=qtcreator / --ide=json /' "$out/build.ninja"
+sed -ri '/^rule gn$/,+1s/ --all-toolchains / --json-file-name=build.json /' "$out/build.ninja"
 
 # Copy gn generated QtCreator project files to current directory
 for f in `ls "$out"/qtcreator_project`; do
