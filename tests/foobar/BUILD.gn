@@ -4,7 +4,7 @@ declare_args() {
 }
 
 if (show_version) {
-  print("bam version: $bam_version")
+  print("bam version: ${bam_version.string}")
 }
 getenv("HOME")
 getenv("somevar")
