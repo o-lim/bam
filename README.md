@@ -57,8 +57,8 @@ An extension of GN's `executable` target.
   Lint: enable_lint, filter_lint_platforms
   Style: enable_style, style_depth, style_dirs, style_mode, style_regex,
          style_root_dir
-  Test: is_one_test_exe_per_file, pre_test, test_args, test_console, test_deps,
-        test_dir, test_extension, test_name, test_runner, test_runner_args,
+  Test: is_one_test_exe_per_file, pre_test, test_args, test_deps, test_dir,
+        test_extension, test_name, test_pool, test_runner, test_runner_args,
         unittests
 ```
 
@@ -72,8 +72,8 @@ An extension of GN's `loadable_module` target.
   Lint: enable_lint, filter_lint_platforms
   Style: enable_style, style_depth, style_dirs, style_mode, style_regex,
          style_root_dir
-  Test: is_one_test_exe_per_file, pre_test, test_args, test_console, test_deps,
-        test_dir, test_extension, test_name, test_runner, test_runner_args,
+  Test: is_one_test_exe_per_file, pre_test, test_args, test_deps, test_dir,
+        test_extension, test_name, test_pool, test_runner, test_runner_args,
         unittests
 ```
 
@@ -87,8 +87,8 @@ An extension of GN's `shared_library` target.
   Lint: enable_lint, filter_lint_platforms
   Style: enable_style, style_depth, style_dirs, style_mode, style_regex,
          style_root_dir
-  Test: is_one_test_exe_per_file, pre_test, test_args, test_console, test_deps,
-        test_dir, test_extension, test_name, test_runner, test_runner_args,
+  Test: is_one_test_exe_per_file, pre_test, test_args, test_deps, test_dir,
+        test_extension, test_name, test_pool, test_runner, test_runner_args,
         unittests
 ```
 
@@ -102,8 +102,8 @@ An extension of GN's `source_set` target.
   Lint: enable_lint, filter_lint_platforms
   Style: enable_style, style_depth, style_dirs, style_mode, style_regex,
          style_root_dir
-  Test: is_one_test_exe_per_file, pre_test, test_args, test_console, test_deps,
-        test_dir, test_extension, test_name, test_runner, test_runner_args,
+  Test: is_one_test_exe_per_file, pre_test, test_args, test_deps, test_dir,
+        test_extension, test_name, test_pool, test_runner, test_runner_args,
         unittests
 ```
 
@@ -117,8 +117,8 @@ An extension of GN's `static_library` target.
   Lint: enable_lint, filter_lint_platforms
   Style: enable_style, style_depth, style_dirs, style_mode, style_regex,
          style_root_dir
-  Test: is_one_test_exe_per_file, pre_test, test_args, test_console, test_deps,
-        test_dir, test_extension, test_name, test_runner, test_runner_args,
+  Test: is_one_test_exe_per_file, pre_test, test_args, test_deps, test_dir,
+        test_extension, test_name, test_pool, test_runner, test_runner_args,
         unittests
 ```
 
@@ -244,7 +244,7 @@ an executable target and an action to run the test.
   Deps: data_deps, external_deps, deps, public_deps, public_external_deps
   Dependent configs: all_dependent_configs, public_configs
   General: check_includes, configs, data, inputs, output_dir, output_extension,
-           output_name, pre_test, public, sources, test_args, test_console,
+           output_name, pre_test, public, sources, test_args, test_pool,
            test_runner, test_runner_args, visibility
 ```
 
@@ -943,9 +943,10 @@ The following build arguments are defined:
   test_args [list of strings]
       Sets the default flags or options to use for unit test execution.
 
-  test_console [boolean]
-      When set to true, tests will be run in the built-in ninja "console" pool,
-      unless specified otherwise by the target/test.
+  test_pool [label]
+      A fully-qualified label representing the pool that will be used to run
+      the test. By default, tests will be run in the built-in ninja "console"
+      pool, unless specified otherwise by the target/test.
 
   test_runner [string]
       Sets the default test runner.
@@ -1062,12 +1063,6 @@ The following build arguments are defined:
   test_args [list of strings] (optional)
       Flags or options to use for unit test execution.
 
-  test_console [boolean] (optional)
-      Run unit test in the console pool. Targets marked "test_console = true"
-      will have their tests run in the built-in ninja "console" pool. They will
-      have access to real stdin and stdout. Only one console pool target can run
-      at any one time in Ninja.
-
   test_deps [list of string] (optional)
       A list of target labels specifying dependencies that are only required in
       order to build the test executable. Test dependencies are not propagated
@@ -1104,6 +1099,12 @@ The following build arguments are defined:
 
       The test output name should have no extension or prefixes, these will be
       added using the default system rules.
+
+  test_pool [label] (optional)
+      Run unit test in the specified pool. By default, targets will have their
+      tests run in the built-in ninja "console" pool. They will have access to
+      real stdin and stdout. Only one console pool target can run at any one
+      time in Ninja.
 
   test_runner [string] (optional)
       A test runner to call to wrap unit test execution in another executable or

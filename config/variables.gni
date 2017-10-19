@@ -120,7 +120,7 @@ style_variables = [
 test_variables = [
   "pre_test",
   "test_args",
-  "test_console",
+  "test_pool",
   "test_runner",
   "test_runner_args",
 ]
