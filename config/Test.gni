@@ -30,8 +30,8 @@ if (!defined(default_test_runner)) {
 if (!defined(default_test_runner_args)) {
   default_test_runner_args = []
 }
-if (!defined(default_test_console)) {
-  default_test_console = true
+if (!defined(default_test_pool)) {
+  default_test_pool = console_pool
 }
 
 #=============================================================================
@@ -69,8 +69,8 @@ declare_args() {
   # it can be used internally by the build sub-commands.
   test_toolchain = "${toolchain_path}:$test_platform"
 
-  # Run tests in the console pool
-  test_console = default_test_console
+  # Run tests in this pool
+  test_pool = default_test_pool
 }
 
 #=============================================================================
@@ -158,6 +158,8 @@ template("Test") {
 
     outputs = ["$target_out_dir/$target_name"]
     deps = [":$test_target_name"]
-    console = test_console
+    if (test_pool != "") {
+      pool = test_pool
+    }
   }
 }

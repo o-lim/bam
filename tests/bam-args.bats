@@ -128,8 +128,8 @@ target_cpu = ""
 target_os = ""
 target_platform = "x86"
 test_args = ["--gtest_print_time=1", "--gtest_repeat=1", "--gtest_shuffle"]
-test_console = true
 test_group_suffix = "_Test"
+test_pool = "//:console_pool"
 test_runner = ""
 test_runner_args = []
 test_suffix = "_UT"
