@@ -794,20 +794,20 @@ The Bam build system automatically initializes and provides the following
 variables:
 
 ```
-  bam_version_major [integer]
+  bam_version.major [integer]
       The major version number of the Bam build system.
 
-  bam_version_minor [integer]
+  bam_version.minor [integer]
       The minor version number of the Bam build system.
 
-  bam_version_patchlevel [integer]
+  bam_version.patch [integer]
       The patch level number for the current version of the Bam build system.
 
-  bam_version_suffix [string]
+  bam_version.suffix [string]
       A string suffix appended to the Bam build system version number used to
       form the version string.
 
-  bam_version [string]
+  bam_version.string [string]
       The Bam build system version string.
 
   current_platform [string]
