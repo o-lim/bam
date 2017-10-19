@@ -5,6 +5,9 @@ assert(defined(toolchain_path), "${color_error}Variable |toolchain_path| must be
 
 if (!defined(bam_core_path)) {
   bam_core_path = getenv("BAM_CORE_PATH")
+  if (bam_core_path == "") {
+    bam_core_path = "@prefix@/share/bam-core"
+  }
 }
 assert(bam_core_path != "", "${color_error}Variable |bam_core_path| must be defined to be a path.${color_none}")
 
