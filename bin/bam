@@ -144,6 +144,11 @@ while true; do
   esac
 done
 
+# Always export the BAM_CORE_PATH environment variable since this is used by
+# the default BUILDCONFIG.gn file so it can import the default GN configuration
+# located at "$BAM_CORE_PATH/config/buildconfig.gni".
+export BAM_CORE_PATH
+
 export PATH="${BAM_EXEC_PATH:-$DEFAULT_EXEC_PATH}:$PATH"
 if [ -z "$command" ]; then
   bam-help
