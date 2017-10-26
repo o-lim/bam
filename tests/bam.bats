@@ -16,6 +16,14 @@ function print_result() {
   done
 }
 
+function get_install_prefix() {
+  if [ $BAM_TEST_ENV == 1 ]; then
+    echo "@prefix@"
+  else
+    echo "$(dirname $(dirname $(which bam)))"
+  fi
+}
+
 @test "'man bam' displays man page for bam" {
   function expected() {
     cat << EOF
@@ -193,8 +201,7 @@ EOF
 
 @test "'bam --core-path' displays default exec path" {
   function default_core_path() {
-    export BAM_INSTALL_PREFIX=${BAM_INSTALL_PREFIX:-@prefix@}
-    echo "$BAM_INSTALL_PREFIX/share/bam-core"
+    echo "$(get_install_prefix)/share/bam-core"
   }
   BAM_CORE_PATH= bam --core-path | diff -u <(default_core_path) -
   BAM_CORE_PATH="/foo" bam --core-path | diff -u <(echo "/foo") -
@@ -202,7 +209,6 @@ EOF
 
 @test "'bam --core-path=' sets empty core path" {
   function expected() {
-    export BAM_INSTALL_PREFIX=${BAM_INSTALL_PREFIX:-@prefix@}
     echo "BAM_CORE_PATH=\"\""
   }
   mkdir .tmp
@@ -229,7 +235,6 @@ EOF
 
 @test "'bam --core-path <path>' uses <path> for core path" {
   function expected() {
-    export BAM_INSTALL_PREFIX=${BAM_INSTALL_PREFIX:-@prefix@}
     echo "BAM_CORE_PATH=\"/bar\""
   }
   mkdir .tmp
@@ -243,8 +248,7 @@ EOF
 
 @test "'bam --exec-path' displays default exec path" {
   function default_exec_path() {
-    export BAM_INSTALL_PREFIX=${BAM_INSTALL_PREFIX:-@prefix@}
-    echo "$BAM_INSTALL_PREFIX/libexec/bam-core"
+    echo "$(get_install_prefix)/libexec/bam-core"
   }
   BAM_EXEC_PATH= bam --exec-path | diff -u <(default_exec_path) -
   BAM_EXEC_PATH="/foo" bam --exec-path | diff -u <(echo "/foo") -
@@ -252,9 +256,8 @@ EOF
 
 @test "'bam --exec-path=' uses default exec path" {
   function expected() {
-    export BAM_INSTALL_PREFIX=${BAM_INSTALL_PREFIX:-@prefix@}
     echo "BAM_EXEC_PATH=\"\""
-    echo "DEFAULT_EXEC_PATH=\"$BAM_INSTALL_PREFIX/libexec/bam-core\""
+    echo "DEFAULT_EXEC_PATH=\"$(get_install_prefix)/libexec/bam-core\""
   }
   mkdir .tmp
   cat > .tmp/bam-show << EOF
