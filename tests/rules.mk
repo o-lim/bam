@@ -4,7 +4,6 @@ export BAM_VERSION = 0.0.0
 ifeq ($(BAM_TEST_ENV),1)
 export BAM_CORE_PATH = $(realpath $(TOP_LEVEL_DIR))
 export BAM_EXEC_PATH = $(BAM_CORE_PATH)/libexec
-export BAM_TEMPLATE_DIR = $(BAM_CORE_PATH)/templates
 else
 export BAM_CORE_PATH = $(shell bam --core-path 2> /dev/null)
 endif
