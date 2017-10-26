@@ -6,7 +6,6 @@ setup() {
   export MANWIDTH=80
   export BAM_OUTPUT_DIR=".tmp"
   export BAM_TEMPLATE_DIR="$BAM_CORE_PATH/templates"
-  export BAM_INSTALL_PREFIX=${BAM_INSTALL_PREFIX:-@prefix@}
 }
 
 before_each() {
@@ -15,6 +14,14 @@ before_each() {
 
 after_each() {
   rm -rf .tmp*
+}
+
+function get_install_prefix() {
+  if [ $BAM_TEST_ENV == 1 ]; then
+    echo "@prefix@"
+  else
+    echo "$(dirname $(dirname $(which bam)))"
+  fi
 }
 
 @test "'bam init --help' displays help" {
@@ -69,7 +76,7 @@ TEMPLATE DIRECTORY
        o The contents of the \$BAM_TEMPLATE_DIR environment variable.
 
        o The default template directory:
-           $BAM_INSTALL_PREFIX/share/bam-core/templates
+           $(get_install_prefix)/share/bam-core/templates
 
        The default template directory includes some directory structure, sug-
        gested build configuration, and copies of common pre-configured
@@ -81,7 +88,8 @@ Bam $BAM_VERSION                                                   BAM-INIT(1)
 EOF
   }
   function filter_man() {
-    if [ "${#BAM_INSTALL_PREFIX}" -gt 35 ]; then
+    INSTALL_PREFIX="$(get_install_prefix)"
+    if [ "${#INSTALL_PREFIX}" -gt 35 ]; then
       sed -e '/o The default template directory:/,/^$/d'
     else
       cat
