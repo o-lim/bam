@@ -18,7 +18,7 @@ $(BATS_FILES):
 	@cd $(TESTS_DIR) && BAM_INSTALL_PREFIX=$(PREFIX) bats $@
 
 $(foreach bats,$(BAM_BATS_FILES),\
-  $(eval $(bats): $(TOP_LEVEL_DIR)/man/man1/$(notdir $(basename $(bats))).1.gz)\
+  $(eval $(bats): $(TOP_LEVEL_DIR)/man/man1/$(notdir $(basename $(bats))).1)\
 )
 
 include $(TOP_LEVEL_DIR)/footer.mk

@@ -10,4 +10,5 @@
 **/.*.swo
 /prefix.mk
 /man/**/*.1.gz
+/man/**/*.1
 /deps
