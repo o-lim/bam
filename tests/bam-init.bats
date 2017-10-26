@@ -5,7 +5,6 @@ set -o pipefail
 setup() {
   export MANWIDTH=80
   export BAM_OUTPUT_DIR=".tmp"
-  export BAM_TEMPLATE_DIR="$BAM_CORE_PATH/templates"
 }
 
 before_each() {
@@ -24,6 +23,12 @@ function get_install_prefix() {
   fi
 }
 
+function print_result() {
+  for line in "${lines[@]}"; do
+    echo "$line"
+  done
+}
+
 @test "'bam init --help' displays help" {
   function expected() {
     cat << EOF
@@ -35,7 +40,8 @@ NAME
        bam-init - Create an empty project or reinitialize an existing one
 
 SYNOPSIS
-       bam init [-h|--help] [-p <platforms>|--platforms <platforms>]
+       bam init [-h|--help] [--template <template_directory>]
+                [-p <platforms>|--platforms <platforms>]
                 [--config <path>] [-n <name>|--name <name>] [<directory>]
 
 DESCRIPTION
@@ -62,6 +68,10 @@ OPTIONS
         <platforms> will be interpreted as a comma separated list of
         platforms (use -p list to list available platforms).
 
+  --template <template_directory>
+        Specifies the directory from which templates will be used. (See
+        the "TEMPLATE DIRECTORY" section below.)
+
   <directory>
         The name of the directory in which to create the project. If
         specified, the command is run inside this directory, otherwise
@@ -73,7 +83,12 @@ TEMPLATE DIRECTORY
 
        The template directory used will be (in order):
 
+       o The argument given with the --template option
+
        o The contents of the \$BAM_TEMPLATE_DIR environment variable.
+
+       o The core-path template directory:
+           \$BAM_CORE_PATH/templates
 
        o The default template directory:
            $(get_install_prefix)/share/bam-core/templates
@@ -173,6 +188,95 @@ EOF
   grep "\.tmp" .tmp/BUILD.gn
 }
 
+@test "'bam init --template=<dir>' uses <dir> for templates" {
+  function expected_files() {
+    echo ".tmp/.bam/config"
+    echo ".tmp/.gn"
+    echo ".tmp/BUILD.gn"
+    echo ".tmp/build/config/BUILD.gn"
+    echo ".tmp/build/config/BUILDCONFIG.gn"
+    echo ".tmp/build/config/another/BUILD.gn"
+    echo ".tmp/build/config/bar/BUILD.gn"
+    echo ".tmp/build/config/foo/BUILD.gn"
+    echo ".tmp/build/config/other/BUILD.gn"
+    echo ".tmp/build/toolchain/BUILD.gn"
+  }
+  function expected_platforms() {
+    echo "Available platforms:"
+    echo "    bar"
+    echo "    foo"
+  }
+  function expected_missing() {
+    echo "bam-init: error: the following platforms are not supported:"
+    echo "    fubar"
+    echo "    i686-linux-gnu"
+  }
+
+  mkdir -p .tmp .tmp-template_dir/config .tmp-template_dir/toolchains/platforms
+  mkdir .tmp-template_dir/config/foo
+  mkdir .tmp-template_dir/config/bar
+  mkdir .tmp-template_dir/config/other
+  mkdir .tmp-template_dir/config/another
+  touch .tmp-template_dir/.gn
+  touch .tmp-template_dir/BUILD.gn
+  touch .tmp-template_dir/config/BUILD.gn
+  touch .tmp-template_dir/config/BUILDCONFIG.gn
+  touch .tmp-template_dir/config/foo/BUILD.gn
+  touch .tmp-template_dir/config/bar/BUILD.gn
+  touch .tmp-template_dir/config/other/BUILD.gn
+  touch .tmp-template_dir/config/another/BUILD.gn
+  touch .tmp-template_dir/toolchains/platforms/foo.gn
+  touch .tmp-template_dir/toolchains/platforms/bar.gn
+  bam -C .tmp init --template ../.tmp-template_dir
+
+  diff -u <(expected_files) <(find .tmp -type f | sort)
+  diff -u <(expected_platforms) <(bam -C .tmp init --template ../.tmp-template_dir -p list)
+  diff -u <(expected_missing) <(bam -C .tmp init --template ../.tmp-template_dir -p foo,bar,fubar,i686-linux-gnu)
+}
+
+@test "'bam init' with BAM_TEMPLATE_DIR=<dir> uses <dir> for templates" {
+  function expected_files() {
+    echo ".tmp/.bam/config"
+    echo ".tmp/.gn"
+    echo ".tmp/BUILD.gn"
+    echo ".tmp/build/config/BUILD.gn"
+    echo ".tmp/build/config/BUILDCONFIG.gn"
+    echo ".tmp/build/config/barbar/BUILD.gn"
+    echo ".tmp/build/config/bbar/BUILD.gn"
+    echo ".tmp/build/config/other/BUILD.gn"
+    echo ".tmp/build/toolchain/BUILD.gn"
+  }
+  function expected_platforms() {
+    echo "Available platforms:"
+    echo "    barbar"
+    echo "    bbar"
+  }
+  function expected_missing() {
+    echo "bam-init: error: the following platforms are not supported:"
+    echo "    fu"
+    echo "    i686-linux-gnu"
+  }
+
+  mkdir -p .tmp .tmp-template-dir/config .tmp-template-dir/toolchains/platforms
+  mkdir .tmp-template-dir/config/barbar
+  mkdir .tmp-template-dir/config/bbar
+  mkdir .tmp-template-dir/config/other
+  touch .tmp-template-dir/.gn
+  touch .tmp-template-dir/BUILD.gn
+  touch .tmp-template-dir/config/BUILD.gn
+  touch .tmp-template-dir/config/BUILDCONFIG.gn
+  touch .tmp-template-dir/config/barbar/BUILD.gn
+  touch .tmp-template-dir/config/bbar/BUILD.gn
+  touch .tmp-template-dir/config/other/BUILD.gn
+  touch .tmp-template-dir/toolchains/platforms/barbar.gn
+  touch .tmp-template-dir/toolchains/platforms/bbar.gn
+  BAM_TEMPLATE_DIR=../.tmp-template-dir bam -C .tmp init
+
+  diff -u <(expected_files) <(find .tmp -type f | sort)
+  diff -u <(expected_platforms) <(BAM_TEMPLATE_DIR=../.tmp-template-dir bam -C .tmp init -p list)
+  diff -u <(expected_missing) <(BAM_TEMPLATE_DIR=../.tmp-template-dir bam -C .tmp init -p barbar,fu,i686-linux-gnu)
+}
+
 @test "'bam -o <path> init' still uses cwd" {
   mkdir .tmp
   bam -C .tmp -o .tmp1 init
@@ -221,6 +325,18 @@ EOF
   mkdir .tmp
   bam -C .tmp init --name mytestproj
   grep mytestproj .tmp/BUILD.gn
+}
+
+@test "'bam init -p <unsupported-platforms>' generates error" {
+  function expected() {
+    echo "bam-init: error: the following platforms are not supported:"
+    echo "    dne"
+    echo "    doesnotexist"
+  }
+  mkdir .tmp
+  run bam -C .tmp init -p dne,i686-linux-gnu,doesnotexist
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 1 ]
 }
 
 @test "'bam init -p <platforms>' only generates the specified platforms" {

@@ -3,10 +3,10 @@
 # to the specified bam-* sub-command.
 
 BAM_INSTALL_PREFIX="${BAM_INSTALL_PREFIX:-@prefix@}"
-DEFAULT_CORE_PATH="$BAM_INSTALL_PREFIX/share/bam-core"
-DEFAULT_EXEC_PATH="$BAM_INSTALL_PREFIX/libexec/bam-core"
-BAM_CORE_PATH="${BAM_CORE_PATH:-$DEFAULT_CORE_PATH}"
-BAM_EXEC_PATH="${BAM_EXEC_PATH:-$DEFAULT_EXEC_PATH}"
+BAM_DEFAULT_CORE_PATH="$BAM_INSTALL_PREFIX/share/bam-core"
+BAM_DEFAULT_EXEC_PATH="$BAM_INSTALL_PREFIX/libexec/bam-core"
+BAM_CORE_PATH="${BAM_CORE_PATH:-$BAM_DEFAULT_CORE_PATH}"
+BAM_EXEC_PATH="${BAM_EXEC_PATH:-$BAM_DEFAULT_EXEC_PATH}"
 
 command=
 while true; do
@@ -149,7 +149,7 @@ done
 # located at "$BAM_CORE_PATH/config/buildconfig.gni".
 export BAM_CORE_PATH
 
-export PATH="${BAM_EXEC_PATH:-$DEFAULT_EXEC_PATH}:$PATH"
+export PATH="${BAM_EXEC_PATH:-$BAM_DEFAULT_EXEC_PATH}:$PATH"
 if [ -z "$command" ]; then
   bam-help
   exit 1

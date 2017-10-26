@@ -6,7 +6,8 @@ bam-init - Create an empty project or reinitialize an existing one
 
 # SYNOPSIS
 
-**bam** **init** [**-h**|**--help**] [**-p** \<platforms\>|**--platforms** \<platforms\>]\
+**bam** **init** [**-h**|**--help**] [**--template** \<template_directory\>]\
+\  \  \  \  \  [**-p** \<platforms\>|**--platforms** \<platforms\>]\
 \  \  \  \  \  [**--config** \<path\>] [**-n** \<name\>|**--name** \<name\>] [\<directory\>]
 
 # DESCRIPTION
@@ -33,6 +34,10 @@ created.
     will be interpreted as a comma separated list of platforms (use -p list
     to list available platforms).
 
+--template \<template_directory\>
+:   Specifies the directory from which templates will be used. (See the
+    "TEMPLATE DIRECTORY" section below.)
+
 \<directory\>
 :   The name of the directory in which to create the project. If specified,
     the command is run inside this directory, otherwise the current working
@@ -45,7 +50,12 @@ an empty bam project.
 
 The template directory used will be (in order):
 
+  -   The argument given with the --template option
+
   -   The contents of the $BAM_TEMPLATE_DIR environment variable.
+
+  -   The core-path template directory:\
+      \  \  $BAM_CORE_PATH/templates
 
   -   The default template directory:\
       \  \  @prefix@/share/bam-core/templates

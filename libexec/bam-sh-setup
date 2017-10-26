@@ -344,6 +344,8 @@ function get_out_dir() {
 }
 
 BAM_INSTALL_PREFIX="${BAM_INSTALL_PREFIX:-@prefix@}"
+BAM_DEFAULT_CORE_PATH="$BAM_INSTALL_PREFIX/share/bam-core"
+BAM_DEFAULT_EXEC_PATH="$BAM_INSTALL_PREFIX/libexec/bam-core"
 
 if [ -z "$BAM_CONFIG" ]; then
   if [ -n "$BAM_DIR" ]; then

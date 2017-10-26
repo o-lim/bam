@@ -4,31 +4,12 @@ set -e
 
 source bam-sh-setup
 
-all_platforms=(
-  "armv7a-apple-ios"
-  "armv7a-ghs-eabihf"
-  "armv7a-gnu-eabihf"
-  "armv7a-linux-gnueabihf"
-  "armv8a-apple-ios"
-  "armv8a-gnu-eabihf"
-  "armv8a-linux-gnueabihf"
-  "c28x-ti-coff"
-  "i686-apple-ios"
-  "i686-linux-gnu"
-  "i686-w64-mingw32"
-  "msp430-ti-eabi"
-  "x86_64-apple-mac"
-  "x86_64-apple-ios"
-  "x86_64-darwin-gnu"
-  "x86_64-linux-gnu"
-  "x86_64-w64-mingw32"
-)
-
 configdir="build"
+template_dir="$BAM_TEMPLATE_DIR"
 name=
-platforms="${all_platforms[@]}"
-cmd=$(basename "$0")
-args=$(getopt -o p:n:h -l "platforms:,name:,config:,help" -n "$cmd" -- "$@")
+platforms=
+cmd="$(basename "$0")"
+args=$(getopt -o p:n:h -l "platforms:,name:,config:,template:,help" -n "$cmd" -- "$@")
 if [ $? != 0 ]; then
   exit 1
 fi
@@ -52,6 +33,10 @@ while true; do
       configdir="$2"
       shift 2
       ;;
+    --template)
+      template_dir="${2:-$BAM_TEMPLATE_DIR}"
+      shift 2
+      ;;
     --)
       shift
       break
@@ -59,12 +44,42 @@ while true; do
   esac
 done
 
+if [ -z "$template_dir" ]; then
+  template_dir="$BAM_CORE_PATH/templates"
+fi
+if [ ! -d "$template_dir" ]; then
+  echo "$cmd: warning: templates not found" >&2
+  template_dir="$BAM_DEFAULT_CORE_PATH/templates"
+fi
+
+IFS=$'\n'
+list=($(ls -d "$template_dir"/toolchains/platforms/*.gn))
+all_platforms=($(basename -a -s .gn "${list[@]}"))
+unset IFS
 if [ "$platforms" == "list" ]; then
   echo "Available platforms:"
-  for pf in ${all_platforms[@]}; do
-    echo "  $pf"
-  done
+  printf "    %s\n" "${all_platforms[@]}"
   exit 0
+fi
+if [ -z "$platforms" ]; then
+  platforms=("${all_platforms[@]}")
+else
+  IFS=$',' read -ra platforms <<< "$platforms"
+fi
+
+set -f
+IFS=$'\n'
+union_platforms=("${all_platforms[@]}" "${platforms[@]}")
+union_platforms=($(sort <<< "${union_platforms[*]}"))
+intersect_platforms=($(uniq -d <<< "${union_platforms[*]}"))
+missing_platforms=("${intersect_platforms[@]}" "${platforms[@]}")
+missing_platforms=($(sort <<< "${missing_platforms[*]}" | uniq -u))
+unset IFS
+set +f
+if [ ${#missing_platforms[@]} -gt 0 ]; then
+  echo "$cmd: error: the following platforms are not supported:" 2>&1
+  printf "    %s\n" "${missing_platforms[@]}"
+  exit 1
 fi
 
 rootdir="$1"
@@ -84,8 +99,6 @@ if ! [ -e ".bam/config" ]; then
   echo -e "[core]\n\toutdir = //out" > ".bam/config"
 fi
 
-platforms=$(echo "$platforms" | sed 's/,/ /g')
-template_dir="${BAM_TEMPLATE_DIR:-$BAM_INSTALL_PREFIX/share/bam-core/templates}"
 config_path="$configdir/config"
 toolchain_path="$configdir/toolchain"
 
@@ -93,17 +106,36 @@ mkdir -p "$config_path"
 mkdir -p "$toolchain_path"
 cp "$template_dir/.gn" "$template_dir/BUILD.gn" .
 cp "$template_dir"/config/*.gn* "$config_path/"
-cp -r "$template_dir"/lnt "$configdir"
 
-configs="lint style ut external $platforms"
-for cf in $configs; do
+IFS=$'\n'
+list=($(ls -d "$template_dir"/*/))
+dir_list=($(basename -a "${list[@]}"))
+unset IFS
+for d in "${dir_list[@]}"; do
+  if [[ "$d" != "config" && "$d" != "toolchains" ]]; then
+    cp -r "$template_dir/$d" "$configdir"
+  fi
+done
+
+IFS=$'\n'
+list=($(ls -d "$template_dir"/config/*/))
+configs=($(basename -a "${list[@]}" "${all_platforms[@]}" | sort | uniq -u))
+unset IFS
+for cf in "${configs[@]}" "${platforms[@]}"; do
   cp -r "$template_dir/config/$cf" "$config_path/"
 done
 
-toolchains="lint_common style ut $platforms"
-for tc in $toolchains; do
+IFS=$'\n'
+list=($(ls "$template_dir"/toolchains/*.gn 2> /dev/null || true))
+unset IFS
+for file in "${list[@]}"; do
   echo >> "$toolchain_path/BUILD.gn"
-  cat < "$template_dir/toolchains/$tc.gn" >> "$toolchain_path/BUILD.gn"
+  cat < "$file" >> "$toolchain_path/BUILD.gn"
+done
+
+for tc in "${platforms[@]}"; do
+  echo >> "$toolchain_path/BUILD.gn"
+  cat < "$template_dir/toolchains/platforms/$tc.gn" >> "$toolchain_path/BUILD.gn"
 done
 
 function get_host_os() {
@@ -137,7 +169,7 @@ if [ -n "$IN_NIX_SHELL" ]; then
 else
   HOST_CPU=$(uname -m)
 fi
-PLATFORMS=$(echo "\"$platforms\"" | sed 's/[, ]/", "/g')
+PLATFORMS=$(echo "\"${platforms[@]}\"" | sed 's/[ ]/", "/g')
 UNAME=$(uname -s | tr A-Z a-z)
 HOST_OS=$(get_host_os "$UNAME")
 HOST_PLATFORM="$(get_host_platform "$UNAME")"
