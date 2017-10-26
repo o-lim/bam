@@ -14,7 +14,7 @@ GN_VERSION = 0.3.0
 GN_PLATFORM = x86_64-linux
 GN_URL = https://github.com/o-lim/generate-ninja/releases/download/v$(GN_VERSION)/gn-$(GN_PLATFORM).tar.gz
 
-NINJA_VERSION = 1.7.2
+NINJA_VERSION = 1.8.2
 NINJA_PLATFORM = linux
 NINJA_URL = https://github.com/ninja-build/ninja/releases/download/v$(NINJA_VERSION)/ninja-$(NINJA_PLATFORM).zip
 
