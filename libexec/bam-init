@@ -45,6 +45,12 @@ while true; do
 done
 
 if [ -z "$template_dir" ]; then
+  template_dir="$(get_config_value "$BAM_CONFIG" init templateDir)"
+  if [ "$template_dir" == "$(null_value)" ]; then
+    template_dir=
+  fi
+fi
+if [ -z "$template_dir" ]; then
   template_dir="$BAM_CORE_PATH/templates"
 fi
 if [ ! -d "$template_dir" ]; then
