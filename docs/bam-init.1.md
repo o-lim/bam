@@ -54,6 +54,8 @@ The template directory used will be (in order):
 
   -   The contents of the $BAM_TEMPLATE_DIR environment variable.
 
+  -   The init.templateDir configuration variable
+
   -   The core-path template directory:\
       \  \  $BAM_CORE_PATH/templates
 

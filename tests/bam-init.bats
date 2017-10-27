@@ -87,6 +87,8 @@ TEMPLATE DIRECTORY
 
        o The contents of the \$BAM_TEMPLATE_DIR environment variable.
 
+       o The init.templateDir configuration variable
+
        o The core-path template directory:
            \$BAM_CORE_PATH/templates
 
@@ -275,6 +277,54 @@ EOF
   diff -u <(expected_files) <(find .tmp -type f | sort)
   diff -u <(expected_platforms) <(BAM_TEMPLATE_DIR=../.tmp-template-dir bam -C .tmp init -p list)
   diff -u <(expected_missing) <(BAM_TEMPLATE_DIR=../.tmp-template-dir bam -C .tmp init -p barbar,fu,i686-linux-gnu)
+}
+
+@test "'bam init' with init.templateDir=<dir> uses <dir> for templates" {
+  function expected_files() {
+    echo ".tmp/.bam/config"
+    echo ".tmp/.gn"
+    echo ".tmp/BUILD.gn"
+    echo ".tmp/build/config/BUILD.gn"
+    echo ".tmp/build/config/BUILDCONFIG.gn"
+    echo ".tmp/build/config/foobar/BUILD.gn"
+    echo ".tmp/build/config/fubar/BUILD.gn"
+    echo ".tmp/build/config/other/BUILD.gn"
+    echo ".tmp/build/toolchain/BUILD.gn"
+  }
+  function expected_platforms() {
+    echo "Available platforms:"
+    echo "    foobar"
+    echo "    fubar"
+  }
+  function expected_missing() {
+    echo "bam-init: error: the following platforms are not supported:"
+    echo "    bar"
+    echo "    foo"
+    echo "    i686-linux-gnu"
+  }
+
+  mkdir -p .tmp .tmp-template_dir/config .tmp-template_dir/toolchains/platforms
+  mkdir .tmp-template_dir/config/foobar
+  mkdir .tmp-template_dir/config/fubar
+  mkdir .tmp-template_dir/config/other
+  touch .tmp-template_dir/.gn
+  touch .tmp-template_dir/BUILD.gn
+  touch .tmp-template_dir/config/BUILD.gn
+  touch .tmp-template_dir/config/BUILDCONFIG.gn
+  touch .tmp-template_dir/config/fubar/BUILD.gn
+  touch .tmp-template_dir/config/foobar/BUILD.gn
+  touch .tmp-template_dir/config/other/BUILD.gn
+  touch .tmp-template_dir/toolchains/platforms/foobar.gn
+  touch .tmp-template_dir/toolchains/platforms/fubar.gn
+  cat > .tmp-config << EOF
+[init]
+    templateDir = $(pwd)/.tmp-template_dir
+EOF
+  BAM_CONFIG=../.tmp-config bam -C .tmp init
+
+  diff -u <(expected_files) <(find .tmp -type f | sort)
+  diff -u <(expected_platforms) <(BAM_CONFIG=../.tmp-config bam -C .tmp init -p list)
+  diff -u <(expected_missing) <(BAM_CONFIG=../.tmp-config bam -C .tmp init -p foobar,fubar,foo,bar,i686-linux-gnu)
 }
 
 @test "'bam -o <path> init' still uses cwd" {
