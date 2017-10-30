@@ -92,6 +92,34 @@ clean: clean-deps
 clean-deps:
 	@rm -rf $(DEPS_DIR)
 
+.PHONY: clean-test-deps
+clean-test-deps: clean-gtest clean-bats clean-cpplint.py
+	@true
+
+.PHONY: clean-gtest
+clean-gtest:
+	@rm -rf $(DEPS_DIR)/googletest-release-$(GTEST_VERSION)
+
+.PHONY: clean-bats
+clean-bats:
+	@rm -rf $(DEPS_DIR)/bats-$(BATS_VERSION)
+
+.PHONY: clean-coreutils
+clean-coreutils:
+	@rm -rf $(DEPS_DIR)/coreutils-v$(COREUTILS_VERSION)
+
+.PHONY: clean-cpplint.py
+clean-cpplint.py:
+	@rm -rf $(DEPS_DIR)/cpplint.py
+
+.PHONY: clean-make-deps
+clean-make-deps: clean-pandoc clean-coreutils
+	@true
+
+.PHONY: clean-pandoc
+clean-pandoc:
+	@rm -rf $(DEPS_DIR)/pandoc-$(PANDOC_VERSION)$(PANDOC_PLATFORM)
+
 $(DEPS_DIR)/:
 	@mkdir -p $@
 
