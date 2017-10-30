@@ -33,3 +33,21 @@ script:
 
 notifications:
   email: false
+
+before_deploy:
+  - make clean-make-deps
+  - make clean-test-deps
+  - ./configure
+  - cd ..
+  - mv bam "bam-${TRAVIS_TAG#v}"
+  - tar -czf "bam-${TRAVIS_TAG#v}.tar.gz" "bam-${TRAVIS_TAG#v}"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: nUtB5YqryWmzO8Logu7fv5lGOfOQGvxVjZufP5Z3hxWXzoRseOahUd0KnbustTvlT+37z4RtmJbpIX98PlQ9W5OEPqNsbjv5RTnAB9WrjqYaSpBDgqQbKTS06QH8ZE9mR8FPpOmvbPKfJDPiQCZfvUOvo3+D7htJw5p5Ki2a37LcUTZYcJi3c7vLrLrSQfcPusP0fV0ZGCkdWZg5NsTupA7vBJhdlIlH+b14ysLVHsw3z9sSdaxSw7Vz+WotEu0RUA9LCme3CNO093HS3UHA4r1paWjp0JFnx9BMTcTGAI39FNINkUmpBipJve8MCWbhrpxe+nJcB6EdsAVrdpA3yh0vXLEwxnRQV0ypXLCwpqJ+ElyPghC8UndXWxH5wHNQkApOdY5PbkJeoNjT7EKYuj1nTQt56oFVKxtXuooxJenAYYM8NgL+RpqToamQCcI8NVelQuGm9e9YON9SagKGP1/0sOytEaG2iD3I84lrn69gLz52Q8uJ6oWXG6D2Mxw+L9Cp823TIuOY1OTg0v0ja0uVBtWbKhp9K18hBN2qXgCt1WMDaXihgFS500g6m9fuuBgVjURkqzqPogJ+zzDpCeZEuUqKaPGpfSjsyv5JRgQE0kawYmjtcdZqLH13c0RSPt8LZ9dB7WZ/hFk+w3ysNCxtbqmnNRLZBmgw2yuGT+M=
+  file: "bam-${TRAVIS_TAG#v}.tar.gz"
+  skip_cleanup: true
+  on:
+    repo: o-lim/bam
+    tags: true
