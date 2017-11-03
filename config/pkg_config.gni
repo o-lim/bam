@@ -52,7 +52,6 @@ declare_args() {
   # Default arguments to pass to pkg-config. This may be different for cross-
   # compilation environments. This value is used to pass additional arguments
   # to pkg-config.
-  # Leaving it blank defaults to '[]'.
   pkg_config_args = default_pkg_config_args
 
   # The switch used to identify system libraries in the pkg-config output. This
