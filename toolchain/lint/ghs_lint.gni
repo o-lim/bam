@@ -100,28 +100,14 @@ template("ghs_lint") {
     pre_lintcxx = "$cxx -E -MMD {{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags} {{cflags}} {{cflags_cc}} -object_dir=$objectdir -filetype.cc {{source}} > /dev/null && $depfixup"
     pre_lintasm = "$cc -E -MMD {{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_asmppflags} {{asmflags}} -object_dir=$objectdir -filetype.assembly {{source}} > /dev/null && $depfixup"
 
-    forward_variables_from(invoker, [
-      "deps",
-      "executable_extension",
-      "extra_asmflags",
-      "extra_cflags",
-      "extra_cxxflags",
-      "extra_objcflags",
-      "extra_objcxxflags",
-      "lintasm",
-      "lintcc",
-      "lintcxx",
-      "loadable_module_extension",
-      "pkg_config",
-      "pkg_config_args",
-      "rebuild_define",
-      "shlib_extension",
-      "source_extensions_asm",
-      "source_extensions_cc",
-      "source_extensions_cxx",
-      "source_extensions_objc",
-      "source_extensions_objcxx",
-      "toolchain_args",
+    forward_variables_from(invoker, lint_toolchain_variables - [
+      "depfile",
+      "depsformat",
+      "extra_asmppflags",
+      "extra_cppflags",
+      "pre_lintasm",
+      "pre_lintcc",
+      "pre_lintcxx",
     ], [], true)
   }
 }

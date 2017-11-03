@@ -49,6 +49,10 @@ template("style_toolchain") {
   import("$bam_core_path/toolchain/toolchain_defaults.gni")
 
   toolchain(target_name) {
+    if (defined(invoker.pool)) {
+      pool = invoker.pool
+    }
+
     cc = invoker.cc
     cxx= invoker.cxx
     if (defined(invoker.asm)) {
