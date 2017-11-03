@@ -85,20 +85,48 @@ template("ghs_lint") {
     depsformat = "gcc"
     depfixup = "sed -i -e '1s|.*\\.o:|{{output}}:|' $depfile"
 
+    if (defined(invoker.extra_asmflags) && invoker.extra_asmflags != "") {
+      extra_asmflags = " " + invoker.extra_asmflags
+    } else {
+      extra_asmflags = ""
+    }
     if (defined(invoker.extra_asmppflags) && invoker.extra_asmppflags != "") {
       extra_asmppflags = " " + invoker.extra_asmppflags
     } else {
       extra_asmppflags = ""
+    }
+    if (defined(invoker.extra_cflags) && invoker.extra_cflags != "") {
+      extra_cflags = " " + invoker.extra_cflags
+    } else {
+      extra_cflags = ""
     }
     if (defined(invoker.extra_cppflags) && invoker.extra_cppflags != "") {
       extra_cppflags = " " + invoker.extra_cppflags
     } else {
       extra_cppflags = ""
     }
+    if (defined(invoker.extra_cxxflags) && invoker.extra_cxxflags != "") {
+      extra_cxxflags = " " + invoker.extra_cxxflags
+    } else {
+      extra_cxxflags = ""
+    }
+    if (defined(invoker.extra_objcflags) && invoker.extra_objcflags != "") {
+      extra_objcflags = " " + invoker.extra_objcflags
+    } else {
+      extra_objcflags = ""
+    }
+    if (defined(invoker.extra_objcxxflags) && invoker.extra_objcxxflags != "") {
+      extra_objcxxflags = " " + invoker.extra_objcxxflags
+    } else {
+      extra_objcxxflags = ""
+    }
 
-    pre_lintcc = "$cc -E -MMD {{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags} {{cflags}} {{cflags_c}} -object_dir=$objectdir -filetype.c {{source}} > /dev/null && $depfixup"
-    pre_lintcxx = "$cxx -E -MMD {{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags} {{cflags}} {{cflags_cc}} -object_dir=$objectdir -filetype.cc {{source}} > /dev/null && $depfixup"
-    pre_lintasm = "$cc -E -MMD {{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_asmppflags} {{asmflags}} -object_dir=$objectdir -filetype.assembly {{source}} > /dev/null && $depfixup"
+    _common_flags = "-E -MMD -object_dir=$objectdir {{defines}} {{include_dirs}} {{sys_include_dirs}}"
+    pre_lintcc = "$cc ${_common_flags}${extra_cppflags}${extra_cflags} {{cflags}} {{cflags_c}} -filetype.c {{source}} > /dev/null && $depfixup"
+    pre_lintcxx = "$cxx ${_common_flags}${extra_cppflags}${extra_cxxflags} {{cflags}} {{cflags_cc}} -filetype.cc {{source}} > /dev/null && $depfixup"
+    pre_lintobjc = "$cc ${_common_flags}${extra_cppflags}${extra_objcflags} {{cflags}} {{cflags_objc}} -filetype.objc {{source}} > /dev/null && $depfixup"
+    pre_lintobjcxx = "$cxx ${_common_flags}${extra_cppflags}${extra_objcxxflags} {{cflags}} {{cflags_objcc}} -filetype.objcc {{source}} > /dev/null && $depfixup"
+    pre_lintasm = "$cc ${_common_flags}${extra_asmppflags}${extra_asmflags} {{asmflags}} -filetype.assembly {{source}} > /dev/null && $depfixup"
 
     forward_variables_from(invoker, lint_toolchain_variables - [
       "depfile",
@@ -108,6 +136,8 @@ template("ghs_lint") {
       "pre_lintasm",
       "pre_lintcc",
       "pre_lintcxx",
+      "pre_lintobjc",
+      "pre_lintobjcxx",
     ], [], true)
   }
 }

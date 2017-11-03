@@ -468,6 +468,17 @@ C/C++ toolchains.
   toolchain_type [string] (required)
       The type of toolchain to load (i.e. gcc, ghs, ti)
 
+  extra_asmppflags [string] (optional)
+      Extra flags to be appended when assembling files. "ASMPP" stands for
+      "ASM PreProcessor" in this context, although it can be used for non-
+      preprocessor flags as well.
+
+  extra_cppflags [string] (optional)
+      Extra flags to be appended when compiling both C and C++ files. "CPP"
+      stands for "C PreProcessor" in this context, although it can be
+      used for non-preprocessor flags as well. Not to be confused with
+      "CXX" (which follows).
+
   is_builtin [boolean] (optional)
       Specifies whether or not the "toolchain_type" is a built-in toolchain that
       is included as part of the Bam build system. Templates for built-in

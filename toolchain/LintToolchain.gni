@@ -16,24 +16,24 @@ import("../config/colors.gni")
 # Optional parameters that control the tools:
 #
 #  - extra_asmflags
-#      Extra flags to be appended when linting assembly files.
+#      Extra flags to be appended when assembling files.
 #  - extra_asmppflags
 #      Extra flags to be appended when linting assembly files. "ASMPP" stands
 #      for "ASM PreProcessor" in this context, although it can be used for non-
 #      preprocessor flags as well.
 #  - extra_cflags
-#      Extra flags to be appended when linting C files (but not C++ files).
+#      Extra flags to be appended when compiling C files (but not C++ files).
 #  - extra_cppflags
 #      Extra flags to be appended when linting both C and C++ files. "CPP"
 #      stands for "C PreProcessor" in this context, although it can be
 #      used for non-preprocessor flags as well. Not to be confused with
 #      "CXX" (which follows).
 #  - extra_cxxflags
-#      Extra flags to be appended when linting C++ files (but not C files).
+#      Extra flags to be appended when compiling C++ files (but not C files).
 #  - extra_objcflags
-#      Extra flags to be appended when linting Objective C files.
+#      Extra flags to be appended when compiling Objective C files.
 #  - extra_objcxxflags
-#      Extra flags to be appended when linting Objective C++ files.
+#      Extra flags to be appended when compiling Objective C++ files.
 #
 #  - is_builtin (defaults to true)
 #      Specifies whether or not the toolchain_type is a builtin toolchain
