@@ -148,44 +148,7 @@ template("Toolchain") {
   }
 
   target("${toolchain_type}_toolchain", target_name) {
-    forward_variables_from(invoker, [
-      "ar",
-      "cc",
-      "cxx",
-      "deps",
-      "executable_extension",
-      "extra_asmflags",
-      "extra_asmppflags",
-      "extra_cflags",
-      "extra_cppflags",
-      "extra_cxxflags",
-      "extra_objcflags",
-      "extra_objcxxflags",
-      "extra_ldflags",
-      "ld",
-      "libs_section_prefix",
-      "libs_section_postfix",
-      "link_outputs",
-      "loadable_module_extension",
-      "object_extensions",
-      "pkg_config",
-      "pkg_config_args",
-      "pool",
-      "post_link",
-      "rebuild_define",
-      "shlib_extension",
-      "solink_libs_section_prefix",
-      "solink_libs_section_postfix",
-      "source_extensions_asm",
-      "source_extensions_cc",
-      "source_extensions_cxx",
-      "source_extensions_ld",
-      "source_extensions_objc",
-      "source_extensions_objcxx",
-      "strip",
-      "toolchain_args",
-      "use_ccache",
-    ] + toolchain_forwards,
-    [], true)
+    forward_variables_from(invoker, toolchain_variables + toolchain_forwards,
+                           [], true)
   }
 }

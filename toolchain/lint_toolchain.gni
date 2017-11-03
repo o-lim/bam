@@ -52,6 +52,16 @@ import("../config/colors.gni")
 #      If this string is specified it will be used for the file extension
 #      for a shared library, rather than default value specified in
 #      toolchain_defaults.gni
+#  - source_extensions_asm
+#      List of source file extensions for assembly files.
+#  - source_extensions_cc
+#      List of source file extensions for C files.
+#  - source_extensions_cxx
+#      List of source file extensions for C++ files.
+#  - source_extensions_objc
+#      List of source file extensions for Objective C files.
+#  - source_extensions_objcxx
+#      List of source file extensions for Objective C++ files.
 #
 template("lint_toolchain") {
   assert(defined(invoker.lintcc), "${color_error}lint_toolchain() must specify a \"lintcc\" value${color_none}")
@@ -84,6 +94,10 @@ template("lint_toolchain") {
       rebuild_string = "-D" + invoker.rebuild_define + " "
     } else {
       rebuild_string = ""
+    }
+
+    if (defined(invoker.pool)) {
+      pool = invoker.pool
     }
 
     lintcc  = invoker.lintcc
