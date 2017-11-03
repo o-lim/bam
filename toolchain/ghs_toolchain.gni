@@ -425,12 +425,6 @@ template("ghs_toolchain") {
     # When invoking this toolchain not as the default one, these args will be
     # passed to the build. They are ignored when this is the default toolchain.
     toolchain_args = {
-      if (defined(invoker.pkg_config)) {
-        pkg_config = invoker.pkg_config
-      }
-      if (defined(invoker.pkg_config_args)) {
-        pkg_config_args = invoker.pkg_config_args
-      }
       pkg_config_lib_switch = lib_switch
       pkg_config_lib_dir_switch = lib_dir_switch
 
