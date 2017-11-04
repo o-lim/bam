@@ -5,9 +5,6 @@ config("arm") {
   cflags = [
     "-g",
   ]
-  ldflags = [
-    "-lSegFault",
-  ]
 }
 
 lint_dep("lnt") {

@@ -120,6 +120,7 @@ function print_result() {
     echo "out/style/obj/src/foo2_UT.cpp.style"
     echo "out/style/obj/src/foobar.cpp.style"
     echo "out/style/obj/src/foobar_UT.cpp.style"
+    echo "out/style/obj/src/foobar_main.cpp.style"
     echo "out/style/obj/src/fu.m.style"
     echo "out/style/obj/src/fu.mm.style"
     echo "out/style/obj/src/fu_UT.cpp.style"

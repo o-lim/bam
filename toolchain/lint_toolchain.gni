@@ -95,10 +95,6 @@ template("lint_toolchain") {
       rebuild_string = ""
     }
 
-    if (defined(invoker.pool)) {
-      pool = invoker.pool
-    }
-
     lintcc  = invoker.lintcc
     lintcxx = invoker.lintcxx
     if (defined(invoker.lintasm)) {
@@ -357,6 +353,6 @@ template("lint_toolchain") {
       target_platform = current_platform
     }
 
-    forward_variables_from(invoker, [ "deps" ])
+    forward_variables_from(invoker, [ "deps", "pool" ])
   }
 }

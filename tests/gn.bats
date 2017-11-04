@@ -286,6 +286,7 @@ function print_result() {
     echo "out/style/obj/src/foo2_UT.cpp.style"
     echo "out/style/obj/src/foobar.cpp.style"
     echo "out/style/obj/src/foobar_UT.cpp.style"
+    echo "out/style/obj/src/foobar_main.cpp.style"
     echo "out/style/obj/src/fu.m.style"
     echo "out/style/obj/src/fu.mm.style"
     echo "out/style/obj/src/fu_UT.cpp.style"
@@ -350,7 +351,7 @@ function print_result() {
 }
 
 @test "can specify a linker script as source file" {
-  ninja -C out -t commands arm/foobar | grep 'foobar\.ld'
+  ninja -C out -t commands mingw32/foobar.exe | grep 'foobar\.ld'
 }
 
 @test "can specify custom linker script as source file" {
@@ -358,7 +359,7 @@ function print_result() {
 }
 
 @test "can specify custom object extensions" {
-  ninja -C out -t commands arm/foobar | grep 'foo\.oo'
+  ninja -C out -t commands mingw32/foobar.exe | grep 'foo\.oo'
 }
 
 @test "generates one test exe per target by default" {
@@ -466,4 +467,25 @@ function print_result() {
 
 @test "sources_assignment_filter should filter out matched sources from build" {
   ! ninja -C out -t commands | grep filtered_foobar
+}
+
+@test "post commands execute after asm/compile/link steps" {
+  function expected() {
+    echo "out/arm/foobar.link"
+    echo "out/arm/libfu.solink"
+    echo "out/arm/obj/out/arm/gen/src/bar.cxx.s"
+    echo "out/arm/obj/src/bar.arm.ss"
+    echo "out/arm/obj/src/bar.asm.ss"
+    echo "out/arm/obj/src/bar.c.s"
+    echo "out/arm/obj/src/baz.cpp.s"
+    echo "out/arm/obj/src/foo.cxx.s"
+    echo "out/arm/obj/src/foo1.cpp.s"
+    echo "out/arm/obj/src/foo2.cpp.s"
+    echo "out/arm/obj/src/foobar.cpp.s"
+    echo "out/arm/obj/src/foobar_main.cpp.s"
+    echo "out/arm/obj/src/fu.cc.s"
+    echo "out/arm/obj/src/libbar.alink"
+  }
+  ninja -C out arm/foobar
+  diff -u <(expected) <(find out/arm -name '*.s' -o -name '*.ss' -o -name '*.*link' | sort)
 }

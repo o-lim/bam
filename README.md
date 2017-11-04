@@ -254,6 +254,7 @@ C/C++ toolchain.
 
 The following vendor specfic toolchain templates are provided:
 
+  - mac_toolchain
   - gcc_toolchain
   - ghs_toolchain
   - ti_toolchain
@@ -266,6 +267,7 @@ of vendor specific lint toolchains:
 
 The following vendor specific lint toolchain templates are provided:
 
+  - mac_lint
   - gcc_lint
   - ghs_lint
   - ti_lint
@@ -327,12 +329,6 @@ toolchains.
   toolchain_type [string] (required)
       The type of toolchain to load (i.e. gcc, ghs, ti)
 
-  is_builtin [boolean] (optional)
-      Specifies whether or not the "toolchain_type" is a built-in toolchain that
-      is included as part of the Bam build system. Templates for built-in
-      toolchains are automatically imported. If this is set to false, you must
-      manually import your toolchain templates.
-
   extra_asmflags [string] (optional)
       Extra flags to be appended when assembling files.
 
@@ -372,20 +368,59 @@ toolchains.
   solink_libs_section_postfix [string] (optional)
       Same as libs_section_{pre,post}fix except used for solink instead of link.
 
+  asm_outputs [string] (optional)
+      The content of this array, if specified, will be added to the list of
+      outputs from the asm command. This can be useful in conjunction with
+      the post_asm parameter.
+
+  compile_outputs [string] (optional)
+      The content of this array, if specified, will be added to the list of
+      outputs from the cc/cxx commands. This can be useful in conjunction with
+      the post_compile parameter.
+
+  alink_outputs [string] (optional)
+      The content of this array, if specified, will be added to the list of
+      outputs from the link command. This can be useful in conjunction with
+      the post_alink parameter.
+
   link_outputs [string] (optional)
       The content of this array, if specified, will be added to the list of
       outputs from the link command. This can be useful in conjunction with
       the post_link parameter.
 
-  pool [label] (optional)
-      Just forwarded to the toolchain definition.
+  solink_outputs [string] (optional)
+      The content of this array, if specified, will be added to the list of
+      outputs from the link command. This can be useful in conjunction with
+      the post_solink parameter.
+
+  solink_module_outputs [string] (optional)
+      The content of this array, if specified, will be added to the list of
+      outputs from the link command. This can be useful in conjunction with
+      the post_solink_module parameter.
+
+  post_asm [string] (optional)
+      The content of this string, if specified, will be run as a separate
+      command following the asm command.
+
+  post_compile [string] (optional)
+      The content of this string, if specified, will be run as a separate
+      command following the the cc/cxx commands.
 
   post_link [string] (optional)
       The content of this string, if specified, will be run as a separate
-      command following the the link command.
+      command following the link command.
 
-  deps [list of strings] (optional)
-      Just forwarded to the toolchain definition.
+  post_alink [string] (optional)
+      The content of this string, if specified, will be run as a separate
+      command following the alink command.
+
+  post_solink [string] (optional)
+      The content of this string, if specified, will be run as a separate
+      command following the solink command.
+
+  post_solink_module [string] (optional)
+      The content of this string, if specified, will be run as a separate
+      command following the solink_module command.
 
   executable_extension [string] (optional)
       If this string is specified it will be used for the file extension for an
@@ -428,6 +463,18 @@ toolchains.
 
   source_extensions_objcxx [list of strings] (optional)
       List of source file extensions for Objective C++ files.
+
+  deps [list of strings] (optional)
+      Just forwarded to the toolchain definition.
+
+  is_builtin [boolean] (optional)
+      Specifies whether or not the "toolchain_type" is a built-in toolchain that
+      is included as part of the Bam build system. Templates for built-in
+      toolchains are automatically imported. If this is set to false, you must
+      manually import your toolchain templates.
+
+  pool [label] (optional)
+      Just forwarded to the toolchain definition.
 
   strip [string] (optional)
       Location of the strip executable. When specified, strip will be run on
@@ -479,37 +526,6 @@ C/C++ toolchains.
       used for non-preprocessor flags as well. Not to be confused with
       "CXX" (which follows).
 
-  is_builtin [boolean] (optional)
-      Specifies whether or not the "toolchain_type" is a built-in toolchain that
-      is included as part of the Bam build system. Templates for built-in
-      toolchains are automatically imported. If this is set to false, you must
-      manually import your toolchain templates.
-
-  lintasm [string] (optional)
-      The lint executable to run for assembly source files.
-
-      Defaults to "flint".
-
-  lintcc [string] (optional)
-      The lint executable to run for C source files.
-
-      Defaults to "flint".
-
-  lintcxx [string] (optional)
-      The lint executable to run for C++ source files.
-
-      Defaults to "flint".
-
-  lint_forwards [list of strings] (optional)
-      List of additional variable names to forward to the lint toolchain.
-
-  deps [list of strings] (optional)
-      Just forwarded to the toolchain definition.
-
-  post_link [string] (optional)
-      The content of this string, if specified, will be run as a separate
-      command following the the link command.
-
   executable_extension [string] (optional)
       If this string is specified it will be used for the file extension for an
       executable, rather than using no extension; targets will still be able to
@@ -551,6 +567,36 @@ C/C++ toolchains.
 
   source_extensions_objcxx [list of strings] (optional)
       List of source file extensions for Objective C++ files.
+
+  deps [list of strings] (optional)
+      Just forwarded to the toolchain definition.
+
+  is_builtin [boolean] (optional)
+      Specifies whether or not the "toolchain_type" is a built-in toolchain that
+      is included as part of the Bam build system. Templates for built-in
+      toolchains are automatically imported. If this is set to false, you must
+      manually import your toolchain templates.
+
+  lintasm [string] (optional)
+      The lint executable to run for assembly source files.
+
+      Defaults to "flint".
+
+  lintcc [string] (optional)
+      The lint executable to run for C source files.
+
+      Defaults to "flint".
+
+  lintcxx [string] (optional)
+      The lint executable to run for C++ source files.
+
+      Defaults to "flint".
+
+  lint_forwards [list of strings] (optional)
+      List of additional variable names to forward to the lint toolchain.
+
+  pool [label] (optional)
+      Just forwarded to the toolchain definition.
 ```
 
 ### ToolchainWithLint
@@ -586,29 +632,34 @@ toolchains with LINT support.
   toolchain_type [string] (required)
       The type of toolchain to load (i.e. gcc, ghs, ti)
 
-  is_builtin [boolean] (optional)
-      Specifies whether or not the "toolchain_type" is a built-in toolchain that
-      is included as part of the Bam build system. Templates for built-in
-      toolchains are automatically imported. If this is set to false, you must
-      manually import your toolchain templates.
+  extra_asmflags [string] (optional)
+      Extra flags to be appended when assembling files.
 
-  lintasm [string] (optional)
-      The lint executable to run for assembly source files.
+  extra_asmppflags [string] (optional)
+      Extra flags to be appended when assembling files. "ASMPP" stands for
+      "ASM PreProcessor" in this context, although it can be used for non-
+      preprocessor flags as well.
 
-      Defaults to "flint".
+  extra_cflags [string] (optional)
+      Extra flags to be appended when compiling C files (but not C++ files).
 
-  lintcc [string] (optional)
-      The lint executable to run for C source files.
+  extra_cppflags [string] (optional)
+      Extra flags to be appended when compiling both C and C++ files. "CPP"
+      stands for "C PreProcessor" in this context, although it can be
+      used for non-preprocessor flags as well. Not to be confused with
+      "CXX" (which follows).
 
-      Defaults to "flint".
+  extra_cxxflags [string] (optional)
+      Extra flags to be appended when compiling C++ files (but not C files).
 
-  lintcxx [string] (optional)
-      The lint executable to run for C++ source files.
+  extra_objcflags [string] (optional)
+      Extra flags to be appended when compiling Objective C files.
 
-      Defaults to "flint".
+  extra_objcxxflags [string] (optional)
+      Extra flags to be appended when compiling Objective C++ files.
 
-  lint_forwards [list of strings] (optional)
-      List of additional variable names to forward to the lint toolchain.
+  extra_ldflags [string] (optional)
+      Extra flags to be appended when linking.
 
   libs_section_prefix [string] (optional)
   libs_section_postfix [string] (optional)
@@ -620,20 +671,59 @@ toolchains with LINT support.
   solink_libs_section_postfix [string] (optional)
       Same as libs_section_{pre,post}fix except used for solink instead of link.
 
+  asm_outputs [string] (optional)
+      The content of this array, if specified, will be added to the list of
+      outputs from the asm command. This can be useful in conjunction with
+      the post_asm parameter.
+
+  compile_outputs [string] (optional)
+      The content of this array, if specified, will be added to the list of
+      outputs from the cc/cxx commands. This can be useful in conjunction with
+      the post_compile parameter.
+
+  alink_outputs [string] (optional)
+      The content of this array, if specified, will be added to the list of
+      outputs from the link command. This can be useful in conjunction with
+      the post_alink parameter.
+
   link_outputs [string] (optional)
       The content of this array, if specified, will be added to the list of
       outputs from the link command. This can be useful in conjunction with
       the post_link parameter.
 
-  pool [label] (optional)
-      Just forwarded to the toolchain definition.
+  solink_outputs [string] (optional)
+      The content of this array, if specified, will be added to the list of
+      outputs from the link command. This can be useful in conjunction with
+      the post_solink parameter.
+
+  solink_module_outputs [string] (optional)
+      The content of this array, if specified, will be added to the list of
+      outputs from the link command. This can be useful in conjunction with
+      the post_solink_module parameter.
+
+  post_asm [string] (optional)
+      The content of this string, if specified, will be run as a separate
+      command following the asm command.
+
+  post_compile [string] (optional)
+      The content of this string, if specified, will be run as a separate
+      command following the the cc/cxx commands.
 
   post_link [string] (optional)
       The content of this string, if specified, will be run as a separate
-      command following the the link command.
+      command following the link command.
 
-  deps [list of strings] (optional)
-      Just forwarded to the toolchain definition.
+  post_alink [string] (optional)
+      The content of this string, if specified, will be run as a separate
+      command following the alink command.
+
+  post_solink [string] (optional)
+      The content of this string, if specified, will be run as a separate
+      command following the solink command.
+
+  post_solink_module [string] (optional)
+      The content of this string, if specified, will be run as a separate
+      command following the solink_module command.
 
   loadable_module_extension [string] (optional)
       If this string is specified it will be used for the file extension
@@ -681,6 +771,36 @@ toolchains with LINT support.
   source_extensions_objcxx [list of strings] (optional)
       List of source file extensions for Objective C++ files.
 
+  deps [list of strings] (optional)
+      Just forwarded to the toolchain definition.
+
+  is_builtin [boolean] (optional)
+      Specifies whether or not the "toolchain_type" is a built-in toolchain that
+      is included as part of the Bam build system. Templates for built-in
+      toolchains are automatically imported. If this is set to false, you must
+      manually import your toolchain templates.
+
+  lintasm [string] (optional)
+      The lint executable to run for assembly source files.
+
+      Defaults to "flint".
+
+  lintcc [string] (optional)
+      The lint executable to run for C source files.
+
+      Defaults to "flint".
+
+  lintcxx [string] (optional)
+      The lint executable to run for C++ source files.
+
+      Defaults to "flint".
+
+  lint_forwards [list of strings] (optional)
+      List of additional variable names to forward to the lint toolchain.
+
+  pool [label] (optional)
+      Just forwarded to the toolchain definition.
+
   strip [string] (optional)
       Location of the strip executable. When specified, strip will be run on
       all shared libraries and executables as they are built. The pre-stripped
@@ -722,6 +842,9 @@ compile/link with external static/shared libraries.
 
   extra_args [list of strings] (optional)
       Additional arguments to pass to pkg-config.
+
+  extra_cflags [list of strings] (optional)
+      A list of compiler flags to append to the resulting config.
 
   extra_defines [list of strings] (optional)
       A list of defines to append to the resulting config.

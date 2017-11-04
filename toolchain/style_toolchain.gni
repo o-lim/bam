@@ -16,6 +16,8 @@ import("../config/colors.gni")
 #      The executable to run for asm files.
 #  - deps
 #      Just forwarded to the toolchain definition.
+#  - pool
+#      Just forwarded to the toolchain definition.
 #  - executable_extension
 #      If this string is specified it will be used for the file extension
 #      for an executable, rather than using no extension; targets will
@@ -49,10 +51,6 @@ template("style_toolchain") {
   import("$bam_core_path/toolchain/toolchain_defaults.gni")
 
   toolchain(target_name) {
-    if (defined(invoker.pool)) {
-      pool = invoker.pool
-    }
-
     cc = invoker.cc
     cxx= invoker.cxx
     if (defined(invoker.asm)) {
@@ -247,6 +245,6 @@ template("style_toolchain") {
       target_platform = current_platform
     }
 
-    forward_variables_from(invoker, [ "deps" ])
+    forward_variables_from(invoker, [ "deps", "pool" ])
   }
 }

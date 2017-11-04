@@ -28,7 +28,7 @@ SourceSet("foo") {
       "foo.oo",
       "foo.cxx",
     ]
-    if (is_test) {
+    if (is_test || is_arm) {
       sources -= ["foo.oo"]
     }
     unittests = [
@@ -75,7 +75,7 @@ SharedLibrary("fu") {
   sources = [
     "fu.cc",
   ]
-  if (!is_test) {
+  if (!is_test && !is_arm) {
     sources += [
       "fu.m",
       "fu.mm",
@@ -129,8 +129,12 @@ Executable("foobar") {
     "filtered_foobar.cpp",
     "filtered_foobar_UT.cpp",
   ]
-  if (is_test) {
+  if (is_test || is_arm) {
     sources -= ["foobar.ld", "foobar.cmd"]
+  }
+  if (is_arm) {
+    sources += [ "foobar_main.cpp" ]
+    ldflags = [ "--specs=nosys.specs" ]
   }
   unittests = [
     "foobar_UT.cpp",

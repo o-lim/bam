@@ -35,21 +35,6 @@ import("../config/colors.gni")
 #  - extra_objcxxflags
 #      Extra flags to be appended when compiling Objective C++ files.
 #
-#  - is_builtin (defaults to true)
-#      Specifies whether or not the toolchain_type is a builtin toolchain
-#      that is included as part of the build system. Templates for builtin
-#      toolchains are automatically imported. If this is set to false, you
-#      must manually import your toolchain templates.
-#  - lintasm (defaults to "flint")
-#      The lint executable to run for assembly source files.
-#  - lintcc (defaults to "flint")
-#      The lint executable to run for C source files.
-#  - lintcxx (defaults to "flint")
-#      The lint executable to run for C++ source files.
-#  - lint_forwards
-#      List of additional variable names to forward to the lint toolchain.
-#  - deps
-#      Just forwarded to the toolchain definition.
 #  - executable_extension
 #      If this string is specified it will be used for the file extension
 #      for an executable, rather than using no extension; targets will
@@ -76,6 +61,24 @@ import("../config/colors.gni")
 #      List of source file extensions for Objective C files.
 #  - source_extensions_objcxx
 #      List of source file extensions for Objective C++ files.
+#
+#  - deps
+#      Just forwarded to the toolchain definition.
+#  - is_builtin (defaults to true)
+#      Specifies whether or not the toolchain_type is a builtin toolchain
+#      that is included as part of the build system. Templates for builtin
+#      toolchains are automatically imported. If this is set to false, you
+#      must manually import your toolchain templates.
+#  - lintasm (defaults to "flint")
+#      The lint executable to run for assembly source files.
+#  - lintcc (defaults to "flint")
+#      The lint executable to run for C source files.
+#  - lintcxx (defaults to "flint")
+#      The lint executable to run for C++ source files.
+#  - lint_forwards
+#      List of additional variable names to forward to the lint toolchain.
+#  - pool
+#      Just forwarded to the toolchain definition.
 #
 template("LintToolchain") {
   assert(defined(invoker.toolchain_type), 
