@@ -133,6 +133,16 @@ ToolchainWithLint("arm") {
   ar = "${toolprefix}ar"
   ld = cxx
 
+  post_asm = "touch {{source_out_dir}}/{{source_file_part}}.ss"
+  post_compile = "touch {{source_out_dir}}/{{source_file_part}}.s"
+  post_alink = "touch {{output_dir}}/{{target_output_name}}.alink"
+  post_link = "touch {{output_dir}}/{{target_output_name}}.link"
+  post_solink = "touch {{output_dir}}/{{target_output_name}}.solink"
+
+  alink_outputs = [ "{{output_dir}}/{{target_output_name}}.alink" ]
+  link_outputs = [ "{{output_dir}}/{{target_output_name}}.link" ]
+  solink_outputs = [ "{{output_dir}}/{{target_output_name}}.solink" ]
+
   source_extensions_asm = ["asm", "s", "S", "arm"]
   source_extensions_ld = ["ld"]
   object_extensions = ["o", "obj", "oo"]

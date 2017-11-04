@@ -39,11 +39,6 @@ import("../config/colors.gni")
 #  - extra_ldflags
 #      Extra flags to be appended when linking
 #
-#  - is_builtin (defaults to true)
-#      Specifies whether or not the toolchain_type is a builtin toolchain
-#      that is included as part of the build system. Templates for builtin
-#      toolchains are automatically imported. If this is set to false, you
-#      must manually import your toolchain templates.
 #  - libs_section_prefix
 #  - libs_section_postfix
 #      The contents of these strings, if specified, will be placed around
@@ -52,17 +47,51 @@ import("../config/colors.gni")
 #  - solink_libs_section_prefix
 #  - solink_libs_section_postfix
 #      Same as libs_section_{pre,post}fix except used for solink instead of link.
+#
+#  - asm_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the asm command. This can be useful in conjunction with
+#      the post_asm parameter.
+#  - compile_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the cc/cxx commands. This can be useful in conjunction with
+#      the post_compile parameter.
+#  - alink_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the link command. This can be useful in conjunction with
+#      the post_alink parameter.
 #  - link_outputs
 #      The content of this array, if specified, will be added to the list of
 #      outputs from the link command. This can be useful in conjunction with
 #      the post_link parameter.
-#  - pool
-#      Just forwarded to the toolchain definition.
+#  - solink_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the link command. This can be useful in conjunction with
+#      the post_solink parameter.
+#  - solink_module_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the link command. This can be useful in conjunction with
+#      the post_solink_module parameter.
+#
+#  - post_asm
+#      The content of this string, if specified, will be run as a separate
+#      command following the the asm command.
+#  - post_compile
+#      The content of this string, if specified, will be run as a separate
+#      command following the the cc/cxx commands.
+#  - post_alink
+#      The content of this string, if specified, will be run as a separate
+#      command following the the alink command.
 #  - post_link
 #      The content of this string, if specified, will be run as a separate
 #      command following the the link command.
-#  - deps
-#      Just forwarded to the toolchain definition.
+#  - post_solink
+#      The content of this string, if specified, will be run as a separate
+#      command following the the solink command.
+#  - post_solink_module
+#      The content of this string, if specified, will be run as a separate
+#      command following the the solink_module command.
+#
 #  - executable_extension
 #      If this string is specified it will be used for the file extension
 #      for an executable, rather than using no extension; targets will
@@ -95,6 +124,16 @@ import("../config/colors.gni")
 #      List of source file extensions for Objective C files.
 #  - source_extensions_objcxx
 #      List of source file extensions for Objective C++ files.
+#
+#  - deps
+#      Just forwarded to the toolchain definition.
+#  - is_builtin (defaults to true)
+#      Specifies whether or not the toolchain_type is a builtin toolchain
+#      that is included as part of the build system. Templates for builtin
+#      toolchains are automatically imported. If this is set to false, you
+#      must manually import your toolchain templates.
+#  - pool
+#      Just forwarded to the toolchain definition.
 #  - strip
 #      Location of the strip executable. When specified, strip will be run on
 #      all shared libraries and executables as they are built. The pre-stripped

@@ -40,23 +40,59 @@ import("../config/colors.gni")
 #  - solink_libs_section_prefix
 #  - solink_libs_section_postfix
 #      Same as libs_section_{pre,post}fix except used for solink instead of link.
+#
+#  - asm_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the asm command. This can be useful in conjunction with
+#      the post_asm parameter.
+#  - compile_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the cc/cxx commands. This can be useful in conjunction with
+#      the post_compile parameter.
+#  - alink_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the link command. This can be useful in conjunction with
+#      the post_alink parameter.
 #  - link_outputs
 #      The content of this array, if specified, will be added to the list of
 #      outputs from the link command. This can be useful in conjunction with
 #      the post_link parameter.
-#  - loadable_module_extension
-#      If this string is specified it will be used for the file extension
-#      for a loadable module, rather than the shlib_extension.
+#  - solink_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the link command. This can be useful in conjunction with
+#      the post_solink parameter.
+#  - solink_module_outputs
+#      The content of this array, if specified, will be added to the list of
+#      outputs from the link command. This can be useful in conjunction with
+#      the post_solink_module parameter.
+#
+#  - post_asm
+#      The content of this string, if specified, will be run as a separate
+#      command following the asm command.
+#  - post_compile
+#      The content of this string, if specified, will be run as a separate
+#      command following the cc/cxx commands.
+#  - post_alink
+#      The content of this string, if specified, will be run as a separate
+#      command following the alink command.
 #  - post_link
 #      The content of this string, if specified, will be run as a separate
-#      command following the the link command.
-#  - deps
-#      Just forwarded to the toolchain definition.
+#      command following the link command.
+#  - post_solink
+#      The content of this string, if specified, will be run as a separate
+#      command following the solink command.
+#  - post_solink_module
+#      The content of this string, if specified, will be run as a separate
+#      command following the solink_module command.
+#
 #  - executable_extension
 #      If this string is specified it will be used for the file extension
 #      for an executable, rather than using no extension; targets will
 #      still be able to override the extension using the output_extension
 #      variable.
+#  - loadable_module_extension
+#      If this string is specified it will be used for the file extension
+#      for a loadable module, rather than the shlib_extension.
 #  - object_extensions
 #      List of extensions for object files that are passed straight to the
 #      linker.
@@ -81,6 +117,11 @@ import("../config/colors.gni")
 #      List of source file extensions for Objective C files.
 #  - source_extensions_objcxx
 #      List of source file extensions for Objective C++ files.
+#
+#  - deps
+#      Just forwarded to the toolchain definition.
+#  - pool
+#      Just forwarded to the toolchain definition.
 #  - strip
 #      Location of the strip executable. When specified, strip will be run on
 #      all shared libraries and executables as they are built. The pre-stripped
@@ -134,10 +175,6 @@ template("ghs_toolchain") {
       rebuild_string = "-D" + invoker.rebuild_define + " "
     } else {
       rebuild_string = ""
-    }
-
-    if (defined(invoker.pool)) {
-      pool = invoker.pool
     }
 
     cc = compiler_prefix + invoker.cc
@@ -239,11 +276,17 @@ template("ghs_toolchain") {
       objectdir = "{{source_out_dir}}"
       depfile = "$objectdir/{{source_file_part}}.d"
       command = "$cc -MMD -c ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_cflags} {{cflags}} {{cflags_c}} -object_dir=$objectdir -filetype.c {{source}} -o {{output}}"
+      if (defined(invoker.post_compile)) {
+        command += " && " + invoker.post_compile
+      }
       depsformat = "gcc"
       description = "CC {{output}}"
       outputs = [
         "{{source_out_dir}}/{{source_file_part}}.o",
       ]
+      if (defined(invoker.compile_outputs)) {
+        outputs += invoker.compile_outputs
+      }
     }
 
     tool("cxx") {
@@ -253,11 +296,17 @@ template("ghs_toolchain") {
       objectdir = "{{source_out_dir}}"
       depfile = "$objectdir/{{source_file_part}}.d"
       command = "$cxx -MMD -c ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_cxxflags} {{cflags}} {{cflags_cc}} -object_dir=$objectdir -filetype.cc {{source}} -o {{output}}"
+      if (defined(invoker.post_compile)) {
+        command += " && " + invoker.post_compile
+      }
       depsformat = "gcc"
       description = "CXX {{output}}"
       outputs = [
         "{{source_out_dir}}/{{source_file_part}}.o",
       ]
+      if (defined(invoker.compile_outputs)) {
+        outputs += invoker.compile_outputs
+      }
     }
 
     tool("asm") {
@@ -267,22 +316,34 @@ template("ghs_toolchain") {
       objectdir = "{{source_out_dir}}"
       depfile = "$objectdir/{{source_file_part}}.d"
       command = "$cc -MMD -c ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_asmppflags}${extra_asmflags} {{asmflags}} -object_dir=$objectdir -filetype.assembly {{source}} -o {{output}}"
+      if (defined(invoker.post_asm)) {
+        command += " && " + invoker.post_asm
+      }
       depsformat = "gcc"
       description = "ASM {{output}}"
       outputs = [
         "{{source_out_dir}}/{{source_file_part}}.o",
       ]
+      if (defined(invoker.asm_outputs)) {
+        outputs += invoker.asm_outputs
+      }
     }
 
     tool("alink") {
       afile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
       arflags = "-update_archive"
       command = "rm -f {{output}} && $ar $arflags {{arflags}} -o $afile {{inputs}}"
+      if (defined(invoker.post_alink)) {
+        command += " && " + invoker.post_alink
+      }
       description = "AR {{output}}"
       outputs = [
         afile,
         "{{output_dir}}/{{target_output_name}}.dba",
       ]
+      if (defined(invoker.alink_outputs)) {
+        outputs += invoker.alink_outputs
+      }
       default_output_dir = "{{target_out_dir}}"
       default_output_extension = ".a"
       output_prefix = "lib"
@@ -305,6 +366,10 @@ template("ghs_toolchain") {
         strip_command = "${invoker.strip} \"$sofile\""
         command += " && cp -af \"$outfile\" \"$unstripped_sofile\" && " + strip_command
       }
+      if (defined(invoker.post_solink)) {
+        command += " && " + invoker.post_solink
+      }
+
       description = "SOLINK $sofile"
 
       # Use this for {{output_extension}} expansions unless a target manually
@@ -313,7 +378,6 @@ template("ghs_toolchain") {
       default_output_extension = default_shlib_extension
 
       default_output_dir = root_shlib_dir
-
       output_prefix = "lib"
 
       outputs = [
@@ -321,6 +385,9 @@ template("ghs_toolchain") {
       ]
       if (sofile != unstripped_sofile) {
         outputs += [ unstripped_sofile ]
+      }
+      if (defined(invoker.solink_outputs)) {
+        outputs += invoker.solink_outputs
       }
       link_output = sofile
       depend_output = sofile
@@ -343,6 +410,9 @@ template("ghs_toolchain") {
         strip_command = "${invoker.strip} \"$sofile\""
         command += " && cp -af \"$outfile\" \"$unstripped_sofile\" && " + strip_command
       }
+      if (defined(invoker.post_solink_module)) {
+        command += " && " + invoker.post_solink_module
+      }
       description = "SOLINK_MODULE $sofile"
 
       # Use this for {{output_extension}} expansions unless a target manually
@@ -355,7 +425,6 @@ template("ghs_toolchain") {
       }
 
       default_output_dir = root_shlib_dir
-
       output_prefix = "lib"
 
       outputs = [
@@ -363,6 +432,9 @@ template("ghs_toolchain") {
       ]
       if (sofile != unstripped_sofile) {
         outputs += [ unstripped_sofile ]
+      }
+      if (defined(invoker.solink_module_outputs)) {
+        outputs += invoker.solink_module_outputs
       }
       link_output = sofile
       depend_output = sofile
@@ -435,6 +507,6 @@ template("ghs_toolchain") {
       target_platform = current_platform
     }
 
-    forward_variables_from(invoker, [ "deps" ])
+    forward_variables_from(invoker, [ "deps", "pool" ])
   }
 }
