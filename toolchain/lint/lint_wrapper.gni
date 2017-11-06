@@ -16,18 +16,18 @@ import("../lint_toolchain.gni")
 #      Extra flags to be appended when linting assembly files. "ASMPP" stands
 #      for "ASM PreProcessor" in this context, although it can be used for non-
 #      preprocessor flags as well.
-#  - extra_cflags
+#  - extra_cflags_c
 #      Extra flags to be appended when linting C files (but not C++ files).
 #  - extra_cppflags
 #      Extra flags to be appended when linting both C and C++ files. "CPP"
 #      stands for "C PreProcessor" in this context, although it can be
 #      used for non-preprocessor flags as well. Not to be confused with
 #      "CXX" (which follows).
-#  - extra_cxxflags
+#  - extra_cflags_cc
 #      Extra flags to be appended when linting C++ files (but not C files).
-#  - extra_objcflags
+#  - extra_cflags_objc
 #      Extra flags to be appended when linting Objective C files.
-#  - extra_objcxxflags
+#  - extra_cflags_objcc
 #      Extra flags to be appended when linting Objective C++ files.
 #
 #  - lintasm (defaults to "flint")

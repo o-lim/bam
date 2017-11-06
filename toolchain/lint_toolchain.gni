@@ -14,13 +14,20 @@ import("../config/colors.gni")
 #
 #  - extra_asmppflags
 #      Extra flags to be appended when linting assembly files. "ASMPP" stands
-#      for "ASM PreProcessor" in this context, although it can be used for non-
-#      preprocessor flags as well.
+#      for "ASM Pre/Post-Processor" in this context, since the lint step is
+#      done either pre or post compile.
 #  - extra_cppflags
-#      Extra flags to be appended when linting both C and C++ files. "CPP"
-#      stands for "C PreProcessor" in this context, although it can be
-#      used for non-preprocessor flags as well. Not to be confused with
-#      "CXX" (which follows).
+#      Extra flags to be appended when linting C/C++ and Objective C/C++ files.
+#      "CPP" stands for "C Pre/Post-Processor" in this context, since the lint
+#      step is done either pre or post compile.
+#  - extra_cppflags_c
+#      Extra flags to be appended when linting C files (but not C++ files).
+#  - extra_cppflags_cc
+#      Extra flags to be appended when linting C++ files (but not C files).
+#  - extra_cppflags_objc
+#      Extra flags to be appended when linting Object C files.
+#  - extra_cppflags_objcc
+#      Extra flags to be appended when linting Object C++ files.
 #
 #  - executable_extension
 #      If this string is specified it will be used for the file extension
@@ -129,6 +136,30 @@ template("lint_toolchain") {
       extra_cppflags = ""
     }
 
+    if (defined(invoker.extra_cppflags_c) && invoker.extra_cppflags_c != "") {
+      extra_cppflags_c = " " + invoker.extra_cppflags_c
+    } else {
+      extra_cppflags_c = ""
+    }
+
+    if (defined(invoker.extra_cppflags_cc) && invoker.extra_cppflags_cc != "") {
+      extra_cppflags_cc = " " + invoker.extra_cppflags_cc
+    } else {
+      extra_cppflags_cc = ""
+    }
+
+    if (defined(invoker.extra_cppflags_objc) && invoker.extra_cppflags_objc != "") {
+      extra_cppflags_objc = " " + invoker.extra_cppflags_objc
+    } else {
+      extra_cppflags_objc = ""
+    }
+
+    if (defined(invoker.extra_cppflags_objcc) && invoker.extra_cppflags_objcc != "") {
+      extra_cppflags_objcc = " " + invoker.extra_cppflags_objcc
+    } else {
+      extra_cppflags_objcc = ""
+    }
+
     sys_include_switch = "--i"
 
     tool("cc") {
@@ -144,7 +175,7 @@ template("lint_toolchain") {
       } else {
         command = ""
       }
-      command += "$lintcc ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags} {{cppflags}} {{cppflags_c}} {{source}}"
+      command += "$lintcc ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_cppflags_c} {{cppflags}} {{cppflags_c}} {{source}}"
       command += " && touch {{output}}"
       if (defined(invoker.post_lintcc)) {
         command += " && " + invoker.post_lintcc
@@ -168,7 +199,7 @@ template("lint_toolchain") {
       } else {
         command = ""
       }
-      command += "$lintcxx ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags} {{cppflags}} {{cppflags_cc}} {{source}}"
+      command += "$lintcxx ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_cppflags_cc} {{cppflags}} {{cppflags_cc}} {{source}}"
       command += " && touch {{output}}"
       if (defined(invoker.post_lintcxx)) {
         command += " && " + invoker.post_lintcxx
@@ -192,7 +223,7 @@ template("lint_toolchain") {
       } else {
         command = ""
       }
-      command += "$lintcc ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags} {{cppflags}} {{cppflags_objc}} {{source}}"
+      command += "$lintcc ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_cppflags_objc} {{cppflags}} {{cppflags_objc}} {{source}}"
       command += " && touch {{output}}"
       if (defined(invoker.post_lintobjc)) {
         command += " && " + invoker.post_lintobjc
@@ -216,7 +247,7 @@ template("lint_toolchain") {
       } else {
         command = ""
       }
-      command += "$lintcxx ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags} {{cppflags}} {{cppflags_objcc}} {{source}}"
+      command += "$lintcxx ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_cppflags_objcc} {{cppflags}} {{cppflags_objcc}} {{source}}"
       command += " && touch {{output}}"
       if (defined(invoker.post_lintobjcxx)) {
         command += " && " + invoker.post_lintobjcxx
