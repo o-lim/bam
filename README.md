@@ -332,27 +332,19 @@ toolchains.
   extra_asmflags [string] (optional)
       Extra flags to be appended when assembling files.
 
-  extra_asmppflags [string] (optional)
-      Extra flags to be appended when assembling files. "ASMPP" stands for
-      "ASM PreProcessor" in this context, although it can be used for non-
-      preprocessor flags as well.
-
   extra_cflags [string] (optional)
+      Extra flags to be appended when compiling C/C++ and Objective C/C++ files.
+
+  extra_cflags_c [string] (optional)
       Extra flags to be appended when compiling C files (but not C++ files).
 
-  extra_cppflags [string] (optional)
-      Extra flags to be appended when compiling both C and C++ files. "CPP"
-      stands for "C PreProcessor" in this context, although it can be
-      used for non-preprocessor flags as well. Not to be confused with
-      "CXX" (which follows).
-
-  extra_cxxflags [string] (optional)
+  extra_cflags_cc [string] (optional)
       Extra flags to be appended when compiling C++ files (but not C files).
 
-  extra_objcflags [string] (optional)
+  extra_cflags_objc [string] (optional)
       Extra flags to be appended when compiling Objective C files.
 
-  extra_objcxxflags [string] (optional)
+  extra_cflags_objcc [string] (optional)
       Extra flags to be appended when compiling Objective C++ files.
 
   extra_ldflags [string] (optional)
@@ -515,16 +507,45 @@ C/C++ toolchains.
   toolchain_type [string] (required)
       The type of toolchain to load (i.e. gcc, ghs, ti)
 
+  extra_asmflags [string] (optional)
+      Extra flags to be appended when assembling files.
+
   extra_asmppflags [string] (optional)
-      Extra flags to be appended when assembling files. "ASMPP" stands for
-      "ASM PreProcessor" in this context, although it can be used for non-
-      preprocessor flags as well.
+      Extra flags to be appended when linting assembly files. "ASMPP" stands
+      for "ASM Pre/Post-Processor" in this context, since the lint step is
+      done either pre or post compile.
+
+  extra_cflags [string] (optional)
+      Extra flags to be appended when compiling C/C++ and Objective C/C++ files.
+
+  extra_cflags_c [string] (optional)
+      Extra flags to be appended when compiling C files (but not C++ files).
+
+  extra_cflags_cc [string] (optional)
+      Extra flags to be appended when compiling C++ files (but not C files).
+
+  extra_cflags_objc [string] (optional)
+      Extra flags to be appended when compiling Objective C files.
+
+  extra_cflags_objcc [string] (optional)
+      Extra flags to be appended when compiling Objective C++ files.
 
   extra_cppflags [string] (optional)
-      Extra flags to be appended when compiling both C and C++ files. "CPP"
-      stands for "C PreProcessor" in this context, although it can be
-      used for non-preprocessor flags as well. Not to be confused with
-      "CXX" (which follows).
+      Extra flags to be appended when linting C/C++ and Objective C/C++ files.
+      "CPP" stands for "C Pre/Post-Processor" in this context, since the lint
+      step is done either pre or post compile.
+
+  extra_cppflags_c [string] (optional)
+      Extra flags to be appended when linting C files (but not C++ files).
+
+  extra_cppflags_cc [string] (optional)
+      Extra flags to be appended when linting C++ files (but not C files).
+
+  extra_cppflags_objc [string] (optional)
+      Extra flags to be appended when linting Object C files.
+
+  extra_cppflags_objcc [string] (optional)
+      Extra flags to be appended when linting Object C++ files.
 
   executable_extension [string] (optional)
       If this string is specified it will be used for the file extension for an
@@ -636,27 +657,41 @@ toolchains with LINT support.
       Extra flags to be appended when assembling files.
 
   extra_asmppflags [string] (optional)
-      Extra flags to be appended when assembling files. "ASMPP" stands for
-      "ASM PreProcessor" in this context, although it can be used for non-
-      preprocessor flags as well.
+      Extra flags to be appended when linting assembly files. "ASMPP" stands
+      for "ASM Pre/Post-Processor" in this context, since the lint step is
+      done either pre or post compile.
 
   extra_cflags [string] (optional)
+      Extra flags to be appended when compiling C/C++ and Objective C/C++ files.
+
+  extra_cflags_c [string] (optional)
       Extra flags to be appended when compiling C files (but not C++ files).
 
-  extra_cppflags [string] (optional)
-      Extra flags to be appended when compiling both C and C++ files. "CPP"
-      stands for "C PreProcessor" in this context, although it can be
-      used for non-preprocessor flags as well. Not to be confused with
-      "CXX" (which follows).
-
-  extra_cxxflags [string] (optional)
+  extra_cflags_cc [string] (optional)
       Extra flags to be appended when compiling C++ files (but not C files).
 
-  extra_objcflags [string] (optional)
+  extra_cflags_objc [string] (optional)
       Extra flags to be appended when compiling Objective C files.
 
-  extra_objcxxflags [string] (optional)
+  extra_cflags_objcc [string] (optional)
       Extra flags to be appended when compiling Objective C++ files.
+
+  extra_cppflags [string] (optional)
+      Extra flags to be appended when linting C/C++ and Objective C/C++ files.
+      "CPP" stands for "C Pre/Post-Processor" in this context, since the lint
+      step is done either pre or post compile.
+
+  extra_cppflags_c [string] (optional)
+      Extra flags to be appended when linting C files (but not C++ files).
+
+  extra_cppflags_cc [string] (optional)
+      Extra flags to be appended when linting C++ files (but not C files).
+
+  extra_cppflags_objc [string] (optional)
+      Extra flags to be appended when linting Object C files.
+
+  extra_cppflags_objcc [string] (optional)
+      Extra flags to be appended when linting Object C++ files.
 
   extra_ldflags [string] (optional)
       Extra flags to be appended when linking.

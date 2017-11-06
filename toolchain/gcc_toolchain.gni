@@ -17,22 +17,16 @@ import("../config/colors.gni")
 #
 #  - extra_asmflags
 #      Extra flags to be appended when assembling files.
-#  - extra_asmppflags
-#      Extra flags to be appended when assembling files. "ASMPP" stands for
-#      "ASM PreProcessor" in this context, although it can be used for non-
-#      preprocessor flags as well.
 #  - extra_cflags
+#      Extra flags to be appended when compiling C/C++ and Objective C/C++
+#      files.
+#  - extra_cflags_c
 #      Extra flags to be appended when compiling C files (but not C++ files).
-#  - extra_cppflags
-#      Extra flags to be appended when compiling both C and C++ files. "CPP"
-#      stands for "C PreProcessor" in this context, although it can be
-#      used for non-preprocessor flags as well. Not to be confused with
-#      "CXX" (which follows).
-#  - extra_cxxflags
+#  - extra_cflags_cc
 #      Extra flags to be appended when compiling C++ files (but not C files).
-#  - extra_objcflags
+#  - extra_cflags_objc
 #      Extra flags to be appended when compiling Objective C files.
-#  - extra_objcxxflags
+#  - extra_cflags_objcc
 #      Extra flags to be appended when compiling Objective C++ files.
 #  - extra_ldflags
 #      Extra flags to be appended when linking
@@ -239,40 +233,34 @@ template("gcc_toolchain") {
       extra_asmflags = ""
     }
 
-    if (defined(invoker.extra_asmppflags) && invoker.extra_asmppflags != "") {
-      extra_asmppflags = " " + invoker.extra_asmppflags
-    } else {
-      extra_asmppflags = ""
-    }
-
-    if (defined(invoker.extra_cflags) && invoker.extra_cflags != "") {
+    if (defined(invoker.extra_cflags) && invoker.extra_cflags!= "") {
       extra_cflags = " " + invoker.extra_cflags
     } else {
       extra_cflags = ""
     }
 
-    if (defined(invoker.extra_cppflags) && invoker.extra_cppflags != "") {
-      extra_cppflags = " " + invoker.extra_cppflags
+    if (defined(invoker.extra_cflags_c) && invoker.extra_cflags_c != "") {
+      extra_cflags_c = " " + invoker.extra_cflags_c
     } else {
-      extra_cppflags = ""
+      extra_cflags_c = ""
     }
 
-    if (defined(invoker.extra_cxxflags) && invoker.extra_cxxflags != "") {
-      extra_cxxflags = " " + invoker.extra_cxxflags
+    if (defined(invoker.extra_cflags_cc) && invoker.extra_cflags_cc != "") {
+      extra_cflags_cc = " " + invoker.extra_cflags_cc
     } else {
-      extra_cxxflags = ""
+      extra_cflags_cc = ""
     }
 
-    if (defined(invoker.extra_objcflags) && invoker.extra_objcflags != "") {
-      extra_objcflags = " " + invoker.extra_objcflags
+    if (defined(invoker.extra_cflags_objc) && invoker.extra_cflags_objc != "") {
+      extra_cflags_objc = " " + invoker.extra_cflags_objc
     } else {
-      extra_objcflags = ""
+      extra_cflags_objc = ""
     }
 
-    if (defined(invoker.extra_objcxxflags) && invoker.extra_objcxxflags != "") {
-      extra_objcxxflags = " " + invoker.extra_objcxxflags
+    if (defined(invoker.extra_cflags_objcc) && invoker.extra_cflags_objcc != "") {
+      extra_cflags_objcc = " " + invoker.extra_cflags_objcc
     } else {
-      extra_objcxxflags = ""
+      extra_cflags_objcc = ""
     }
 
     if (defined(invoker.extra_ldflags) && invoker.extra_ldflags != "") {
@@ -293,7 +281,7 @@ template("gcc_toolchain") {
         source_extensions = invoker.source_extensions_cc
       }
       depfile = "{{output}}.d"
-      command = "$cc -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_cflags} {{cflags}} {{cflags_c}} -c {{source}} -o {{output}}"
+      command = "$cc -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cflags}${extra_cflags_c} {{cflags}} {{cflags_c}} -c {{source}} -o {{output}}"
       if (defined(invoker.post_compile)) {
         command += " && " + invoker.post_compile
       }
@@ -313,7 +301,7 @@ template("gcc_toolchain") {
         source_extensions = invoker.source_extensions_cxx
       }
       depfile = "{{output}}.d"
-      command = "$cxx -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_cxxflags} {{cflags}} {{cflags_cc}} -c {{source}} -o {{output}}"
+      command = "$cxx -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cflags}${extra_cflags_cc} {{cflags}} {{cflags_cc}} -c {{source}} -o {{output}}"
       if (defined(invoker.post_compile)) {
         command += " && " + invoker.post_compile
       }
@@ -333,7 +321,7 @@ template("gcc_toolchain") {
         source_extensions = invoker.source_extensions_objc
       }
       depfile = "{{output}}.d"
-      command = "$cc -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_objcflags} {{cflags}} {{cflags_objc}} -c {{source}} -o {{output}}"
+      command = "$cc -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cflags}${extra_cflags_objc} {{cflags}} {{cflags_objc}} -c {{source}} -o {{output}}"
       if (defined(invoker.post_compile)) {
         command += " && " + invoker.post_compile
       }
@@ -353,7 +341,7 @@ template("gcc_toolchain") {
         source_extensions = invoker.source_extensions_objcxx
       }
       depfile = "{{output}}.d"
-      command = "$cxx -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_objcxxflags} {{cflags}} {{cflags_objcc}} -c {{source}} -o {{output}}"
+      command = "$cxx -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cflags}${extra_cflags_objcc} {{cflags}} {{cflags_objcc}} -c {{source}} -o {{output}}"
       if (defined(invoker.post_compile)) {
         command += " && " + invoker.post_compile
       }
@@ -373,7 +361,7 @@ template("gcc_toolchain") {
       }
       # For GCC we can just use the C compiler to compile assembly.
       depfile = "{{output}}.d"
-      command = "$cc -MMD -MF $depfile -x assembler-with-cpp ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_asmppflags}${extra_asmflags} {{asmflags}} -c {{source}} -o {{output}}"
+      command = "$cc -MMD -MF $depfile -x assembler-with-cpp ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_asmflags} {{asmflags}} -c {{source}} -o {{output}}"
       if (defined(invoker.post_asm)) {
         command += " && " + invoker.post_asm
       }

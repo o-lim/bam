@@ -112,8 +112,28 @@ ToolchainWithLint("mingw64") {
   ar = "${toolprefix}ar"
   ld = cxx
 
+  lintcc = "mylint"
+  lintcxx = lintcc
+  lintasm = lintcc
+
+  source_extensions_lintasm = []
+  source_extensions_lintasm = ["asm"]
   source_extensions_ld = ["ld", "cmd"]
   object_extensions = ["o", "obj", "oo"]
+
+  extra_asmflags = "-DEXTRA_ASMFLAGS"
+  extra_cflags = "-DEXTRA_CFLAGS"
+  extra_cflags_c = "-DEXTRA_CFLAGS_C"
+  extra_cflags_cc = "-DEXTRA_CFLAGS_CC"
+  extra_cflags_objc = "-DEXTRA_CFLAGS_OBJC"
+  extra_cflags_objcc = "-DEXTRA_CFLAGS_OBJCC"
+
+  extra_asmppflags = "-DEXTRA_ASMPPFLAGS"
+  extra_cppflags = "-DEXTRA_CPPFLAGS"
+  extra_cppflags_c = "-DEXTRA_CPPFLAGS_C"
+  extra_cppflags_cc = "-DEXTRA_CPPFLAGS_CC"
+  extra_cppflags_objc = "-DEXTRA_CPPFLAGS_OBJC"
+  extra_cppflags_objcc = "-DEXTRA_CPPFLAGS_OBJCC"
 
   toolchain_args = {
     pkg_config = "${toolprefix}pkg-config"

@@ -14,24 +14,31 @@ import("lint_wrapper.gni")
 # Optional parameters that control the tools:
 #
 #  - extra_asmflags
-#      Extra flags to be appended when linting assembly files.
+#      Extra flags to be appended when assembling files.
 #  - extra_asmppflags
 #      Extra flags to be appended when linting assembly files. "ASMPP" stands
-#      for "ASM PreProcessor" in this context, although it can be used for non-
-#      preprocessor flags as well.
-#  - extra_cflags
-#      Extra flags to be appended when linting C files (but not C++ files).
+#      for "ASM Pre/Post-Processor" in this context, since the lint step is
+#      done either pre or post compile.
+#  - extra_cflags_c
+#      Extra flags to be appended when compiling C files (but not C++ files).
+#  - extra_cflags_cc
+#      Extra flags to be appended when compiling C++ files (but not C files).
+#  - extra_cflags_objc
+#      Extra flags to be appended when compiling Objective C files.
+#  - extra_cflags_objcc
+#      Extra flags to be appended when compiling Objective C++ files.
 #  - extra_cppflags
-#      Extra flags to be appended when linting both C and C++ files. "CPP"
-#      stands for "C PreProcessor" in this context, although it can be
-#      used for non-preprocessor flags as well. Not to be confused with
-#      "CXX" (which follows).
-#  - extra_cxxflags
+#      Extra flags to be appended when linting C/C++ and Objective C/C++ files.
+#      "CPP" stands for "C Pre/Post-Processor" in this context, since the lint
+#      step is done either pre or post compile.
+#  - extra_cppflags_c
+#      Extra flags to be appended when linting C files (but not C++ files).
+#  - extra_cppflags_cc
 #      Extra flags to be appended when linting C++ files (but not C files).
-#  - extra_objcflags
-#      Extra flags to be appended when linting Objective C files.
-#  - extra_objcxxflags
-#      Extra flags to be appended when linting Objective C++ files.
+#  - extra_cppflags_objc
+#      Extra flags to be appended when linting Object C files.
+#  - extra_cppflags_objcc
+#      Extra flags to be appended when linting Object C++ files.
 #
 #  - lintasm
 #      The lint executable to run for assembly source files.
@@ -87,49 +94,42 @@ template("mac_lint") {
     } else {
       extra_asmflags = ""
     }
-    if (defined(invoker.extra_asmppflags) && invoker.extra_asmppflags != "") {
-      extra_asmppflags = " " + invoker.extra_asmppflags
-    } else {
-      extra_asmppflags = ""
-    }
     if (defined(invoker.extra_cflags) && invoker.extra_cflags != "") {
       extra_cflags = " " + invoker.extra_cflags
     } else {
       extra_cflags = ""
     }
-    if (defined(invoker.extra_cppflags) && invoker.extra_cppflags != "") {
-      extra_cppflags = " " + invoker.extra_cppflags
+    if (defined(invoker.extra_cflags_c) && invoker.extra_cflags_c != "") {
+      extra_cflags_c = " " + invoker.extra_cflags_c
     } else {
-      extra_cppflags = ""
+      extra_cflags_c = ""
     }
-    if (defined(invoker.extra_cxxflags) && invoker.extra_cxxflags != "") {
-      extra_cxxflags = " " + invoker.extra_cxxflags
+    if (defined(invoker.extra_cflags_cc) && invoker.extra_cflags_cc != "") {
+      extra_cflags_cc = " " + invoker.extra_cflags_cc
     } else {
-      extra_cxxflags = ""
+      extra_cflags_cc = ""
     }
-    if (defined(invoker.extra_objcflags) && invoker.extra_objcflags != "") {
-      extra_objcflags = " " + invoker.extra_objcflags
+    if (defined(invoker.extra_cflags_objc) && invoker.extra_cflags_objc != "") {
+      extra_cflags_objc = " " + invoker.extra_cflags_objc
     } else {
-      extra_objcflags = ""
+      extra_cflags_objc = ""
     }
-    if (defined(invoker.extra_objcxxflags) && invoker.extra_objcxxflags != "") {
-      extra_objcxxflags = " " + invoker.extra_objcxxflags
+    if (defined(invoker.extra_cflags_objcc) && invoker.extra_cflags_objcc != "") {
+      extra_cflags_objcc = " " + invoker.extra_cflags_objcc
     } else {
-      extra_objcxxflags = ""
+      extra_cflags_objcc = ""
     }
 
     _common_flags = "-E -MM -MF $depfile -MT '{{output}}' {{defines}} {{include_dirs}} {{sys_include_dirs}}"
-    pre_lintcc = "$cc ${_common_flags}${extra_cppflags}${extra_cflags} {{cflags}} {{cflags_c}} {{source}}"
-    pre_lintcxx = "$cxx ${_common_flags}${extra_cppflags}${extra_cxxflags} {{cflags}} {{cflags_cc}} {{source}}"
-    pre_lintobjc = "$cc ${_common_flags}${extra_cppflags}${extra_objcflags} {{cflags}} {{cflags_objc}} {{source}}"
-    pre_lintobjcxx = "$cxx ${_common_flags}${extra_cppflags}${extra_objcxxflags} {{cflags}} {{cflags_objcc}} {{source}}"
+    pre_lintcc = "$cc ${_common_flags}${extra_cflags}${extra_cflags_c} {{cflags}} {{cflags_c}} {{source}}"
+    pre_lintcxx = "$cxx ${_common_flags}${extra_cflags}${extra_cflags_cc} {{cflags}} {{cflags_cc}} {{source}}"
+    pre_lintobjc = "$cc ${_common_flags}${extra_cflags}${extra_cflags_objc} {{cflags}} {{cflags_objc}} {{source}}"
+    pre_lintobjcxx = "$cxx ${_common_flags}${extra_cflags}${extra_cflags_objcc} {{cflags}} {{cflags_objcc}} {{source}}"
     pre_lintasm = "$cc ${_common_flags}${extra_asmflags} {{asmflags}} {{source}}"
 
     forward_variables_from(invoker, lint_toolchain_variables - [
       "depfile",
       "depsformat",
-      "extra_asmppflags",
-      "extra_cppflags",
       "pre_lintasm",
       "pre_lintcc",
       "pre_lintcxx",

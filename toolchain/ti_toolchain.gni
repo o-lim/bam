@@ -17,18 +17,12 @@ import("../config/colors.gni")
 #
 #  - extra_asmflags
 #      Extra flags to be appended when assembling files.
-#  - extra_asmppflags
-#      Extra flags to be appended when assembling files. "ASMPP" stands for
-#      "ASM PreProcessor" in this context, although it can be used for non-
-#      preprocessor flags as well.
 #  - extra_cflags
+#      Extra flags to be appended when compiling C/C++ and Objective C/C++
+#      files.
+#  - extra_cflags_c
 #      Extra flags to be appended when compiling C files (but not C++ files).
-#  - extra_cppflags
-#      Extra flags to be appended when compiling both C and C++ files. "CPP"
-#      stands for "C PreProcessor" in this context, although it can be
-#      used for non-preprocessor flags as well. Not to be confused with
-#      "CXX" (which follows).
-#  - extra_cxxflags
+#  - extra_cflags_cc
 #      Extra flags to be appended when compiling C++ files (but not C files).
 #  - extra_ldflags
 #      Extra flags to be appended when linking
@@ -227,28 +221,22 @@ template("ti_toolchain") {
       extra_asmflags = ""
     }
 
-    if (defined(invoker.extra_asmppflags) && invoker.extra_asmppflags != "") {
-      extra_asmppflags = " " + invoker.extra_asmppflags
-    } else {
-      extra_asmppflags = ""
-    }
-
-    if (defined(invoker.extra_cflags) && invoker.extra_cflags != "") {
+    if (defined(invoker.extra_cflags) && invoker.extra_cflags!= "") {
       extra_cflags = " " + invoker.extra_cflags
     } else {
       extra_cflags = ""
     }
 
-    if (defined(invoker.extra_cppflags) && invoker.extra_cppflags != "") {
-      extra_cppflags = " " + invoker.extra_cppflags
+    if (defined(invoker.extra_cflags_c) && invoker.extra_cflags_c != "") {
+      extra_cflags_c = " " + invoker.extra_cflags_c
     } else {
-      extra_cppflags = ""
+      extra_cflags_c = ""
     }
 
-    if (defined(invoker.extra_cxxflags) && invoker.extra_cxxflags != "") {
-      extra_cxxflags = " " + invoker.extra_cxxflags
+    if (defined(invoker.extra_cflags_cc) && invoker.extra_cflags_cc != "") {
+      extra_cflags_cc = " " + invoker.extra_cflags_cc
     } else {
-      extra_cxxflags = ""
+      extra_cflags_cc = ""
     }
 
     if (defined(invoker.extra_ldflags) && invoker.extra_ldflags != "") {
@@ -270,7 +258,7 @@ template("ti_toolchain") {
       }
       depfile = "{{output}}.d"
       depfixup = "sed -i -e '\$!s/\$/ \\\\/' -e '1!s|.*\\.o:||' $depfile"
-      command = "rm -f {{output}} && $cc -ppd=$depfile --preproc_with_compile --obj_extension={{source_extension}}.o --obj_directory={{source_out_dir}} ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cppflags}${extra_cflags} {{cflags}} {{cflags_c}} {{source}} && $depfixup"
+      command = "rm -f {{output}} && $cc -ppd=$depfile --preproc_with_compile --obj_extension={{source_extension}}.o --obj_directory={{source_out_dir}} ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_cflags}${extra_cflags_c} {{cflags}} {{cflags_c}} {{source}} && $depfixup"
       if (defined(invoker.post_compile)) {
         command += " && " + invoker.post_compile
       }
@@ -290,7 +278,7 @@ template("ti_toolchain") {
       }
       depfile = "{{output}}.d"
       depfixup = "sed -i -e '\$!s/\$/ \\\\/' -e '1!s|.*\\.o:||' $depfile"
-      command = "rm -f {{output}} && $cxx -ppd=$depfile --preproc_with_compile --obj_extension={{source_extension}}.o --obj_directory={{source_out_dir}} ${rebuild_string}{{defines}} {{include_dirs}}${extra_cppflags}${extra_cxxflags} {{sys_include_dirs}} {{cflags}} {{cflags_cc}} {{source}} && $depfixup"
+      command = "rm -f {{output}} && $cxx -ppd=$depfile --preproc_with_compile --obj_extension={{source_extension}}.o --obj_directory={{source_out_dir}} ${rebuild_string}{{defines}} {{include_dirs}}${extra_cflags}${extra_cflags_cc} {{sys_include_dirs}} {{cflags}} {{cflags_cc}} {{source}} && $depfixup"
       if (defined(invoker.post_compile)) {
         command += " && " + invoker.post_compile
       }
@@ -308,7 +296,7 @@ template("ti_toolchain") {
       if (defined(invoker.source_extensions_asm)) {
         source_extensions = invoker.source_extensions_asm
       }
-      command = "rm -f {{output}} && $cc --obj_extension={{source_extension}}.o --obj_directory={{source_out_dir}} ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_asmppflags}${extra_asmflags} {{asmflags}} {{source}}"
+      command = "rm -f {{output}} && $cc --obj_extension={{source_extension}}.o --obj_directory={{source_out_dir}} ${rebuild_string}{{defines}} {{include_dirs}} {{sys_include_dirs}}${extra_asmflags} {{asmflags}} {{source}}"
       if (defined(invoker.post_asm)) {
         command += " && " + invoker.post_asm
       }

@@ -489,3 +489,27 @@ function print_result() {
   ninja -C out arm/foobar
   diff -u <(expected) <(find out/arm -name '*.s' -o -name '*.ss' -o -name '*.*link' | sort)
 }
+
+@test "extra_cflags inserts additional cflags to compile command" {
+  ninja -C out -t commands -s mingw64/obj/src/bar.asm.o | grep -- '-DEXTRA_ASMFLAGS\>'
+  ninja -C out -t commands -s mingw64/obj/src/bar.c.o | grep -- '-DEXTRA_CFLAGS\>'
+  ninja -C out -t commands -s mingw64/obj/src/bar.c.o | grep -- '-DEXTRA_CFLAGS_C\>'
+  ninja -C out -t commands -s mingw64/obj/src/fu.cc.o | grep -- '-DEXTRA_CFLAGS\>'
+  ninja -C out -t commands -s mingw64/obj/src/fu.cc.o | grep -- '-DEXTRA_CFLAGS_CC\>'
+  ninja -C out -t commands -s mingw64/obj/src/fu.m.o | grep -- '-DEXTRA_CFLAGS\>'
+  ninja -C out -t commands -s mingw64/obj/src/fu.m.o | grep -- '-DEXTRA_CFLAGS_OBJC\>'
+  ninja -C out -t commands -s mingw64/obj/src/fu.mm.o | grep -- '-DEXTRA_CFLAGS\>'
+  ninja -C out -t commands -s mingw64/obj/src/fu.mm.o | grep -- '-DEXTRA_CFLAGS_OBJCC\>'
+}
+
+@test "extra_cppflags inserts additional cflags to lint command" {
+  ninja -C out -t commands -s lint-mingw64/obj/src/bar.asm.lint | grep -- '-DEXTRA_ASMPPFLAGS\>'
+  ninja -C out -t commands -s lint-mingw64/obj/src/bar.c.lint | grep -- '-DEXTRA_CPPFLAGS\>'
+  ninja -C out -t commands -s lint-mingw64/obj/src/bar.c.lint | grep -- '-DEXTRA_CPPFLAGS_C\>'
+  ninja -C out -t commands -s lint-mingw64/obj/src/foobar.cpp.lint | grep -- '-DEXTRA_CPPFLAGS\>'
+  ninja -C out -t commands -s lint-mingw64/obj/src/foobar.cpp.lint | grep -- '-DEXTRA_CPPFLAGS_CC\>'
+  ninja -C out -t commands -s lint-mingw64/obj/src/fu.m.lint | grep -- '-DEXTRA_CPPFLAGS\>'
+  ninja -C out -t commands -s lint-mingw64/obj/src/fu.m.lint | grep -- '-DEXTRA_CPPFLAGS_OBJC\>'
+  ninja -C out -t commands -s lint-mingw64/obj/src/fu.mm.lint | grep -- '-DEXTRA_CPPFLAGS\>'
+  ninja -C out -t commands -s lint-mingw64/obj/src/fu.mm.lint | grep -- '-DEXTRA_CPPFLAGS_OBJCC\>'
+}

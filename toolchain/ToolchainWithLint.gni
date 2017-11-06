@@ -22,22 +22,29 @@ import("LintToolchain.gni")
 #  - extra_asmflags
 #      Extra flags to be appended when assembling files.
 #  - extra_asmppflags
-#      Extra flags to be appended when assembling files. "ASMPP" stands for
-#      "ASM PreProcessor" in this context, although it can be used for non-
-#      preprocessor flags as well.
-#  - extra_cflags
+#      Extra flags to be appended when linting assembly files. "ASMPP" stands
+#      for "ASM Pre/Post-Processor" in this context, since the lint step is
+#      done either pre or post compile.
+#  - extra_cflags_c
 #      Extra flags to be appended when compiling C files (but not C++ files).
-#  - extra_cppflags
-#      Extra flags to be appended when compiling both C and C++ files. "CPP"
-#      stands for "C PreProcessor" in this context, although it can be
-#      used for non-preprocessor flags as well. Not to be confused with
-#      "CXX" (which follows).
-#  - extra_cxxflags
+#  - extra_cflags_cc
 #      Extra flags to be appended when compiling C++ files (but not C files).
-#  - extra_objcflags
+#  - extra_cflags_objc
 #      Extra flags to be appended when compiling Objective C files.
-#  - extra_objcxxflags
+#  - extra_cflags_objcc
 #      Extra flags to be appended when compiling Objective C++ files.
+#  - extra_cppflags
+#      Extra flags to be appended when linting C/C++ and Objective C/C++ files.
+#      "CPP" stands for "C Pre/Post-Processor" in this context, since the lint
+#      step is done either pre or post compile.
+#  - extra_cppflags_c
+#      Extra flags to be appended when linting C files (but not C++ files).
+#  - extra_cppflags_cc
+#      Extra flags to be appended when linting C++ files (but not C files).
+#  - extra_cppflags_objc
+#      Extra flags to be appended when linting Object C files.
+#  - extra_cppflags_objcc
+#      Extra flags to be appended when linting Object C++ files.
 #  - extra_ldflags
 #      Extra flags to be appended when linking
 #
