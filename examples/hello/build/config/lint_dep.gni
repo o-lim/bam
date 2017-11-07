@@ -5,7 +5,7 @@ template("lint_dep") {
   action("_${lint_dep_name}_lint_dir") {
     command = "mkdir -p " + rebase_path("$root_gen_dir/lnt", root_build_dir)
     command += " && touch " + rebase_path("$root_gen_dir/lnt/.dirstamp", root_build_dir)
-    description = "LINTDEP DIR $root_gen_dir/lnt"
+    description = "LINTDEP DIR " + rebase_path("$root_gen_dir/lnt", root_build_dir)
     outputs = ["$root_gen_dir/lnt/.dirstamp"]
   }
 
@@ -72,7 +72,7 @@ template("lint_dep") {
     ]
     inputs = [ makefile ]
     data_deps = [":_${lint_dep_name}_lint_dir"]
-    description = "LINTDEP $root_gen_dir/lnt"
+    description = "LINTDEP " + rebase_path("$root_gen_dir/lnt", root_build_dir)
     outputs = [
       "$root_gen_dir/lnt/$vendor-include-path.lnt",
       "$root_gen_dir/lnt/lint_cmac.h",
