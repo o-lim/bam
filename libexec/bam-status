@@ -5,19 +5,24 @@ set -o pipefail
 source bam-sh-setup
 
 cmd=$(basename "$0")
-args=$(getopt -o h -l "help,show-out-dir,no-show-out-dir,show-source-root,no-show-source-root" -n "$cmd" -- "$@")
+args=$(getopt -o hq -l "help,quiet,show-out-dir,no-show-out-dir,show-source-root,no-show-source-root" -n "$cmd" -- "$@")
 if [ $? != 0 ]; then
-  exit 1
+  exit 128
 fi
 
 show_out_dir=1
 show_source_root=0
+quiet=0
 
 eval set -- "$args"
 while true; do
   case "$1" in
     -h|--help)
       exec man "$cmd"
+      shift
+      ;;
+    -q|--quiet)
+      quiet=1
       shift
       ;;
     --show-out-dir)
@@ -82,15 +87,15 @@ function echo_dirty() {
 }
 
 if [ "$show_out_dir" -ne 0 ]; then
-  echo "Build output directory: $BAM_OUTPUT_DIR"
+  [ "$quiet" -eq 0 ] && echo "Build output directory: $BAM_OUTPUT_DIR"
 fi
 if [ "$show_source_root" -ne 0 ]; then
-  echo "Source root: $BAM_SOURCE_ROOT"
+  [ "$quiet" -eq 0 ] && echo "Source root: $BAM_SOURCE_ROOT"
 fi
 
 # Check if output directory has ninja build files
 if ! [ -f "$BAM_OUTPUT_PATH/build.ninja" ]; then
-  echo_dirty "No previously generated build"
+  [ "$quiet" -eq 0 ] && echo_dirty "No previously generated build"
   exit $EXIT_CODE_MISSING_BUILD
 fi
 
@@ -108,8 +113,8 @@ diff -Naq "$buildenv" "$buildenv.tmp" > /dev/null && \
   diff -Naq "$envlog" "$envlog.tmp" > /dev/null
 if [ "$?" -ne 0 ]; then
   rm -f "$buildenv.tmp" "$envlog.tmp"
-  echo_dirty "Build environment modified"
-  echo_dirty "Ninja files are out-of-date"
+  [ "$quiet" -eq 0 ] && echo_dirty "Build environment modified"
+  [ "$quiet" -eq 0 ] && echo_dirty "Ninja files are out-of-date"
   exit $EXIT_CODE_ENV_CHANGED
 else
   rm -f "$buildenv.tmp" "$envlog.tmp"
@@ -120,7 +125,7 @@ cat "$BAM_OUTPUT_PATH/build.ninja.d" | \
     sed '$a\\t@echo ninja out of date' | \
     make --question -C "$BAM_OUTPUT_PATH" -f - --no-print-directory
 if [ "$?" -ne 0 ]; then
-  echo_dirty "Ninja files are out-of-date"
+  [ "$quiet" -eq 0 ] && echo_dirty "Ninja files are out-of-date"
   exit $EXIT_CODE_NINJA_OUT_OF_DATE
 fi
 
@@ -130,10 +135,10 @@ if [ "$#" -gt 0 ]; then
 
   if [ "$?" -ne 0 ]; then
     echo "$cmd: error: $targets" >&2
-    exit 1
+      exit 128
   elif [ -z "$targets" ]; then
     echo "$cmd: error: cannot find any targets for: $@" >&2
-    exit 1
+      exit 128
   fi
 
   targets="$(echo "$targets" | sort -u)"
@@ -150,9 +155,9 @@ fi
 ninja -C "$BAM_OUTPUT_PATH" -n "${targets[@]}" | tail -n 1 | \
     diff -q <(echo "ninja: no work to do.") - > /dev/null
 if [ "$?" -ne 0 ]; then
-  echo_dirty "$tgt_string out-of-date"
+  [ "$quiet" -eq 0 ] && echo_dirty "$tgt_string out-of-date"
   exit $EXIT_CODE_BUILD_OUT_OF_DATE
 else
-  echo "$tgt_string up-to-date"
+  [ "$quiet" -eq 0 ] && echo "$tgt_string up-to-date"
   exit 0
 fi
