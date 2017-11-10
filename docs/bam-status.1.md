@@ -6,13 +6,14 @@ bam-status - Show the build status
 
 # SYNOPSIS
 
-**bam** **status** [**-h**|**--help**] [**-q**|**--quiet**] [**--[no-]show-out-dir**]\
-\  \  \  \  \  \ [**--[no-]show-source-root**] [\<target-patterns...\>]
+**bam** **status** [**-h**|**--help**] [**-q**|**--quiet**]\
+\  \  \  \  \  \ [**--[no-]show-out-dir**] [**--[no-]show-source-root**]\
+\  \  \  \  \  \ [\<targets...\>|\<target-patterns...\>]
 
 # DESCRIPTION
-  Displays whether or not the build is up-to-date. If one or more target
-  patterns are specified, then only display the build status of the matching
-  targets.
+  Displays whether or not the build is up-to-date. If one or more targets or
+  target patterns are specified, then only display the build status of the
+  matching targets.
 
   This command exits with an error if the build is not up-to-date. The exit
   codes are:
@@ -49,3 +50,9 @@ bam-status - Show the build status
 
 --no-show-source-root
 :   Do not show the source root directory.
+
+\<targets\>
+:   List of targets to check status.
+
+\<target-patterns\>
+:   List of target label patterns to check status.
