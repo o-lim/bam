@@ -166,10 +166,21 @@ if [ "$?" -eq 0 ]; then
     if [ "${alias:0:1}" == "!" ]; then
       # This is a shell command
       eval set -- "${alias:1}"
-      export BAM_PREFIX && cd "$BAM_TOP_LEVEL" && exec "$@" "${args[@]}"
+      export BAM_PREFIX
+      cd "$BAM_TOP_LEVEL"
+      type -P "$1" > /dev/null 2>&1 && exec "$@" "${args[@]}"
+
+      # Error: shell command not found
+      err=$("$1" 2>&1)
+      echo "bam: fatal: while expanding alias '$command': '$1':${err#*:*:*:}" >&2
+      exit 128
     fi
     eval set -- "$alias"
-    exec bam-"$@" "${args[@]}"
+    type -P "bam-$1" > /dev/null 2>&1 && exec bam-"$@" "${args[@]}"
+
+    # Error: no bam command found for alias
+    echo "bam: error: expansion of alias '$command' failed; '$1' is not a bam command" >&2
+    exit 1
   fi
 fi
 
