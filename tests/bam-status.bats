@@ -36,7 +36,7 @@ NAME
        bam-status - Show the build status
 
 SYNOPSIS
-       bam status [-h|--help] [--[no-]show-out-dir]
+       bam status [-h|--help] [-q|--quiet] [--[no-]show-out-dir]
                   [--[no-]show-source-root] [<target-patterns...>]
 
 DESCRIPTION
@@ -57,9 +57,15 @@ DESCRIPTION
 
        4. There is no previously generated build.
 
+       128. Unexpected error encountered.
+
 OPTIONS
        -h, --help
               Display this help and exit.
+
+       -q, --quiet
+              Quiet mode. Do not print any output unless an error is encoun-
+              tered.
 
        --show-out-dir
               Show \$BAM_OUTPUT_DIR if defined. Otherwise show the build out-
@@ -142,6 +148,13 @@ EOF
   [ "$status" -eq 4 ]
 }
 
+@test "'bam status -q' without running gen step" {
+  BAM_OUTPUT_DIR=out run bam status -q
+
+  diff -u /dev/null <(print_result)
+  [ "$status" -eq 4 ]
+}
+
 @test "'bam status' build environment changed" {
   function expected() {
     echo "Build output directory: //out"
@@ -155,6 +168,14 @@ EOF
   [ "$status" -eq 3 ]
 }
 
+@test "'bam status --quiet' build environment changed" {
+  BAM_OUTPUT_DIR=out bam gen
+  PKG_CONFIG_PATH="foobar" BAM_OUTPUT_DIR=out run bam status --quiet
+
+  diff -u /dev/null <(print_result)
+  [ "$status" -eq 3 ]
+}
+
 @test "'bam status' gn file environment changed" {
   function expected() {
     echo "Build output directory: //out"
@@ -165,6 +186,14 @@ EOF
   HOME="/tmp" BAM_OUTPUT_DIR=out run bam status
 
   diff -u <(expected) <(print_result)
+  [ "$status" -eq 3 ]
+}
+
+@test "'bam status -q' gn file environment changed" {
+  BAM_OUTPUT_DIR=out bam gen
+  HOME="/tmp" BAM_OUTPUT_DIR=out run bam status -q
+
+  diff -u /dev/null <(print_result)
   [ "$status" -eq 3 ]
 }
 
@@ -182,6 +211,16 @@ EOF
   [ "$status" -eq 2 ]
 }
 
+@test "'bam status -q' ninja files out-of-date" {
+  BAM_OUTPUT_DIR=out bam gen
+  sleep 1
+  touch .gn
+  BAM_OUTPUT_DIR=out run bam status -q
+
+  diff -u /dev/null <(print_result)
+  [ "$status" -eq 2 ]
+}
+
 @test "'bam status' have ninja files but not built" {
   function expected() {
     echo "Build output directory: //out"
@@ -191,6 +230,14 @@ EOF
   BAM_OUTPUT_DIR=out run bam status
 
   diff -u <(expected) <(print_result)
+  [ "$status" -eq 1 ]
+}
+
+@test "'bam status -q' have ninja files but not built" {
+  BAM_OUTPUT_DIR=out bam gen
+  BAM_OUTPUT_DIR=out run bam status -q
+
+  diff -u /dev/null <(print_result)
   [ "$status" -eq 1 ]
 }
 
@@ -204,6 +251,12 @@ EOF
   BAM_OUTPUT_DIR=out bam status | diff <(expected) -
 }
 
+@test "'bam status -q' on up-to-date build" {
+  BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
+  LD_LIBRARY_PATH="ut" ninja -C out
+  BAM_OUTPUT_DIR=out bam status -q | diff /dev/null -
+}
+
 @test "'bam status <target-label>' error when no targets found" {
   function expected() {
     echo "Build output directory: //out"
@@ -214,7 +267,19 @@ EOF
   BAM_OUTPUT_DIR=out run bam status 'doesnotexist'
 
   diff -u <(expected) <(print_result)
-  [ "$status" -eq 1 ]
+  [ "$status" -eq 128 ]
+}
+
+@test "'bam status -q <target-label>' error when no targets found" {
+  function expected() {
+    echo "bam-status: error: cannot find any targets for: doesnotexist"
+  }
+  BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
+  LD_LIBRARY_PATH="ut" ninja -C out
+  BAM_OUTPUT_DIR=out run bam status -q 'doesnotexist'
+
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 128 ]
 }
 
 @test "'bam status <target-pattern>' gets status for specified targets only" {
@@ -252,6 +317,14 @@ EOF
   [ "$status" -eq 0 ]
 }
 
+@test "'bam status -q <target-label>' on a single target when up-to-date" {
+  BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
+  LD_LIBRARY_PATH="ut" ninja -C out
+  BAM_OUTPUT_DIR=out run bam status -q 'src:foobar(//build/toolchain:ut)'
+  diff -u /dev/null <(print_result)
+  [ "$status" -eq 0 ]
+}
+
 @test "'bam status <target-label>' on a single target when out-of-date" {
   function expected() {
     echo "Build output directory: //out"
@@ -263,6 +336,16 @@ EOF
   touch src/bar.c
   BAM_OUTPUT_DIR=out run bam status 'src:bar(//build/toolchain:ut)'
   diff -u <(expected) <(print_result)
+  [ "$status" -eq 1 ]
+}
+
+@test "'bam status -q <target-label>' on a single target when out-of-date" {
+  BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
+  LD_LIBRARY_PATH="ut" ninja -C out
+  sleep 1
+  touch src/bar.c
+  BAM_OUTPUT_DIR=out run bam status -q 'src:bar(//build/toolchain:ut)'
+  diff -u /dev/null <(print_result)
   [ "$status" -eq 1 ]
 }
 

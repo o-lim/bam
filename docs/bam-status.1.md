@@ -6,7 +6,7 @@ bam-status - Show the build status
 
 # SYNOPSIS
 
-**bam** **status** [**-h**|**--help**] [**--[no-]show-out-dir**]\
+**bam** **status** [**-h**|**--help**] [**-q**|**--quiet**] [**--[no-]show-out-dir**]\
 \  \  \  \  \  \ [**--[no-]show-source-root**] [\<target-patterns...\>]
 
 # DESCRIPTION
@@ -27,9 +27,14 @@ bam-status - Show the build status
 
   4. There is no previously generated build.
 
+  128\. Unexpected error encountered.
+
 # OPTIONS
 -h, --help
 :   Display this help and exit.
+
+-q, --quiet
+:   Quiet mode. Do not print any output unless an error is encountered.
 
 --show-out-dir
 :   Show $BAM_OUTPUT_DIR if defined. Otherwise show the build output
