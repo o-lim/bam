@@ -372,6 +372,81 @@ EOF
   [ "$status" -eq 0 ]
 }
 
+@test "'bam <alias>' error when not a bam command" {
+  function expected() {
+    echo "bam: error: expansion of alias 'foo' failed; 'invalid-command' is not a bam command"
+  }
+  mkdir .tmp
+  cat > .tmp/config << EOF
+[alias]
+    foo = invalid-command arg1 arg2 arg3
+EOF
+  BAM_CONFIG=".tmp/config" run bam foo
+
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 1 ]
+}
+
+@test "'bam <alias>' error when command not found" {
+  function expected() {
+    echo "bam: fatal: while expanding alias 'bar': 'no-shell-command': command not found"
+  }
+  mkdir .tmp
+  cat > .tmp/config << EOF
+[alias]
+    bar = !no-shell-command arg1 arg2 arg3
+EOF
+  BAM_CONFIG=".tmp/config" run bam bar
+
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 128 ]
+}
+
+@test "'bam <alias>' error when file not found" {
+  function expected() {
+    echo "bam: fatal: while expanding alias 'baz': './command-dne': No such file or directory"
+  }
+  mkdir .tmp
+  cat > .tmp/config << EOF
+[alias]
+    baz = !./command-dne arg1 arg2 arg3
+EOF
+  BAM_CONFIG=".tmp/config" run bam baz
+
+  diff -ui <(expected) <(print_result)
+  [ "$status" -eq 128 ]
+}
+
+@test "'bam <alias>' error when file is directory" {
+  function expected() {
+    echo "bam: fatal: while expanding alias 'foobar': './foobar': Is a directory"
+  }
+  mkdir .tmp
+  cat > .tmp/config << EOF
+[alias]
+    foobar = !./foobar arg1 arg2 arg3
+EOF
+  BAM_CONFIG=".tmp/config" run bam foobar
+
+  diff -ui <(expected) <(print_result)
+  [ "$status" -eq 128 ]
+}
+
+@test "'bam <alias>' error when permission denied" {
+  function expected() {
+    echo "bam: fatal: while expanding alias 'dofoo': 'foobar/.bam/config': Permission denied"
+  }
+  mkdir .tmp
+  cat > .tmp/config << EOF
+[alias]
+    dofoo = !foobar/.bam/config arg1 arg2 arg3
+EOF
+  BAM_CONFIG=".tmp/config" run bam dofoo
+
+  diff -ui <(expected) <(print_result)
+  [ "$status" -eq 128 ]
+}
+
 @test "'bam --top-level' without <path> generates error" {
   function expected() {
     echo "bam: error: no directory given for --top-level"
