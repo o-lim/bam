@@ -103,7 +103,7 @@ function resolvepath() {
   echo "$path"
 }
 
-function resolve_caret_targets() {
+function resolve_caret_target() {
   local tgt="$1"
   local pretgt="${tgt%^}"
   local src="${pretgt%(*)}"
@@ -118,6 +118,22 @@ function resolve_caret_targets() {
   fi
   local filter=".targets | to_entries | map(select($tcmatch and .value.source_outputs != null and .value.source_outputs.\"$srcpath\" != null)) | [ .[].value.source_outputs.\"$srcpath\" ] | flatten | .[]"
   cat "$BAM_OUTPUT_PATH/build.json" | jq -r "$filter"
+}
+
+function resolve_target() {
+  local target_label="$1"
+  if is_caret_target "$target_label"; then
+    resolve_caret_target "$target_label"
+  elif is_target_label "$target_label"; then
+    gn --root="$BAM_SOURCE_ROOT" ls "$BAM_OUTPUT_PATH" --as=output --all-toolchains "$target_label"
+  elif [[ "$target_label" == *"/"* ]]; then
+    local tgts="$(realpath -L -m --relative-to="$BAM_OUTPUT_PATH" "$target_label")"
+    ninja -C "$BAM_OUTPUT_PATH" -t commands -s "$tgts" > /dev/null 2>&1 && echo "$tgts" || echo
+  elif ninja -C "$BAM_OUTPUT_PATH" -t commands -s "$target_label" > /dev/null 2>&1; then
+    echo "$target_label"
+  else
+    echo
+  fi
 }
 
 function find_config_matches() {

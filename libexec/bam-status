@@ -133,21 +133,7 @@ tgt_string="Build is"
 if [ "$#" -gt 0 ]; then
   targets=
   for target_label in "$@"; do
-    if is_caret_target "$target_label"; then
-      tgts="$(resolve_caret_targets "$target_label")"
-    elif is_target_label "$target_label"; then
-      tgts="$(gn --root="$BAM_SOURCE_ROOT" ls "$BAM_OUTPUT_PATH" --as=output --all-toolchains "$target_label")"
-    elif [[ "$target_label" == *"/"* ]]; then
-      tgts="$(realpath -L -m --relative-to="$BAM_OUTPUT_PATH" "$target_label")"
-      if ! ninja -C "$BAM_OUTPUT_PATH" -t commands -s "$tgts" > /dev/null 2>&1; then
-        tgts=
-      fi
-    elif ninja -C "$BAM_OUTPUT_PATH" -t commands -s "$target_label" > /dev/null 2>&1; then
-      tgts="$target_label"
-    else
-      tgts=
-    fi
-
+    tgts="$(resolve_target "$target_label")"
     if [ "$?" -ne 0 ]; then
       echo "$cmd: error: $tgts" >&2
       exit 128
