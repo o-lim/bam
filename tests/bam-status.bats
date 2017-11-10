@@ -36,13 +36,14 @@ NAME
        bam-status - Show the build status
 
 SYNOPSIS
-       bam status [-h|--help] [-q|--quiet] [--[no-]show-out-dir]
-                  [--[no-]show-source-root] [<target-patterns...>]
+       bam status [-h|--help] [-q|--quiet]
+                  [--[no-]show-out-dir] [--[no-]show-source-root]
+                  [<targets...>|<target-patterns...>]
 
 DESCRIPTION
-       Displays whether or not the build is up-to-date. If one or more target
-       patterns are specified, then only display the build status of the
-       matching targets.
+       Displays whether or not the build is up-to-date. If one or more tar-
+       gets or target patterns are specified, then only display the build sta-
+       tus of the matching targets.
 
        This command exits with an error if the build is not up-to-date. The
        exit codes are:
@@ -80,6 +81,12 @@ OPTIONS
 
        --no-show-source-root
               Do not show the source root directory.
+
+       <targets>
+              List of targets to check status.
+
+       <target-patterns>
+              List of target label patterns to check status.
 
 
 
@@ -260,7 +267,7 @@ EOF
 @test "'bam status <target-label>' error when no targets found" {
   function expected() {
     echo "Build output directory: //out"
-    echo "bam-status: error: cannot find any targets for: doesnotexist"
+    echo "bam-status: error: cannot find any targets for 'doesnotexist'"
   }
   BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
   LD_LIBRARY_PATH="ut" ninja -C out
@@ -272,7 +279,7 @@ EOF
 
 @test "'bam status -q <target-label>' error when no targets found" {
   function expected() {
-    echo "bam-status: error: cannot find any targets for: doesnotexist"
+    echo "bam-status: error: cannot find any targets for 'doesnotexist'"
   }
   BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
   LD_LIBRARY_PATH="ut" ninja -C out
@@ -347,6 +354,66 @@ EOF
   BAM_OUTPUT_DIR=out run bam status -q 'src:bar(//build/toolchain:ut)'
   diff -u /dev/null <(print_result)
   [ "$status" -eq 1 ]
+}
+
+@test "'bam status <target^>' finds targets with rule containing target" {
+  function expected() {
+    echo "Build output directory: //out"
+    echo "Targets are up-to-date"
+  }
+  BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
+  LD_LIBRARY_PATH="ut" ninja -C out
+  BAM_OUTPUT_DIR=out run bam status 'src/bar.c^'
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 0 ]
+}
+
+@test "'bam status <target>' with bad ninja target fails" {
+  function expected() {
+    echo "Build output directory: //out"
+    echo "bam-status: error: cannot find any targets for 'out/ut/doesnotexist'"
+  }
+  BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
+  LD_LIBRARY_PATH="ut" ninja -C out
+  BAM_OUTPUT_DIR=out run bam status out/ut/doesnotexist
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 128 ]
+}
+
+@test "'bam status <target-path>' works for ninja targets" {
+  function expected() {
+    echo "Build output directory: //out"
+    echo "Target is up-to-date"
+  }
+  BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
+  LD_LIBRARY_PATH="ut" ninja -C out
+  BAM_OUTPUT_DIR=out run bam status out/ut/foobar_UT
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 0 ]
+}
+
+@test "'bam status <target>' works for ninja phony targets" {
+  function expected() {
+    echo "Build output directory: //out"
+    echo "Target is up-to-date"
+  }
+  BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
+  LD_LIBRARY_PATH="ut" ninja -C out
+  BAM_OUTPUT_DIR=out run bam status all
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 0 ]
+}
+
+@test "'bam status <targets>' works for multiple targets" {
+  function expected() {
+    echo "Build output directory: //out"
+    echo "Targets are up-to-date"
+  }
+  BAM_OUTPUT_DIR=out bam gen --args='platforms=["ut"] enable_lint=false'
+  LD_LIBRARY_PATH="ut" ninja -C out
+  BAM_OUTPUT_DIR=out run bam status out/ut/foobar_UT 'src:bar(//build/toolchain:ut)' test
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 0 ]
 }
 
 @test "'bam status <target-label>' works outside source root" {
