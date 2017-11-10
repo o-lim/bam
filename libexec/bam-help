@@ -65,5 +65,12 @@ elif [ "$command" == "help" ]; then
 fi
 
 type -P "bam-$command" > /dev/null 2>&1 && exec bam-$command --help
+
+source "bam-sh-setup"
+alias="$(get_config_value "$BAM_CONFIG" alias "$command" | tail -n 1)"
+if [ "$alias" != "$(null_value)" ]; then
+  exec echo "\`bam $command' is aliased to \`$alias'"
+fi
+
 echo "$cmd: error: no help for 'bam-$command'" >&2
 exit 1
