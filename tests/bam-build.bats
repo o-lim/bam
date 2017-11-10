@@ -213,6 +213,28 @@ EOF
   [ "$status" -eq 1 ]
 }
 
+@test "'bam build <target>' error if no ninja targets found" {
+  function expected() {
+    echo "bam-build: error: cannot find any targets for 'fuzz'"
+  }
+  gn gen out
+  run bam build foo "fuzz"
+
+  diff -u <(expected) <(print_result | tail -n +3)
+  [ "$status" -eq 1 ]
+}
+
+@test "'bam build <target-path>' error if no ninja targets found" {
+  function expected() {
+    echo "bam-build: error: cannot find any targets for 'out/far'"
+  }
+  gn gen out
+  run bam build baz "out/far"
+
+  diff -u <(expected) <(print_result | tail -n +3)
+  [ "$status" -eq 1 ]
+}
+
 @test "'bam build -v' enables verbose" {
   function expected() {
     echo "bam-build: found targets for '//src:baz(build/toolchain:arm)':"

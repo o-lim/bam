@@ -60,16 +60,7 @@ elif [ "$#" -eq 0 ]; then
 else
   targets=
   for target_label in "$@"; do
-    if is_caret_target "$target_label"; then
-      tgts="$(resolve_caret_targets "$target_label")"
-    elif is_target_label "$target_label"; then
-      tgts="$(gn --root="$BAM_SOURCE_ROOT" ls "$BAM_OUTPUT_PATH" --as=output --all-toolchains "$target_label")"
-    elif [[ "$target_label" == *"/"* ]]; then
-      tgts="$(realpath -L -m --relative-to="$BAM_OUTPUT_PATH" "$target_label")"
-    else
-      tgts="$target_label"
-    fi
-
+    tgts="$(resolve_target "$target_label")"
     if [ "$?" -ne 0 ]; then
       echo "$cmd: error: $tgts" >&2
       exit 1

@@ -126,6 +126,28 @@ EOF
   [ "$status" -eq 0 ]
 }
 
+@test "'bam clean <target>' error if no ninja targets found" {
+  function expected() {
+    echo "bam-clean: error: cannot find any targets for 'fuzz'"
+  }
+  gn gen out
+  run bam clean foo "fuzz"
+
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 1 ]
+}
+
+@test "'bam clean <target-path>' error if no ninja targets found" {
+  function expected() {
+    echo "bam-clean: error: cannot find any targets for 'out/far'"
+  }
+  gn gen out
+  run bam clean style "out/far"
+
+  diff -u <(expected) <(print_result)
+  [ "$status" -eq 1 ]
+}
+
 @test "'bam clean <target^>' cleans target^" {
   function expected() {
     echo "bam-clean: found targets for 'src/foo.cxx^':"
