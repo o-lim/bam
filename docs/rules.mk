@@ -26,6 +26,7 @@ endif
 .PHONY: $(DOCS_DIR)/clean
 $(DOCS_DIR)/clean:
 	@rm -rf $(TOP_LEVEL_DIR)/man
+	@rm -f $(PANDOC_MAN_TEMPLATE_FILE)
 
 $(TOP_LEVEL_DIR)/man/man1:
 	@mkdir -p $@
