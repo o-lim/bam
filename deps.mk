@@ -246,8 +246,8 @@ endif
 install-test-deps: install-bats install-gtest install-cpplint.py
 ifeq ($(OS),Linux)
 install-test-deps:
-	@apt-get install -qq -y lua5.2
-	@apt-get install -qq -y lua5.2-dev
+	@apt-get install -qq -y lua5.1
+	@apt-get install -qq -y lua5.1-dev
 	@apt-get install -qq -y valgrind
 	@apt-get install -qq -y python-dev
 	@add-apt-repository ppa:team-gcc-arm-embedded/ppa -y
@@ -258,6 +258,7 @@ install-test-deps:
 endif
 ifeq ($(OS),Mac)
 install-test-deps:
+	@brew list lua@5.1 > /dev/null 2>&1 || brew install lua@5.1
 	@brew list lua > /dev/null 2>&1 || brew install lua
 	@brew list python > /dev/null 2>&1 || brew install python
 	@brew list gcc49 > /dev/null 2>&1 || brew install gcc49

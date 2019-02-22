@@ -1,5 +1,5 @@
 external_dep("lua") {
-  packages = ["lua5.2"]
+  packages = ["lua5.1"]
 }
 external_dep("python") {
   packages = ["python"]
