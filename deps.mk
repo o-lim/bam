@@ -32,7 +32,7 @@ PANDOC_URL = https://github.com/jgm/pandoc/releases/download/$(PANDOC_VERSION)/p
 BATS_VERSION = 0.4.0
 BATS_URL = https://github.com/sstephenson/bats/archive/v$(BATS_VERSION).tar.gz
 
-GTEST_VERSION = 1.8.0
+GTEST_VERSION = 1.8.1
 GTEST_URL = https://github.com/google/googletest/archive/release-$(GTEST_VERSION).tar.gz
 
 COREUTILS_VERSION = 8.23
@@ -146,7 +146,7 @@ $(DEPS_DIR)/bats-$(BATS_VERSION): | $(DEPS_DIR)/
 
 $(DEPS_DIR)/googletest-release-$(GTEST_VERSION): | $(DEPS_DIR)/
 	@curl --location $(GTEST_URL) | tar -C $(@D) -xzf -
-	@patch -d $@ -p1 < patches/googletest-support-for-pkgconfig.patch
+	@patch -d $@ -p1 < patches/googletest-$(GTEST_VERSION).patch
 	@mkdir -p $@/build
 	@cd $@/build && cmake ..
 	@make -C $@/build
