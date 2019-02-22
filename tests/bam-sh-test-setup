@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+# Use gnu-sed when on Mac
+if [ "$(uname -s)" == "Darwin" ]; then
+  export SED_PATH=$(brew list gnu-sed | grep '/bin/')
+  function sed() {
+    $SED_PATH "$@"
+  }
+  export -f sed
+fi
+
 function build_gn_synopsis() {
   local cmd="$1"
   cat << EOF
@@ -10,11 +19,13 @@ SYNOPSIS
                 [--time] [--tracelog=<logfile>] [-v]
 EOF
 }
+export -f build_gn_synopsis
 
 function build_gn_synopsis_quiet() {
   local cmd="$1"
   build_gn_synopsis "$cmd" | sed -r '2s/(.*)/\1 [-q]/'
 }
+export -f build_gn_synopsis_quiet
 
 function build_gn_options_common_quiet() {
 cat << EOF
@@ -56,7 +67,9 @@ OPTIONS
        -v     Verbose logging.
 EOF
 }
+export -f build_gn_options_common_quiet
 
 function build_gn_options_common() {
   build_gn_options_common_quiet | sed '/  *-q/,/^$/d'
 }
+export -f build_gn_options_common

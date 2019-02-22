@@ -3,6 +3,7 @@
 set -o pipefail
 
 setup() {
+  source bam-sh-test-setup
   export MANWIDTH=80
   cd foobar
 }
@@ -13,7 +14,6 @@ teardown() {
 
 before_each() {
   export BAM_OUTPUT_DIR="out"
-  source ../bam-sh-test-setup
   rm -rf out .tmp*
 }
 

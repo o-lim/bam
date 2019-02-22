@@ -32,7 +32,7 @@ $(TOP_LEVEL_DIR)/man/man1:
 	@mkdir -p $@
 
 $(PANDOC_MAN_TEMPLATE_FILE): $(TOP_LEVEL_DIR)/libexec/bam-version $(DOCS_DIR)/rules.mk
-	@pandoc -D man | sed "s/\\\$$footer\\\$$/Bam $$($<)/g" > $@
+	@pandoc -D man | sed "s/\\\$$footer\\\$$/Bam $$(PATH=$(TOP_LEVEL_DIR)/libexec:$$PATH $<)/g" > $@
 
 $(TOP_LEVEL_DIR)/man/man1/%.1: $(DOCS_DIR)/%.1.md $(PANDOC_MAN_TEMPLATE_FILE) $(DOCS_DIR)/rules.mk | $(TOP_LEVEL_DIR)/man/man1
 	@echo "Generating man page for $(*F)"

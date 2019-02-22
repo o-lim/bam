@@ -157,7 +157,7 @@ fi
 type -P "bam-$command" > /dev/null 2>&1 && exec bam-$command "$@"
 
 # Command not found, check to see if there is an alias instead
-type -P "bam-sh-setup" > /dev/null 2>&1
+type -P bam-sh-setup > /dev/null 2>&1
 if [ "$?" -eq 0 ]; then
   source "bam-sh-setup"
   alias="$(get_config_value "$BAM_CONFIG" alias "$command" | tail -n 1)"

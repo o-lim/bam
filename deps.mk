@@ -194,9 +194,7 @@ install-deps:
 	@brew list cmake > /dev/null 2>&1 || brew install cmake
 	@brew list coreutils > /dev/null 2>&1 || brew install coreutils
 	@brew list gnu-getopt > /dev/null 2>&1 || brew install gnu-getopt
-	@brew link --force gnu-getopt
-	@brew install gnu-sed --default-names
-	@brew link --force gnu-sed
+	@brew list gnu-sed > /dev/null 2>&1 || brew install gnu-sed
 	@brew list binutils > /dev/null 2>&1 || brew install binutils
 endif
 

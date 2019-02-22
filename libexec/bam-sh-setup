@@ -17,7 +17,25 @@
 export LC_ALL=C
 
 # Make sure coloring is disabled for grep
-alias grep='grep --color=never'
+export GREP_PATH=$(type -P grep)
+function grep() {
+  $GREP_PATH --color=never "$@"
+}
+export -f grep
+
+# Use gnu tools when on Mac
+if [ "$(uname -s)" == "Darwin" ]; then
+  export GETOPT_PATH=$(brew list gnu-getopt | grep '/bin/')
+  export SED_PATH=$(brew list gnu-sed | grep '/bin/')
+  function getopt() {
+    $GETOPT_PATH "$@"
+  }
+  function sed() {
+    $SED_PATH "$@"
+  }
+  export -f getopt
+  export -f sed
+fi
 
 function write_buildenv() {
   local buildenv="$1"

@@ -3,6 +3,7 @@
 set -o pipefail
 
 setup() {
+  source bam-sh-test-setup
   export BAM_OUTPUT_DIR="out"
   export UNAME="$(uname -s | tr A-Z a-z)"
 }

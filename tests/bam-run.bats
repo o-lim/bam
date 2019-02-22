@@ -3,6 +3,7 @@
 set -o pipefail
 
 setup() {
+  source bam-sh-test-setup
   export MANWIDTH=80
   cp -r ../examples .tmp
   cd .tmp/hello

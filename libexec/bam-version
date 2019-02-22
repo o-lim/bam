@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source bam-sh-setup
+
 cmd=$(basename "$0")
 args=$(getopt -o h -l "help" -n "$cmd" -- "$@")
 if [ $? != 0 ]; then

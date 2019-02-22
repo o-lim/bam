@@ -38,6 +38,8 @@ EOF
   exit 0
 }
 
+source bam-sh-setup
+
 cmd=$(basename "$0")
 args=$(getopt -o h -l "help" -n "$cmd" -- "$@")
 if [ $? != 0 ]; then
@@ -66,7 +68,6 @@ fi
 
 type -P "bam-$command" > /dev/null 2>&1 && exec bam-$command --help
 
-source "bam-sh-setup"
 alias="$(get_config_value "$BAM_CONFIG" alias "$command" | tail -n 1)"
 if [ "$alias" != "$(null_value)" ]; then
   exec echo "\`bam $command' is aliased to \`$alias'"
