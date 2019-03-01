@@ -50,6 +50,6 @@ $(MAN_INSTALL_PATH):
 	@install -d $@
 
 $(MAN_INSTALL_PATH)/%.1.gz: $(TOP_LEVEL_DIR)/man/man1/%.1 $(TOP_LEVEL_DIR)/prefix.mk | $(MAN_INSTALL_PATH)
-	@sed -e 's|\\\@prefix\\\@|$(shell echo $(PREFIX) | sed -r 's/([\\@\s-])/\\\1/g')|g' $< | gzip > $@
+	@sed -e 's|\\\@prefix\\\@|$(shell echo $(PREFIX) | sed 's/\([\\@\s-]\)/\\\1/g')|g' $< | gzip > $@
 
 include $(TOP_LEVEL_DIR)/footer.mk
