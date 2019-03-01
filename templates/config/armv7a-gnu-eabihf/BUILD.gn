@@ -7,7 +7,6 @@ config("armv7a-gnu-eabihf") {
     "-O0",
     "-fno-strict-aliasing",
     "-fno-strict-overflow",
-    "-ansi",
     "-Wall",
     "-Werror",
     "-Wextra",
@@ -33,6 +32,10 @@ config("armv7a-gnu-eabihf") {
     "-Wno-endif-labels",
     "-Wno-variadic-macros",
   ]
+  cflags_c = [ "-std=c11" ]
+  cflags_cc = [ "-std=c++11" ]
+  cflags_objc = [ "-std=c11" ]
+  cflags_objcc = [ "-std=c++11" ]
   asmflags = cflags
   ldflags = [
     "-rdynamic",
