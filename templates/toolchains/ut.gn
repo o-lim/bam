@@ -17,7 +17,7 @@ ToolchainWithLint("ut") {
 
   toolchain_args = {
     current_cpu = "@HOST_CPU@"
-    current_os = "@HOST_OS@"
+    current_os = host_os
     current_platform = "ut"
   }
 }

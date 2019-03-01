@@ -18,7 +18,6 @@ config("i686-apple-ios") {
     "-Wcast-qual",
     "-Wcast-align",
     "-Wwrite-strings",
-    "-Wlogical-op",
     "-Wmissing-format-attribute",
     "-Wpacked",
     "-Winvalid-pch",

@@ -19,7 +19,6 @@ config("x86_64-darwin-gnu") {
     "-Wcast-qual",
     "-Wcast-align",
     "-Wwrite-strings",
-    "-Wlogical-op",
     "-Wmissing-format-attribute",
     "-Wpacked",
     "-Winvalid-pch",
