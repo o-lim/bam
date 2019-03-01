@@ -561,15 +561,13 @@ template("mac_toolchain") {
     }
 
     tool("compile_xcassets") {
+      sdk_name = "macosx"
+      target_devices = "--target-device mac"
+      min_deployment_target = mac_deployment_target
       if (_is_ios) {
         sdk_name = "iphoneos"
         target_devices = "--target-device iphone --target-device ipad"
         min_deployment_target = ios_deployment_target
-      }
-      if (_is_mac) {
-        sdk_name = "macosx"
-        target_devices = "--target-device mac"
-        min_deployment_target = mac_deployment_target
       }
       command = "rm -f {{output}} && " +
                 "xcrun actool --output-format=human-readable-text " +
