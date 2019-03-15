@@ -5,23 +5,18 @@ set -o pipefail
 setup() {
   source bam-sh-test-setup
   export MANWIDTH=80
+}
+
+before_each() {
+  export BAM_OUTPUT_DIR="out"
   cp -r ../examples .tmp
   cd .tmp/hello
   sed -i "s/host_platform = \"x86_64-linux-gnu\"/host_platform = \"x86_64-$(uname -s | tr A-Z a-z)-gnu\"/" build/config/BUILDCONFIG.gn
 }
 
-teardown() {
+after_each() {
   cd ../..
   rm -rf .tmp*
-}
-
-before_each() {
-  export BAM_OUTPUT_DIR="out"
-  rm -rf out
-}
-
-after_each() {
-  rm -rf out
 }
 
 function print_result() {
@@ -253,7 +248,7 @@ EOF
     echo " ./hello \"arg1\" \"arg2\""
   }
   gn gen out
-  run bam run --dry-run --verbose //src:hello "arg1" "arg2"
+  run bam run --dry-run --verbose '//src:hello' "arg1" "arg2"
 
   ! [ -e "out/hello" ]
   diff -u <(expectedHead) <(print_result | tail -n +3 | head -n 3)
