@@ -313,7 +313,15 @@ function get_source_root() {
   local ninjafile="$BAM_OUTPUT_DIR/build.ninja"
   if [[ -n "$BAM_OUTPUT_DIR" && "$BAM_OUTPUT_DIR" != //* &&
           -f "$ninjafile" ]]; then
-    echo "$(sed -rn '/^rule gn$/,+1s/\s*command\s*= *.* +--root=(.*) -q .*/\1/p' "$ninjafile")"
+    local path="$(sed -rn '/^rule gn$/,+1s/\s*command\s*= *.* +--root=(.*) -q .*/\1/p' "$ninjafile")"
+    local root=
+
+    if [ "${path:0:1}" == "/" ]; then
+      root="$path"
+    else
+      root="$(realpath -L -m -s "$BAM_OUTPUT_DIR/$path")"
+    fi
+    echo "$root"
   else
     local cwd="$(pwd)"
     local path="$(realpath -L -s "$cwd")"
