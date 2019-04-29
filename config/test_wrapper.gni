@@ -223,7 +223,7 @@ template("test_wrapper") {
         }
       }
       if (deps == test_pass_deps && data_deps == [] && public_deps == []) {
-        mark_used(test_label)
+        mark_used(["test_label"])
       }
     }
   }

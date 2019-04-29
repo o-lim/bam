@@ -131,7 +131,7 @@ template("style") {
       }
       mark_used(["depth", "regex", "root_dir"])
       if (defined(source_dirs)) {
-        mark_used(source_dirs)
+        mark_used(["source_dirs"])
       }
     }
 
@@ -179,9 +179,9 @@ template("style") {
       "root_dir",
     ])
     if (defined(sources)) {
-      mark_used(sources)
+      mark_used(["sources"])
     } else if (defined(source_dirs)) {
-      mark_used(source_dirs)
+      mark_used(["source_dirs"])
     }
 
     mark_used_from(invoker, binary_target_variables +

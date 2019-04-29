@@ -108,7 +108,7 @@ template("LintToolchain") {
          "${color_error}toolchain_args must specify a \"current_os\"${color_none}")
   assert(defined(invoker_toolchain_args.current_platform),
          "${color_error}toolchain_args must specify a \"current_platform\"${color_none}")
-  mark_used(invoker_toolchain_args)
+  mark_used(["invoker_toolchain_args"])
 
   toolchain_type = invoker.toolchain_type
   is_builtin = (!defined(invoker.is_builtin) || invoker.is_builtin)

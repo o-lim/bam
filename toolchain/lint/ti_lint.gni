@@ -81,7 +81,7 @@ template("ti_lint") {
          "${color_error}toolchain_args must specify a \"current_os\"${color_none}")
   assert(defined(invoker_toolchain_args.current_platform),
          "${color_error}toolchain_args must specify a \"current_platform\"${color_none}")
-  mark_used(invoker_toolchain_args)
+  mark_used(["invoker_toolchain_args"])
 
   cc = invoker.cc
   cxx = invoker.cxx

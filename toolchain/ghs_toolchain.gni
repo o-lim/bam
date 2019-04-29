@@ -149,7 +149,7 @@ template("ghs_toolchain") {
   # Note: OS definitions do not work for toolchains,
   # so we must redefine them here
   _is_win = (invoker_toolchain_args.current_os == "win")
-  mark_used(_is_win)
+  mark_used(["_is_win"])
 
   toolchain(target_name) {
     if (defined(invoker.use_ccache)) {

@@ -43,7 +43,7 @@ template("target_wrapper") {
   this_target_name = target_name
   if (target_type == "executable" && is_test) {
     group(this_target_name) {}
-    mark_used(is_codegen)
+    mark_used(["is_codegen"])
     mark_used_from(invoker, binary_target_variables +
                             lint_variables + style_variables)
   } else {

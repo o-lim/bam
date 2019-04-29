@@ -105,7 +105,7 @@ template("lint") {
       }
       mark_used(["depth", "regex"])
       if (defined(source_dirs)) {
-        mark_used(source_dirs)
+        mark_used(["source_dirs"])
       }
     }
 
@@ -150,9 +150,9 @@ template("lint") {
       "regex",
     ])
     if (defined(sources)) {
-      mark_used(sources)
+      mark_used(["sources"])
     } else if (defined(source_dirs)) {
-      mark_used(source_dirs)
+      mark_used(["source_dirs"])
     }
 
     mark_used_from(invoker, binary_target_variables +
