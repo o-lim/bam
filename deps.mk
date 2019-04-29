@@ -258,7 +258,9 @@ ifeq ($(OS),Mac)
 install-test-deps:
 	@brew list lua@5.1 > /dev/null 2>&1 || brew install lua@5.1
 	@brew list lua > /dev/null 2>&1 || brew install lua
+	@brew list pkg-config > /dev/null 2>&1 || brew install pkg-config
 	@brew list python > /dev/null 2>&1 || brew install python
+	@brew list python2 > /dev/null 2>&1 || brew install python2
 	@brew list gcc49 > /dev/null 2>&1 || brew install gcc49
 	@ln -s gcc-4.9 /usr/local/bin/gcc
 	@ln -s g++-4.9 /usr/local/bin/g++
