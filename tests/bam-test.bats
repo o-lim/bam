@@ -271,7 +271,7 @@ EOF
   gn gen out
   run bam test '//src/foo/*'
 
-  diff -u <(expected) <(print_result | tail -n +4)
+  diff -u <(expected) <(print_result | sed '1,/^Done\./d')
   [ "$status" -eq 1 ]
 }
 
@@ -282,7 +282,7 @@ EOF
   gn gen out
   run bam test '//:*'
 
-  diff -u <(expected) <(print_result | tail -n +4)
+  diff -u <(expected) <(print_result | sed '1,/^Done\./d')
   [ "$status" -eq 1 ]
 }
 
@@ -358,7 +358,7 @@ EOF
   gn gen out
   LD_LIBRARY_PATH="./ut" run bam test --verbose '//src:*'
 
-  diff -u <(expectedHead) <(print_result | sed '1,3d;/^ninja: Entering/,$d')
+  diff -u <(expectedHead) <(print_result | sed '1,/^Done\./d;/^ninja: Entering/,$d')
   print_result | grep -E '\[.*\] (clang|g)\+\+'
   [ "$status" -eq 0 ]
 }
@@ -376,7 +376,7 @@ EOF
   gn gen out
   run bam test -v --replace-test-args '//src:foo'
 
-  diff -u <(expectedHead) <(print_result | sed '1,3d;/^ninja: Entering/,$d')
+  diff -u <(expectedHead) <(print_result | sed '1,/^Done\./d;/^ninja: Entering/,$d')
   print_result | grep -E '\[.*\] (clang|g)\+\+'
   print_result | grep 'bam-test: running command-line: echo foo_pretest &&  ut/foo_UT'
   [ "$status" -eq 0 ]
@@ -423,7 +423,7 @@ EOF
   gn gen out
   LD_LIBRARY_PATH="./ut" run bam test -v --only bar --skip foobar '//src:*'
 
-  diff -u <(expectedHead) <(print_result | sed '1,3d;/^ninja: Entering/,$d')
+  diff -u <(expectedHead) <(print_result | sed '1,/^Done\./d;/^ninja: Entering/,$d')
   print_result | grep -E '\[.*\] (clang|g)\+\+'
   [ "$status" -eq 0 ]
 }

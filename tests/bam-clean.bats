@@ -187,15 +187,12 @@ EOF
 
 @test "'bam clean -r <rules>' forwards to ninja -t clean -r" {
   function expected() {
-    echo "ninja: error: unknown rule 'myrule'"
-    echo "Cleaning... 0 files."
+      echo "ninja: error: unknown rule 'myrule'"
   }
   gn gen out
   ninja -C out style
-  run bam clean -r myrule
 
-  diff -u <(expected) <(print_result)
-  [ "$status" -eq 1 ]
+  diff -u <(expected) <(bam clean -r myrule 2>&1 > /dev/null)
 }
 
 @test "'bam clean' without args forwards to gn clean" {

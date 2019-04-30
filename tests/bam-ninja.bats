@@ -102,7 +102,7 @@ EOF
   gn gen .tmp1
   run bam -o .tmp1 ninja style
 
-  diff -u <(echo "ninja: Entering directory \`.tmp1'") <(echo "${lines[3]}")
+  diff -u <(echo "ninja: Entering directory \`.tmp1'") <(print_result | grep '^ninja: Entering directory')
   [ "$status" -eq 0 ]
 }
 
@@ -111,6 +111,6 @@ EOF
   gn gen .tmp2
   run bam ninja style
 
-  diff -u <(echo "ninja: Entering directory \`.tmp2'") <(echo "${lines[3]}")
+  diff -u <(echo "ninja: Entering directory \`.tmp2'") <(print_result | grep '^ninja: Entering directory')
   [ "$status" -eq 0 ]
 }

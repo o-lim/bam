@@ -170,7 +170,7 @@ EOF
   gn gen out
   run bam build out/obj/src/foo.cxx.o
 
-  diff -u <(expected) <(print_result | tail -n +4)
+  diff -u <(expected) <(print_result | sed '1,/^Done\./d')
   [ -f "out/obj/src/foo.cxx.o" ]
 }
 
@@ -222,7 +222,7 @@ EOF
   gn gen out
   run bam build foo baz "//:fuzz"
 
-  diff -u <(expected) <(print_result | tail -n +4)
+  diff -u <(expected) <(print_result | sed '1,/^Done\./d')
   [ "$status" -eq 1 ]
 }
 
@@ -233,7 +233,7 @@ EOF
   gn gen out
   run bam build foo "fuzz"
 
-  diff -u <(expected) <(print_result | tail -n +4)
+  diff -u <(expected) <(print_result | sed '1,/^Done\./d')
   [ "$status" -eq 1 ]
 }
 
@@ -244,7 +244,7 @@ EOF
   gn gen out
   run bam build baz "out/far"
 
-  diff -u <(expected) <(print_result | tail -n +4)
+  diff -u <(expected) <(print_result | sed '1,/^Done\./d')
   [ "$status" -eq 1 ]
 }
 
@@ -258,7 +258,7 @@ EOF
   run bam build -v '//src:baz(build/toolchain:arm)'
 
   [ -f "out/arm/libbaz.so" ]
-  diff -u <(expected) <(print_result | tail -n +4 | head -n 3)
+  diff -u <(expected) <(print_result | sed '1,/^Done\./d' | head -n 3)
   print_result | grep '\[.*\] arm-none-eabi-g++'
   [ "$status" -eq 0 ]
 }

@@ -131,7 +131,7 @@ EOF
   gn gen out
   run bam run '//*'
 
-  diff -u <(expected) <(print_result | tail -n +4)
+  diff -u <(expected) <(print_result | sed '1,/^Done\./d')
   [ "$status" -eq 1 ]
 }
 
@@ -219,7 +219,7 @@ EOF
   run bam run -v //src:hello
 
   [ -f "out/hello" ]
-  diff -u <(expectedHead) <(print_result | tail -n +4 | head -n 3)
+  diff -u <(expectedHead) <(print_result | sed '1,/^Done\./d' | head -n 3)
   diff -u <(expectedTail) <(print_result | tail -n 2)
   print_result | grep -E '\[.*\] (clang|g)\+\+'
   [ "$status" -eq 0 ]
@@ -251,7 +251,7 @@ EOF
   run bam run --dry-run --verbose '//src:hello' "arg1" "arg2"
 
   ! [ -e "out/hello" ]
-  diff -u <(expectedHead) <(print_result | tail -n +4 | head -n 3)
+  diff -u <(expectedHead) <(print_result | sed '1,/^Done\./d' | head -n 3)
   diff -u <(expectedTail) <(print_result | tail -n 2)
   print_result | grep -E '\[.*\] (clang|g)\+\+'
   [ "$status" -eq 0 ]
