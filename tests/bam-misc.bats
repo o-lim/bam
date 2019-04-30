@@ -138,11 +138,11 @@ EOF
 
 @test "'bam misc --show-out-dir' shows output dir" {
   bam misc --show-out-dir | diff -u <(echo "//out/Release") -
-  BAM_OUTPUT_DIR="//out" bam misc --show-out-dir | diff -u <(echo "//out") -
+  BAM_OUTPUT_DIR="//output" bam misc --show-out-dir | diff -u <(echo "//output") -
   bam -o "out/Debug" misc --show-out-dir | diff -u <(echo "//out/Debug") -
   bam --out-dir "/tmp/out/foo" misc --show-out-dir | diff -u <(echo "/tmp/out/foo") -
   bam -C src misc --show-out-dir | diff -u <(echo "//out/Release") -
-  BAM_DIR="xxx" bam misc --show-out-dir | diff -u <(echo "//") -
+  BAM_DIR="xxx" bam misc --show-out-dir | diff -u <(echo "//out") -
 }
 
 @test "'bam misc --show-cdup' shows top-level dir relative to current dir" {
