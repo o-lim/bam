@@ -77,7 +77,7 @@ function check_buildenv() {
     local vars=()
     if [ -f "$envlog" ]; then
       vars="$(sed -nr 's/^([a-zA-Z0-9_]+)=.*/\1/p' "$envlog")"
-      IFS=$'\n' read -rd '' -a vars <<< "$vars"
+      IFS=$'\n' read -rd '' -a vars <<< "$vars" || true
     fi
     write_buildenv "$buildenv.tmp"
     write_envvars "$envlog.tmp" "${vars[@]}"
@@ -182,7 +182,7 @@ function read_config_value() {
   local value=
   if [ -f "$cfgfile" ]; then
     local matched_lines="$(find_config_matches "$cfgfile" "$section" "$key")"
-    IFS=$'\n' read -rd '' -a matched_lines <<< "$matched_lines"
+    IFS=$'\n' read -rd '' -a matched_lines <<< "$matched_lines" || true
 
     local sed_cmds=
     local sub="s/\\s*$key\\s*=\s*//p;"
@@ -260,7 +260,7 @@ function get_config_value() {
   fi
 
   local values=
-  IFS=$'\n' read -rd '' -a values <<< "$value"
+  IFS=$'\n' read -rd '' -a values <<< "$value" || true
   local i=0
   for v in "${values[@]}"; do
     echo "$(trim_config_value "$v")"

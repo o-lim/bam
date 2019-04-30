@@ -221,7 +221,7 @@ EOF
   [ -f "out/hello" ]
   diff -u <(expectedHead) <(print_result | tail -n +3 | head -n 3)
   diff -u <(expectedTail) <(print_result | tail -n 2)
-  print_result | grep '\[.*\] g++'
+  print_result | grep -E '\[.*\] (clang|g)\+\+'
   [ "$status" -eq 0 ]
 }
 
@@ -253,6 +253,6 @@ EOF
   ! [ -e "out/hello" ]
   diff -u <(expectedHead) <(print_result | tail -n +3 | head -n 3)
   diff -u <(expectedTail) <(print_result | tail -n 2)
-  print_result | grep '\[.*\] g++'
+  print_result | grep -E '\[.*\] (clang|g)\+\+'
   [ "$status" -eq 0 ]
 }

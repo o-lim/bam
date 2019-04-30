@@ -70,7 +70,7 @@ fi
 if [ -z "$platforms" ]; then
   platforms=("${all_platforms[@]}")
 else
-  IFS=$',' read -ra platforms <<< "$platforms"
+  IFS=$',' read -ra platforms <<< "$platforms" || true
 fi
 
 set -f
