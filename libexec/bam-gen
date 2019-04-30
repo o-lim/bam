@@ -13,4 +13,4 @@ envlog="build-env.log"
 jsonfile="build.json"
 write_buildenv "$BAM_OUTPUT_PATH/.buildenv"
 
-exec gn --root="$BAM_SOURCE_ROOT" --envlog="$envlog" --ide=json --json-file-name="$jsonfile" gen "$BAM_OUTPUT_PATH" "$@"
+exec gn --root="$BAM_SOURCE_ROOT" --envlog="$envlog" --ide=json --json-file-name="$jsonfile" --export-compile-commands-per-toolchain gen "$BAM_OUTPUT_PATH" "$@"

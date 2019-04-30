@@ -67,6 +67,25 @@ EOF
   [ "$status" -eq 0 ]
 }
 
+@test "'bam gen' generates compile commands for each toolchain" {
+  function expected() {
+    echo "out/arm/compile_commands.json"
+    echo "out/compile_commands.json"
+    echo "out/lint-arm/compile_commands.json"
+    echo "out/lint-mingw32/compile_commands.json"
+    echo "out/lint-mingw64/compile_commands.json"
+    echo "out/lint-x86/compile_commands.json"
+    echo "out/mingw32/compile_commands.json"
+    echo "out/mingw64/compile_commands.json"
+    echo "out/style/compile_commands.json"
+    echo "out/ut/compile_commands.json"
+  }
+  run bam gen
+
+  diff -u <(expected) <(find out -name compile_commands.json | sort)
+  [ "$status" -eq 0 ]
+}
+
 @test "'bam -o <path> gen' changes output dir" {
   run bam -o .tmp gen
   [ -f .tmp/build.ninja ]

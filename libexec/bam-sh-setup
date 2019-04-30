@@ -64,7 +64,7 @@ function check_buildenv() {
   local ninjafile="$out/build.ninja"
   local envlog="$(realpath -L -m -s "$out/build-env.log")"
   if ! [ -f "$ninjafile" ]; then
-    gn --root="$BAM_SOURCE_ROOT" --envlog="build-env.log" --ide=json --json-file-name="build.json" gen "$out"
+    gn --root="$BAM_SOURCE_ROOT" --envlog="build-env.log" --ide=json --json-file-name="build.json" --export-compile-commands-per-toolchain gen "$out"
     write_buildenv "$buildenv"
   else
     local gn_cmd="$(sed -nr "/^rule gn$/,+1s| *command *= *.* +--root=.* -q (.*)|gn --root=$BAM_SOURCE_ROOT \\1|p" "$ninjafile")"
@@ -73,6 +73,9 @@ function check_buildenv() {
     fi
     if [[ "$gn_cmd" != *" --ide=json --json-file-name=build.json "* ]]; then
       gn_cmd="$gn_cmd --ide=json --json-file-name=build.json"
+    fi
+    if [[ "$gn_cmd" != *" --export-compile-commands-per-toolchain "* ]]; then
+      gn_cmd="$gn_cmd --export-compile-commands-per-toolchain"
     fi
     local vars=()
     if [ -f "$envlog" ]; then

@@ -21,6 +21,12 @@ after_each() {
   rm -rf out .tmp*
 }
 
+function print_result() {
+  for line in "${lines[@]}"; do
+    echo "$line"
+  done
+}
+
 @test "'bam ninja --help' displays help" {
   function expected() {
     cat << EOF
@@ -80,11 +86,15 @@ EOF
 }
 
 @test "'bam ninja' forwards to ninja and automatically calls gn first" {
+  function expected() {
+    echo "Generating JSON projects took XXms"
+    echo "Generating compile_commands took XXms"
+    echo "Done. Made XX targets from XX files in XXms"
+    echo "ninja: Entering directory \`out'"
+  }
   run bam ninja style
 
-  diff -u <(echo "Generating JSON projects took XXms") <(echo "${lines[0]}" | sed -r 's/[0-9]+/XX/g')
-  diff -u <(echo "Done. Made XX targets from XX files in XXms") <(echo "${lines[1]}" | sed -r 's/[0-9]+/XX/g')
-  diff -u <(echo "ninja: Entering directory \`out'") <(echo "${lines[2]}")
+  diff -u <(expected) <(print_result | head -n 4 | sed -r 's/[0-9]+/XX/g')
   [ "$status" -eq 0 ]
 }
 
@@ -92,7 +102,7 @@ EOF
   gn gen .tmp1
   run bam -o .tmp1 ninja style
 
-  diff -u <(echo "ninja: Entering directory \`.tmp1'") <(echo "${lines[2]}")
+  diff -u <(echo "ninja: Entering directory \`.tmp1'") <(echo "${lines[3]}")
   [ "$status" -eq 0 ]
 }
 
@@ -101,6 +111,6 @@ EOF
   gn gen .tmp2
   run bam ninja style
 
-  diff -u <(echo "ninja: Entering directory \`.tmp2'") <(echo "${lines[2]}")
+  diff -u <(echo "ninja: Entering directory \`.tmp2'") <(echo "${lines[3]}")
   [ "$status" -eq 0 ]
 }

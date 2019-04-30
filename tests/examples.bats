@@ -25,6 +25,7 @@ after_each() {
 @test "hello example: no errors in gn files" {
   function expected() {
     echo "Generating JSON projects took XXms"
+    echo "Generating compile_commands took XXms"
     echo "Done. Made XX targets from XX files in XXms"
   }
 
@@ -61,6 +62,7 @@ after_each() {
 @test "hello example: no errors in gn files when outdir is source root" {
   function expected() {
     echo "Generating JSON projects took XXms"
+    echo "Generating compile_commands took XXms"
     echo "Done. Made XX targets from XX files in XXms"
   }
 

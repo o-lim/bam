@@ -105,21 +105,33 @@ EOF
 }
 
 @test "'bam build' forwards to ninja and automatically calls gn first" {
+  function expected() {
+    echo "Generating JSON projects took XXms"
+    echo "Generating compile_commands took XXms"
+    echo "Done. Made XX targets from XX files in XXms"
+    echo "ninja: Entering directory \`out'"
+  }
   run bam build style
 
-  diff -u <(echo "Generating JSON projects took XXms") <(echo "${lines[0]}" | sed -r 's/[0-9]+/XX/g')
-  diff -u <(echo "Done. Made XX targets from XX files in XXms") <(echo "${lines[1]}" | sed -r 's/[0-9]+/XX/g')
-  diff -u <(echo "ninja: Entering directory \`out'") <(echo "${lines[2]}")
+  diff -u <(expected) <(print_result | head -n 4 | sed -r 's/[0-9]+/XX/g')
+  [ -f out/compile_commands.json ]
+  [ -f out/arm/compile_commands.json ]
   [ "$status" -eq 0 ]
 }
 
-@test "'bam build' automatically re-runs gn gen with --ide=json" {
-	gn gen out
+@test "'bam build' automatically re-runs gn gen with --ide=json and --export-compile-commands-per-toolchain" {
+  function expected() {
+    echo "Generating JSON projects took XXms"
+    echo "Generating compile_commands took XXms"
+    echo "Done. Made XX targets from XX files in XXms"
+    echo "ninja: Entering directory \`out'"
+  }
+  gn gen out
   run bam build foo
 
-  diff -u <(echo "Generating JSON projects took XXms") <(echo "${lines[0]}" | sed -r 's/[0-9]+/XX/g')
-  diff -u <(echo "Done. Made XX targets from XX files in XXms") <(echo "${lines[1]}" | sed -r 's/[0-9]+/XX/g')
-  diff -u <(echo "ninja: Entering directory \`out'") <(echo "${lines[2]}")
+  diff -u <(expected) <(print_result | head -n 4 | sed -r 's/[0-9]+/XX/g')
+  [ -f out/compile_commands.json ]
+  [ -f out/arm/compile_commands.json ]
   [ "$status" -eq 0 ]
 }
 
@@ -158,7 +170,7 @@ EOF
   gn gen out
   run bam build out/obj/src/foo.cxx.o
 
-  diff -u <(expected) <(print_result | tail -n +3)
+  diff -u <(expected) <(print_result | tail -n +4)
   [ -f "out/obj/src/foo.cxx.o" ]
 }
 
@@ -210,7 +222,7 @@ EOF
   gn gen out
   run bam build foo baz "//:fuzz"
 
-  diff -u <(expected) <(print_result | tail -n +3)
+  diff -u <(expected) <(print_result | tail -n +4)
   [ "$status" -eq 1 ]
 }
 
@@ -221,7 +233,7 @@ EOF
   gn gen out
   run bam build foo "fuzz"
 
-  diff -u <(expected) <(print_result | tail -n +3)
+  diff -u <(expected) <(print_result | tail -n +4)
   [ "$status" -eq 1 ]
 }
 
@@ -232,7 +244,7 @@ EOF
   gn gen out
   run bam build baz "out/far"
 
-  diff -u <(expected) <(print_result | tail -n +3)
+  diff -u <(expected) <(print_result | tail -n +4)
   [ "$status" -eq 1 ]
 }
 
@@ -246,7 +258,7 @@ EOF
   run bam build -v '//src:baz(build/toolchain:arm)'
 
   [ -f "out/arm/libbaz.so" ]
-  diff -u <(expected) <(print_result | tail -n +3 | head -n 3)
+  diff -u <(expected) <(print_result | tail -n +4 | head -n 3)
   print_result | grep '\[.*\] arm-none-eabi-g++'
   [ "$status" -eq 0 ]
 }
@@ -303,7 +315,7 @@ EOF
   sleep 1
   run bam build --check-up-to-date '//src:foo(//build/toolchain:x86)'
 
-  diff -u <(echo) <(print_result | sed -e 's/^Done\. Made .*//' -e '/^Generating JSON .*/d')
+  diff -u <(echo) <(print_result | sed -e 's/^Done\. Made .*//' -e '/^Generating .*/d')
   [ "$status" -eq 0 ]
 }
 
