@@ -266,8 +266,6 @@ install-test-deps:
 	@ln -s g++-4.9 /usr/local/bin/g++
 	@brew tap PX4/homebrew-px4
 	@brew install gcc-arm-none-eabi-49
-	@ln -s /usr/local/bin/ghead ~/bin/head
-	@ln -s /usr/local/bin/gtail ~/bin/tail
 endif
 
 .PHONY: install-gtest

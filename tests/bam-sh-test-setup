@@ -7,6 +7,14 @@ if [ "$(uname -s)" == "Darwin" ]; then
     $SED_PATH "$@"
   }
   export -f sed
+  function head() {
+    ghead "$@"
+  }
+  export -f head
+  function tail() {
+    gtail "$@"
+  }
+  export -f tail
 fi
 
 function build_gn_synopsis() {
