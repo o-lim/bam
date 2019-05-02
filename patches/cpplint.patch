@@ -1,5 +1,11 @@
 --- a/cpplint.py	2017-09-19 16:17:31.809825857 -0700
 +++ b/cpplint.py	2017-09-19 17:09:17.156059545 -0700
+@@ -1,4 +1,4 @@
+-#!/usr/bin/env python
++#!/usr/bin/env python2
+ #
+ # Copyright (c) 2009 Google Inc. All rights reserved.
+ #
 @@ -546,7 +546,7 @@
  
  # The allowed extensions for file names

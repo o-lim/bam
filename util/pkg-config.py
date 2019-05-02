@@ -24,9 +24,9 @@ if options.variable:
                                         "--variable", options.variable] +
                                        args,
                                        env=os.environ)
-    print variable.strip()
+    print(variable.strip().decode('utf-8'))
   except:
-    print "Error running pkg-config."
+    print("Error running pkg-config.")
     sys.exit(1)
   sys.exit(0)
 
@@ -39,9 +39,9 @@ if options.cflags:
     cflagsString = subprocess.check_output([options.pkg_config,
                                             "--cflags"] +
                                             static + args, env=os.environ)
-    all_cflags = cflagsString.strip().split(' ')
+    all_cflags = cflagsString.strip().decode('utf-8').split(' ')
   except:
-    print "Error running pkg-config."
+    print("Error running pkg-config.")
     sys.exit(1)
 
 if options.libs:
@@ -49,9 +49,9 @@ if options.libs:
     ldflagsString = subprocess.check_output([options.pkg_config,
                                              "--libs"] +
                                             static + args, env=os.environ)
-    all_ldflags = ldflagsString.strip().split(' ')
+    all_ldflags = ldflagsString.strip().decode('utf-8').split(' ')
   except:
-    print "Error running pkg-config."
+    print("Error running pkg-config.")
     sys.exit(1)
 
 defines = []
@@ -92,9 +92,9 @@ for flag in all_cflags[:]:
 
 # Output a GN scope. The JSON formatter prints GN compatible lists when
 # everything is a list of strings.
-print "defines = " + json.dumps(defines)
-print "include_dirs = " + json.dumps(includes)
-print "cflags = " + json.dumps(cflags)
-print "libs = " + json.dumps(libs)
-print "lib_dirs = " + json.dumps(lib_dirs)
-print "ldflags = " + json.dumps(ldflags)
+print("defines = " + json.dumps(defines))
+print("include_dirs = " + json.dumps(includes))
+print("cflags = " + json.dumps(cflags))
+print("libs = " + json.dumps(libs))
+print("lib_dirs = " + json.dumps(lib_dirs))
+print("ldflags = " + json.dumps(ldflags))
