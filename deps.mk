@@ -10,7 +10,7 @@ ifeq ($(UNAME_S),Darwin)
 endif
 endif
 
-GN_VERSION = 0.3.2
+GN_VERSION = 0.4.0
 GN_PLATFORM = x86_64-linux
 GN_URL = https://github.com/o-lim/generate-ninja/releases/download/v$(GN_VERSION)/gn-$(GN_PLATFORM).tar.gz
 
